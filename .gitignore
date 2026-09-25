@@ -1,0 +1,3 @@
+*.pcap
+!docs/phase-1-baseline/assets/wireshark-ping.pcap
+__pycache__/
