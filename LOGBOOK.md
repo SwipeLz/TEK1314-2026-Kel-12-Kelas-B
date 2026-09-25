@@ -1,9 +1,9 @@
 # LOGBOOK - Kelompok 12 Kelas B
 
 Anggota:
-1. Muhamad Akhdan Ramadhan (J0404241102) - Lead
-2. Thevan Erlangga (J0404241073) - Blue Team
-3. Fachri Abyasa Tarid (J0404241136) - Red Team
+1. Thevan Erlangga (J0404241073) - Lead
+2. Muhamad Akhdan Ramadhan (J0404241102) - Red Team
+3. Fachri Abyasa Tarid (J0404241136) - Blue Team
 
 ## Minggu 2
 
