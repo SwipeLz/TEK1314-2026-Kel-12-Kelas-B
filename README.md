@@ -1,7 +1,7 @@
 # Proyek PBL Keamanan Siber - Kelompok 12 Kelas B
 
 **Mata Kuliah:** TEK1314 - Keamanan Siber
-**Program Studi:** D4 Teknologi Rekayasa Komputer
+**Program Studi:** Teknologi Rekayasa Komputer
 **Subnet:** 192.168.12.0/24
 
 ## Anggota
