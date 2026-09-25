@@ -1,79 +1,60 @@
-# PBL TEK1314 Keamanan Siber — Kelompok 12 Kelas B
+# Proyek PBL Keamanan Siber - Kelompok 12 Kelas B
 
-**Skenario (adaptasi IoT, sesuai ralat terbaru):** Smart Greenhouse Monitoring — ESP32 + MQTT + Web Dashboard
-**Subnet kelompok:** `192.168.12.0/24`
+**Mata Kuliah:** TEK1314 - Keamanan Siber
+**Program Studi:** D4 Teknologi Rekayasa Komputer
+**Fase Proyek:** Minggu ke-4 (Design) + Minggu 5-7 (Baseline & Hardening Review)
+**Subnet:** `192.168.12.0/24`
 **Repo:** https://github.com/SwipeLz/TEK1314-2026-Kel-12-Kelas-B
-**Folder lokal:** `F:\apaelah\TUGAS\smt5\Cyber\Tugas PBL`
 
-> Catatan ralat: Panduan di bagian General class (id=81433, Strategi PBL tahun lalu dengan skenario 01–10) sudah dinyatakan OUTDATED dan TIDAK dipakai. Panduan yang benar dan dikerjakan adalah Panduan Minggu ke-4 / Pertemuan ke-4 (Design: topologi + IP plan, id=84570) dan Panduan Minggu ke-6 (id=87547), plus adaptasi skenario dari projek IoT kelompok.
+> Ralat: Panduan General (id=81433, skenario 01–10 tahun lalu) OUTDATED dan tidak dipakai. Yang dikerjakan: Panduan Minggu ke-4 / Pertemuan ke-4 Design (id=84570) + Panduan Minggu ke-6 (id=87547), dengan skenario diadaptasi dari projek IoT kelompok.
 
-## Anggota & Peran (mengikuti Panduan Minggu ke-4 v2: Lead / Blue / Red)
+## Anggota & Peran (Lead / Blue / Red — Panduan Minggu ke-4 v2)
 
-| Nama | NIM | Peran | Tanggung jawab |
-|------|-----|-------|----------------|
-| Muhamad Akhdan Ramadhan | J0404241102 | **Lead** | Finalisasi topologi + IP plan, upload GitHub, koordinasi OS target, LOGBOOK, baseline-report |
-| Thevan Erlangga | J0404241073 | **Blue Team (Defender/Network)** | Gambar topologi, skema IP + routing, penempatan Security Onion, hardening (UFW, user, patch) |
-| Fachri Abyasa Tarid | J0404241136 | **Red Team (Attacker)** | Riset port & celah, masukan OS target rentan, simulasi attack Fase 2 (ping, scan, MQTT/Web test, hanya ke IP kelompok sendiri) |
+| Nama | NIM | Peran |
+|------|-----|-------|
+| Muhamad Akhdan Ramadhan | J0404241102 | Lead — finalisasi topologi + IP, GitHub, LOGBOOK, baseline-report |
+| Thevan Erlangga | J0404241073 | Blue Team — topologi, IP, penempatan Onion, hardening |
+| Fachri Abyasa Tarid | J0404241136 | Red Team — riset port/celah, OS target, attack Fase 2 (hanya ke .5) |
 
-## Deskripsi Skenario IoT (dibuat kelompok, bukan perorangan)
+## 1. Deskripsi Skenario Proyek (gabungan desain awal + adaptasi IoT)
 
-Judul: **Smart Greenhouse Monitoring System**
+Simulasi lingkungan pentest terisolasi di `192.168.12.0/24`:
 
-Sistem greenhouse pintar untuk memantau suhu/kelembaban dan mengontrol pompa/relay secara remote:
+* **Penyerangan (Red Team):** Kali (`192.168.12.100`) reconnaissance + eksploitasi web/service rentan di server korban (`.5`) — Nmap, MQTT probe, HTTP traversal, SSH brute ringan.
+* **Pertahanan & Analisis (Blue Team):** Security Onion (`.200` + sniff promiscuous) dengan Suricata/Zeek + Sguil/Squert merekam real-time untuk deteksi + forensik.
+* **Adaptasi IoT (sesuai ralat):** 1 VM Target berperan sebagai **Server Alat IoT Smart Greenhouse** — ESP32 + DHT22 + relay disimulasikan via `mosquitto_pub` dari Attacker. Target menjalankan Mosquitto MQTT (`1883`, topik `greenhouse/#`) + Web Dashboard (`80`) + SSH (`22`). OS Target: **Ubuntu Server 22.04 CLI ringan** (opsi Metasploitable 2 tetap dicatat sebagai alternatif rentan jika RAM cukup — lihat `ip_plan.md`). Alur normal: ESP32-SIM → MQTT `.5:1883` → Dashboard `.5:80` → user, semua dimonitor Onion.
 
-* **Edge:** ESP32 + sensor DHT22 + relay pompa (simulasi, tidak perlu hardware fisik untuk PBL siber — cukup disimulasikan publish MQTT dari script/laptop).
-* **Server IoT (Target Node / Korban):** 1 VM Ubuntu Server 22.04 CLI ringan yang menjalankan:
-  * Mosquitto MQTT Broker port `1883` (topik `greenhouse/suhu`, `greenhouse/pompa/cmd`)
-  * Web Dashboard (Node-RED / Flask sederhana) port `80` (dan `443` jika sempat) untuk grafik + tombol kontrol pompa
-  * SSH port `22` untuk manajemen (akan di-harden)
-* **Alur data normal:** ESP32 --publish--> MQTT (`192.168.12.5:1883`) --subscribe--> Dashboard Web (`192.168.12.5:80`) dibaca user via browser dari segmen yang sama. Semua trafik dilewatkan / dimonitor oleh Security Onion.
-* **Fokus serangan Fase 2 (rencana Red Team):** Unauthorized Publish / Replay ke topik `greenhouse/pompa/cmd` (nyalakan pompa tanpa izin), MQTT brute-force / anon access jika salah config, Web Directory Traversal / brute-force login dashboard, dan SSH brute-force ringan. Semua HANYA ke `192.168.12.5`.
-* **Fokus defense (Blue Team):** UFW ketat hanya buka 22/80/1883 dari segmen sendiri, disable anon MQTT, non-root user, update patch, Security Onion merekam ICMP + MQTT + HTTP.
+## 2. Struktur Deliverables
 
-Kenapa ini dipilih: mencakup 2 permukaan serangan (Web + IoT MQTT) tapi tetap ringan di laptop (1 VM target CLI saja), dan sangat cocok untuk demo logging (ping + publish MQTT langsung kelihatan di Sguil/Squert).
+Design (Minggu 4):
+* [Dokumen Perencanaan IP (ip_plan.md)](docs/design/ip_plan.md)
+* [Diagram Topologi — versi tim (jpeg)](docs/design/topology.jpeg)
+* [Diagram Topologi — versi generate + penjelasan (png/md)](docs/design/topology.png) + [topology.md](docs/design/topology.md)
 
-## Topologi Logis (ringkas)
+Baseline Fase 1 (Minggu 5-7):
+* [Baseline Report (Before Attack)](docs/phase-1-baseline/baseline-report.md)
+* [Bukti logging & hardening](docs/phase-1-baseline/assets/README.md)
+* [LOGBOOK](LOGBOOK.md)
+* [Skrip hardening + verifikasi](scripts/README.md)
 
-```
-[ESP32 Sim] --MQTT:1883--> [SRV-IOT-KEL12G 192.168.12.5 Ubuntu+Mosquitto+Web] <--monitor-- [SOC-KEL12 192.168.12.200 Security Onion]
-        |                                                                                          ^
-        +---------------------- HTTP:80 dashboard --------------------------------------------------+
-[ATTACKER-KEL12 192.168.12.100 Kali/CyberOps] --ping/scan/MQTT-test--> [Target .5] (span/mirror ke .200)
-```
+Fase lanjutan (template):
+* `docs/phase-2-va/` — VA Report (Minggu 9-11)
+* `docs/phase-3-incident/` — Incident Response NIST (Minggu 12-15)
 
-* File gambar: `docs/design/topology.png`
-* Detail IP: `docs/design/ip_plan.md`
-* Laporan hardening + logging: `docs/phase-1-baseline/baseline-report.md`
-* Bukti screenshot: `docs/phase-1-baseline/assets/`
+Bukti VM fisik:
+* `docs/Laptop Backup/` + `docs/Laptop Utama/` — screenshot CyberOps VM & Security Onion jalan di laptop anggota.
 
-Semua VM pakai Host-Only / Internal Network yang sama agar tidak bocor ke Wi-Fi kampus. Jangan serang IP di luar `192.168.12.0/24`.
+## 3. Pembagian Peran Tim (detail)
 
-## Struktur Repo (gabungan Panduan Design Minggu 4 + Demo Fase 1 Minggu 7)
+* **Project Lead:** koordinasi desain, tinjauan arsitektur, manajemen repo, pastikan `topology` + `ip_plan` final disepakati Red & Blue.
+* **Red Team:** riset celah (port 80, 21, 22, 3306 versi awal + tambahan 1883 MQTT untuk IoT), masukan OS target rentan, serahkan daftar port ke Blue.
+* **Blue Team:** model topologi logis (Attacker, Target IoT, Monitoring), segmentasi IP `192.168.12.0/24`, penempatan sensor NIDS agar pantau seluruh segmen, hardening UFW/user/patch.
 
-```
-/docs
-  /design/                  <- Output Minggu 4: topology.png + ip_plan.md
-  /phase-1-baseline/        <- Output Minggu 7: baseline-report.md + /assets/
-  /phase-2-va/              <- Template Fase 2 (akan diisi Minggu 9-11)
-  /phase-3-incident/        <- Template Fase 3 (akan diisi Minggu 12-15)
-/scripts/                   <- hardening-iot-server.sh, verify-logging.sh
-LOGBOOK.md
-README.md
-```
+## 4. Demo Minggu 7 (10-15 menit)
 
-## Cara Demo Minggu 7 (10-15 menit)
+1. Topologi: tunjukkan `topology.jpeg/png`, jelaskan ESP32 → MQTT → Web + posisi Onion span.
+2. Hardening: `cat /etc/ufw/user.rules`, `sudo ufw status verbose`, `cat /etc/mosquitto/mosquitto.conf`.
+3. Logging live: dari `.100` → `ping 192.168.12.5` + `mosquitto_pub`, lihat di Sguil (timestamp, src `.100`, dst `.5`).
+4. Q&A: kenapa Ubuntu CLI (ringan), kenapa buka 22/80/1883 saja, kenapa matikan anon MQTT.
 
-1. **Topologi Review (3 mnt):** tunjukkan `topology.png`, jelaskan alur ESP32 -> MQTT -> Dashboard, dan posisi Security Onion sebagai passive monitor.
-2. **Hardening Walkthrough (5 mnt):** `cat /etc/ufw/user.rules`, `sudo ufw status verbose`, `cat /etc/mosquitto/mosquitto.conf | grep -v ^#`, `id iotadmin`, tunjukkan SSH hanya key/non-root.
-3. **Logging Verification (5 mnt):** dari Attacker `ping 192.168.12.5` + `mosquitto_pub -h 192.168.12.5 -t greenhouse/suhu -m "test"`, lalu tunjukkan live di Sguil/Squert: timestamp, src `192.168.12.100`, dst `192.168.12.5`, proto ICMP/MQTT.
-4. **Q&A:** kenapa pilih Ubuntu CLI (ringan), kenapa hanya buka 22/80/1883, kenapa matikan anonymous MQTT.
-
-## Checklist Sebelum Demo
-
-* [ ] 3 VM running, IP statis benar, bisa saling ping
-* [ ] `topology.png` + `ip_plan.md` sudah di-push
-* [ ] UFW aktif, rule minimal
-* [ ] Mosquitto tanpa anonymous, user + password
-* [ ] Security Onion menangkap ping + MQTT publish (screenshot di `assets/`)
-* [ ] LOGBOOK.md update Minggu 4-7
-* [ ] Hostname: `SRV-IOT-KEL12-G`, `ATTACKER-KEL12`, `SOC-KEL12`
+Semua attack HANYA ke `192.168.12.5`. Jangan ke Wi-Fi kampus / IP kelompok lain. Mode VirtualBox: Host-Only / Internal `kel12-net`, bukan Bridged.
