@@ -21,7 +21,7 @@ Anggota:
 * Blue Team gambar topologi 3 node (attacker, target, monitoring).
 * Tentukan subnet 192.168.12.0/24. Target .5, attacker .100, Onion .200.
 * Lead upload `docs/design/topology.jpeg` dan `docs/design/ip_plan.md`.
-* OS target: Ubuntu Server CLI (ringan). Cadangan Metasploitable 2.
+* OS target: Arch Linux Security Workstation (VM yang dikasih lab).
 
 ## Minggu 5 (26 Sep 2026)
 
@@ -31,8 +31,14 @@ Anggota:
 * Onion: IP 192.168.12.200 di eth0 (diset arp on karena NOARP), hostname SOC-KEL12-B. User analyst, password cyberops.
 * Tes ping attacker ke target dan ke Onion: 0% loss. Bukti di `docs/phase-1-baseline/assets/ping-attacker.log`.
 * tcpdump di Onion menangkap ICMP (12 packets, 0 dropped). Bukti `assets/tcpdump-icmp.png`.
-* Sguil dibuka (user analyst, sensor seconion-import) tapi RealTime Events kosong. Dicek: proses snort IDS tidak jalan, container so-suricata/so-zeek tidak ada (hanya pipeline so-elastic/kibana/logstash yang Up). Jadi dipakai Plan B sesuai panduan: capture Wireshark di attacker (45 paket ICMP/ARP antar .100 dan .5). Bukti `assets/wireshark-icmp.png` + `assets/kel12-demo.pcap`.
-* Kurang: hardening target (Minggu 6).
+* Sguil dibuka tapi RealTime Events kosong. Perbaikan: IDS_ENGINE_ENABLED=no
+  diganti yes, NIC monitoring diset promiscuous allow-all, sensor direstart
+  resmi. Hasil: DB sguild mencatat ping (GPL ICMP_INFO PING) dan SSH scan
+  (ET SCAN Potential SSH Scan) dari .100 ke .5.
+  Bukti `assets/sguil-db-events.log`.
+* Capture Wireshark di attacker (45 paket). Bukti `assets/wireshark-icmp.png`
+  + `assets/kel12-demo.pcap`.
+* Kurang: screenshot jendela Sguil (manual), hardening target (Minggu 6).
 
 ## Minggu 6 (26 Sep 2026)
 
