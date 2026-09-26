@@ -23,11 +23,15 @@ Anggota:
 * Lead upload `docs/design/topology.jpeg` dan `docs/design/ip_plan.md`.
 * OS target: Ubuntu Server CLI (ringan). Cadangan Metasploitable 2.
 
-## Minggu 5 (rencana)
+## Minggu 5 (26 Sep 2026)
 
-* Set IP statis, tes ping antar VM.
-* Pastikan Security Onion merekam ping di Sguil.
-* Simpan screenshot ke `docs/phase-1-baseline/assets/`.
+* Host adapter diset 192.168.12.1. Semua VM pindah ke Host-Only.
+* Attacker (LabVM): IP 192.168.12.100, hostname ATTACKER-KEL12-B. User analyst, password cyberops.
+* Target (Workstation): password sec_admin direset ke kel12admin via GRUB init=/bin/bash. Display diperbaiki (VMSVGA ke VBoxVGA, VRAM 64). IP 192.168.12.5, hostname SRV-IOT-KEL12-B.
+* Onion: IP 192.168.12.200 di eth0 (diset arp on karena NOARP), hostname SOC-KEL12-B. User analyst, password cyberops.
+* Tes ping attacker ke target dan ke Onion: 0% loss. Bukti di `docs/phase-1-baseline/assets/ping-attacker.log`.
+* tcpdump di Onion menangkap ICMP (12 packets, 0 dropped). Bukti `assets/tcpdump-icmp.png`.
+* Kurang: screenshot Sguil (belum dibuka), hardening target (Minggu 6).
 
 ## Minggu 6 (rencana)
 
