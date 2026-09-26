@@ -38,7 +38,8 @@ Anggota:
   Bukti `assets/sguil-db-events.log`.
 * Capture Wireshark di attacker (45 paket). Bukti `assets/wireshark-icmp.png`
   + `assets/kel12-demo.pcap`.
-* Kurang: screenshot jendela Sguil (manual), hardening target (Minggu 6).
+* Screenshot jendela Sguil (sensor seconion-import, baris .100 ke .5).
+  Bukti `assets/sguil-alert.png`.
 
 ## Minggu 6 (26 Sep 2026)
 

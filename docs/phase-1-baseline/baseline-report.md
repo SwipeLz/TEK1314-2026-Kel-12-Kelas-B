@@ -44,6 +44,8 @@ Hasil uji (attacker .100 ke target .5):
 * 12x koneksi SSH ke port 22: tercatat sebagai ET SCAN Potential SSH Scan
   (+ OUTBOUND), lengkap dengan source port.
 * Bukti database: `assets/sguil-db-events.log` (timestamp, src, dst, signature).
+* Bukti jendela Sguil: `assets/sguil-alert.png` (pilih sensor seconion-import,
+  terlihat baris 192.168.12.100 ke .5).
 
 Bukti lain di `assets/`:
 * `ping-attacker.log` (ping 0% loss)
@@ -51,8 +53,6 @@ Bukti lain di `assets/`:
 * `wireshark-icmp.png` + `kel12-demo.pcap` (45 paket, Plan B)
 * `target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`
 * `hardening-services.png`, `hardening-firewall.png`
-
-Kurang: screenshot jendela Sguil (diambil manual saat demo).
 
 
 ## 4. Demo Minggu 7
