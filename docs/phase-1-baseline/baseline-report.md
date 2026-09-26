@@ -32,19 +32,28 @@ Identitas:
 
 ## 3. Logging Check Minggu 5
 
-Sguil dibuka (sensor seconion-import) tapi RealTime Events kosong karena proses IDS snort/suricata tidak ter-provision di VM ini (hanya pipeline elastic/kibana/logstash yang Up). Dipakai Plan B sesuai panduan (Wireshark + log manual).
+Awalnya Sguil kosong. Setelah diselidiki, dua penyebabnya: IDS engine sensor
+dimatikan di config (IDS_ENGINE_ENABLED=no) dan NIC monitoring mode promiscuous
+deny sehingga tidak melihat trafik antar VM. Keduanya sudah diperbaiki:
+IDS_ENGINE_ENABLED=yes + promiscuous allow-all + sensor direstart resmi
+pakai nsm_sensor_ps-start. Rantai deteksi sekarang jalan:
+snort (eth0) -> unified2 -> barnyard2 -> sguild -> MySQL (sguildb.event).
 
-Cara uji yang dilakukan:
-* Dari attacker: `ping 192.168.12.5` dan `nmap -sS` (0% loss, port 22 open).
-* tcpdump di Onion menangkap ICMP (12 packets, 0 dropped).
-* Capture Wireshark di attacker: 45 paket (ICMP .100 ke .5, ARP).
+Hasil uji (attacker .100 ke target .5):
+* 10x ping: tercatat sebagai GPL ICMP_INFO PING *NIX.
+* 12x koneksi SSH ke port 22: tercatat sebagai ET SCAN Potential SSH Scan
+  (+ OUTBOUND), lengkap dengan source port.
+* Bukti database: `assets/sguil-db-events.log` (timestamp, src, dst, signature).
 
-Bukti di `assets/`:
-* `ping-attacker.log`
-* `tcpdump-icmp.png`
-* `wireshark-icmp.png` + `kel12-demo.pcap`
+Bukti lain di `assets/`:
+* `ping-attacker.log` (ping 0% loss)
+* `tcpdump-icmp.png` (capture live di Onion)
+* `wireshark-icmp.png` + `kel12-demo.pcap` (45 paket, Plan B)
 * `target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`
 * `hardening-services.png`, `hardening-firewall.png`
+
+Kurang: screenshot jendela Sguil (diambil manual saat demo).
+
 
 ## 4. Demo Minggu 7
 
