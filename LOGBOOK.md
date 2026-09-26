@@ -31,7 +31,8 @@ Anggota:
 * Onion: IP 192.168.12.200 di eth0 (diset arp on karena NOARP), hostname SOC-KEL12-B. User analyst, password cyberops.
 * Tes ping attacker ke target dan ke Onion: 0% loss. Bukti di `docs/phase-1-baseline/assets/ping-attacker.log`.
 * tcpdump di Onion menangkap ICMP (12 packets, 0 dropped). Bukti `assets/tcpdump-icmp.png`.
-* Kurang: screenshot Sguil (belum dibuka), hardening target (Minggu 6).
+* Sguil dibuka (user analyst, sensor seconion-import) tapi RealTime Events kosong. Dicek: proses snort IDS tidak jalan, container so-suricata/so-zeek tidak ada (hanya pipeline so-elastic/kibana/logstash yang Up). Jadi dipakai Plan B sesuai panduan: capture Wireshark di attacker (45 paket ICMP/ARP antar .100 dan .5). Bukti `assets/wireshark-icmp.png` + `assets/kel12-demo.pcap`.
+* Kurang: hardening target (Minggu 6).
 
 ## Minggu 6 (26 Sep 2026)
 
