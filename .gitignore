@@ -1,3 +1,4 @@
 *.pcap
 !docs/phase-1-baseline/assets/kel12-demo.pcap
 __pycache__/
+docs/phase-1-baseline/demo-script-minggu7.md
