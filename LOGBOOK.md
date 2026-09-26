@@ -33,10 +33,13 @@ Anggota:
 * tcpdump di Onion menangkap ICMP (12 packets, 0 dropped). Bukti `assets/tcpdump-icmp.png`.
 * Kurang: screenshot Sguil (belum dibuka), hardening target (Minggu 6).
 
-## Minggu 6 (rencana)
+## Minggu 6 (26 Sep 2026)
 
-* Hardening target SRV-IOT-KEL12-B: UFW, user non-root, update patch, matikan service tidak perlu, MQTT tanpa anonymous.
-* Simpan bukti `ufw status` dan config.
+* Target SRV-IOT-KEL12-B: matikan service berbahaya (vsftpd, telnet.socket, pox, ovs-vswitchd). Sisa sshd, networkd, lightdm.
+* Firewall iptables: default INPUT DROP, buka ICMP + TCP 22/80/1883 hanya dari 192.168.12.0/24. Ping attacker ke target tetap 0% loss.
+* User sec_admin (uid 1001, non-root). IP dibuat statis permanen via /etc/systemd/network/10-static.network (192.168.12.5/24).
+* Patch: segmen isolasi tanpa internet, jadi pacman -Syu tidak jalan. Dicatat sebagai keterbatasan.
+* Bukti: `assets/hardening-services.png`, `assets/hardening-firewall.png`, `assets/target-ip-statis.png`.
 
 ## Minggu 7 (rencana)
 
