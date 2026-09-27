@@ -11,10 +11,14 @@ Anggota:
 * Install VirtualBox, download ISO Ubuntu, Kali, Security Onion.
 * Buat repo GitHub. Repo jadi tempat single source of truth sampai demo.
 
+Semua bukti masuk repo.
+
 ## Minggu 3
 
 * Latihan dasar Linux.
 * Red team cek port yang perlu dibuka (80, 21, 22, 1883). Port ini yang nanti dipakai di skenario IoT.
+
+Latihannya belum dalam, baru perintah file, user, dan network biar pas megang VM target dan sensor tidak kagok, karena kalau dasarnya goyang, troubleshooting IDS yang lumayan berlapis itu bakal makan waktu dua kali lipat.
 
 ## Minggu 4
 
@@ -22,6 +26,8 @@ Anggota:
 * Tentukan subnet 192.168.12.0/24. Target .5, attacker .100, Onion .200.
 * Lead upload `docs/design/topology.jpeg` dan `docs/design/ip_plan.md`.
 * OS target: Arch Linux Security Workstation (VM yang dikasih lab). Beda dari rencana awal di `ip_plan.md`, tapi peran tetap sama sebagai server IoT.
+
+Beda OS, peran sama.
 
 ## Minggu 5 (26 Sep 2026)
 
@@ -37,6 +43,8 @@ Anggota:
 
 Sempat bingung karena tcpdump dapat paket tapi Sguil kosong. Ternyata beda lapis: tcpdump lihat interface, Sguil nunggu alur sensor sampai DB. Begitu alur itu dibetulkan, event langsung masuk.
 
+Pelajaran minggu ini sederhana tapi nempel lama, yaitu capture mentah dan event sensor itu dua lapis yang beda sehingga tcpdump bisa penuh padahal Sguil tetap kosong, dan begitu engine dinyalakan plus interface dibuka dengan mode yang benar, rantai dari snort sampai database langsung hidup dan semua jejak attacker tercatat rapi tanpa perlu ngulang pengujian dari awal, dan pola pikir lapis ini yang kami bawa ke hardening minggu berikutnya.
+
 ## Minggu 6 (26 Sep 2026)
 
 * Target SRV-IOT-KEL12-B: matikan service berbahaya (vsftpd, telnet.socket, pox, ovs-vswitchd). Sisa sshd, networkd, lightdm. Cek ulang pakai `systemctl list-unit-files --state=enabled`.
@@ -44,6 +52,8 @@ Sempat bingung karena tcpdump dapat paket tapi Sguil kosong. Ternyata beda lapis
 * User sec_admin (uid 1001, non-root). IP dibuat statis permanen via /etc/systemd/network/10-static.network (192.168.12.5/24).
 * Patch: segmen isolasi tanpa internet, jadi pacman -Syu tidak jalan. Dicatat sebagai keterbatasan.
 * Bukti: `assets/hardening-services.png`, `assets/hardening-firewall.png`, `assets/target-ip-statis.png`.
+
+Rapi dan gampang dicek.
 
 ## Minggu 7 (rencana)
 
