@@ -2,6 +2,8 @@
 
 Subnet 192.168.12.0/24. Kondisi before attack. Sistem sudah di-hardening sebelum diserang.
 
+Semua bisa dicek ulang.
+
 ## 1. Aset
 
 | Hostname | IP | OS | Service |
@@ -13,6 +15,8 @@ Subnet 192.168.12.0/24. Kondisi before attack. Sistem sudah di-hardening sebelum
 Detail IP ada di `../design/ip_plan.md`. Gambar ada di `../design/topology.jpeg`.
 
 Catatan soal OS: `ip_plan.md` nulis rencana Ubuntu Server 22.04 atau Metasploitable 2. Yang kepakai di lab ternyata Arch Linux Security Workstation. Service dan port yang dibuka menyesuaikan kondisi itu.
+
+Fungsinya tetap sama.
 
 ## 2. Hardening
 
@@ -39,7 +43,7 @@ Identitas:
 
 Awalnya Sguil kosong. Kami kira sensor rusak.
 
-Ternyata dua hal. IDS engine sensor mati di config (IDS_ENGINE_ENABLED=no). Dan NIC monitoring mode promiscuous deny, jadi tidak melihat trafik antar VM. Setelah dibetulkan (IDS_ENGINE_ENABLED=yes + promiscuous allow-all + sensor direstart resmi pakai nsm_sensor_ps-start), rantai deteksi jalan:
+Ternyata dua hal. IDS engine sensor mati di config (IDS_ENGINE_ENABLED=no). Dan NIC monitoring mode promiscuous deny, jadi tidak melihat trafik antar VM. Setelah dibetulkan (IDS_ENGINE_ENABLED=yes + promiscuous allow-all + sensor direstart resmi pakai nsm_sensor_ps-start), rantai deteksi jalan. Sebelum diperbaiki, Sguil cuma pajangan karena tidak ada satu pun event yang nyangkut, dan setelah dua setelan itu dibetulkan plus sensor direstart dengan prosedur resmi, semua pengujian yang tadinya sepi langsung tercatat satu per satu, dan sejak saat itu semua pengujian tercatat rapi tanpa jeda sama sekali.
 
 snort (eth0) -> unified2 -> barnyard2 -> sguild -> MySQL (sguildb.event).
 
@@ -64,3 +68,5 @@ Bukti lain di `assets/`:
 2. Tunjukkan file hardening.
 3. Tunjukkan live ping tercatat di Onion.
 4. Q&A alasan pilih hardening tersebut. Intinya: tutup yang tidak perlu, buka seperlunya, catat semua.
+
+Demo diurut dari topologi ke hardening ke live logging supaya penonton yang belum pernah buka Security Onion tetap bisa ngikutin, karena tiap langkah nunjukin layar yang sama dengan yang ada di screenshot assets, dan sesi tanya jawab di akhir khusus ngebahas alasan tiap aturan dibuka atau ditutup. Urutan ini juga ngebantu kami sendiri, karena tiap klaim di laporan ini kepakai langsung sebagai bahan omongan tanpa perlu nyiapin slide tambahan.

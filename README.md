@@ -19,6 +19,8 @@ Kami jalan di jaringan terisolasi 192.168.12.0/24. Satu VM target diposisikan se
 
 Fokusnya sempit. Cuma satu target, jadi alur serang dan catatannya gampang dilacak.
 
+Kalau ada yang aneh, langsung kelihatan.
+
 ## 2. File desain (minggu 4)
 
 * [ip_plan.md](docs/design/ip_plan.md)
@@ -35,6 +37,8 @@ Ini acuan IP dan topologi yang dipakai sampai fase baseline.
 
 Struktur folder ikut panduan: `/docs/phase-1-baseline`, `/docs/phase-2-va`, `/docs/phase-3-incident`, `/scripts`, `LOGBOOK.md`, `README.md`.
 
+Alurnya nyambung dari desain ke baseline. Desain minggu 4 mengunci alamat target, attacker, dan monitoring di satu subnet terisolasi supaya tidak ada trafik liar yang masuk atau keluar selama pengujian, kemudian baseline minggu 5 sampai 7 membuktikan konektivitas lewat ping tanpa loss dari attacker ke target dan ke Onion, hardening lewat iptables default INPUT DROP yang cuma buka ICMP dan beberapa port TCP dari segmen sendiri, dan logging lewat Sguil yang mencatat ping serta scan SSH dari attacker ke target. Pas demo minggu 7 tinggal nunjukin ulang apa yang sudah dicatat.
+
 ## 4. Pembagian tugas
 
 * Lead: pastikan topologi dan IP final, upload ke GitHub.
@@ -42,6 +46,8 @@ Struktur folder ikut panduan: `/docs/phase-1-baseline`, `/docs/phase-2-va`, `/do
 * Blue team: gambar topologi, susun IP, atur penempatan Security Onion, hardening.
 
 Tugas dibagi biar demo minggu 7 tidak saling tunggu.
+
+Catat semua. Jangan keluar segmen.
 
 ## 5. Demo minggu 7
 
@@ -51,3 +57,5 @@ Tugas dibagi biar demo minggu 7 tidak saling tunggu.
 4. Q&A.
 
 Serangan hanya ke 192.168.12.5. Tidak ke jaringan kampus atau kelompok lain.
+
+Itu aturan mainnya.
