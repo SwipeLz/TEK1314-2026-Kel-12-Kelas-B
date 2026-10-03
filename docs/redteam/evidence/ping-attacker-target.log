@@ -1,0 +1,10 @@
+# Ping attacker (.100) ke target (.5) — 3 Okt 2026, SESUDAH lab pulih
+# Perintah di LabVM: ping -c 3 -W 2 192.168.12.5
+# Hasil: 3 packets transmitted, 3 received, 0% packet loss, time 2003ms
+#   rtt min/avg/max/mdev = 0.847/1.202/1.740/0.386 ms
+#
+# Perintah: ping -c 5 -W 2 192.168.12.5
+# Hasil: 5 packets transmitted, 5 received, 0% packet loss, time 4062ms
+#
+# Ping ini tercatat di Sguil sebagai GPL ICMP_INFO PING *NIX (lihat screenshot
+# Sguil terbaru di docs/phase-1-baseline/assets/).

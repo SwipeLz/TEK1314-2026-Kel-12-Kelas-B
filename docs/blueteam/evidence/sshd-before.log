@@ -1,0 +1,11 @@
+# sshd_config efektif SEBELUM hardening (3 Okt 2026)
+# Perintah: sshd -T | grep (user sec_admin, target 192.168.12.5)
+
+port 22
+maxauthtries 6
+permitrootlogin without-password
+pubkeyauthentication yes
+passwordauthentication yes
+permitemptypasswords no
+banner none
+loglevel INFO
