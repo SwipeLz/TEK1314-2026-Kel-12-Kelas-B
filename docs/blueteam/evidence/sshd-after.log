@@ -1,0 +1,11 @@
+# sshd_config efektif SESUDAH hardening (3 Okt 2026)
+# Perubahan: PermitRootLogin no, AllowUsers sec_admin, MaxAuthTries 3,
+# LoginGraceTime 60, LogLevel VERBOSE, Banner aktif. Reload + login ulang OK.
+
+port 22
+logingracetime 60
+maxauthtries 3
+permitrootlogin no
+allowusers sec_admin
+banner /etc/issue.net
+loglevel VERBOSE

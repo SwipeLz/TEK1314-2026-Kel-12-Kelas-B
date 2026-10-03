@@ -1,0 +1,8 @@
+# Status akun target SESUDAH hardening (3 Okt 2026)
+# analyst dikunci (passwd -l). Tidak ada password kosong.
+# root tetap berpassword (akses konsol darurat), tapi login SSH root ditolak
+# (PermitRootLogin no — diuji: Authentication failed).
+
+root HAS-PW
+analyst LOCKED
+sec_admin HAS-PW

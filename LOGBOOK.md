@@ -59,3 +59,34 @@ Rapi dan gampang dicek.
 
 * Finalkan baseline-report.md.
 * Siapkan demo: topologi, hardening, live logging. Urutannya itu, biar penonton ngikutin alur dari desain sampai bukti.
+
+## Minggu 8-9 (persiapan checkpoint Fase 2)
+
+Skenario resmi ditetapkan: **No 10 — IoT Protocol Guardian**. Proyek IoT asli
+kelompok (penyemprotan sapi otomatis: ESP32 + DS18B20 → Firebase Realtime
+Database → relay → solenoid valve) dideklarasikan di
+`docs/presentation-minggu9/tech_stack_declaration.md`. Data kandang asli tidak
+masuk lab, semua dummy.
+
+* LabVM nyasar ke 192.168.18.6 (DHCP). Dikembalikan statis ke 192.168.12.100
+  via netplan (`docs/blueteam/evidence/netplan-attacker-before.log` dan
+  `netplan-attacker-after.log`). Ping .100 ke .5: 0% loss lagi.
+* Temuan: aturan iptables Fase 1 hilang (tabel kosong, policy ACCEPT).
+  Diterapkan ulang + disimpan ke `/etc/iptables/iptables.rules` + service
+  enabled. Bukti `docs/blueteam/evidence/iptables-before.log` dan
+  `iptables-after.log`.
+* SSH target dikeraskan: `PermitRootLogin no`, `AllowUsers sec_admin`,
+  `MaxAuthTries 3`, `LoginGraceTime 60`, `LogLevel VERBOSE`, banner
+  peringatan. Login root via SSH sekarang ditolak (diuji). Bukti
+  `docs/blueteam/evidence/sshd-before.log` dan `sshd-after.log`.
+* Akun `analyst` di target dikunci, tidak ada password kosong
+  (`docs/blueteam/evidence/users-after.log`). journald dibuat persistent
+  (`docs/blueteam/evidence/journal-after.log`).
+* Recon red team: `nmap -sS -sV -O` ke .5 dari LabVM (6 detik). Hasil: 22 open
+  (OpenSSH 8.4), 80/1883 closed, sisanya filtered. Bukti
+  `docs/redteam/evidence/nmap-target-after.log`.
+* Checklist 9 kontrol (A/B/C) di `docs/blueteam/hardening_checklist.md`.
+  Attack plan 3 skenario di `docs/redteam/attack_plan.md`. Kerangka purple
+  loop di `docs/purple-team-log.md` (diisi penuh Minggu 10-11).
+* Keterbatasan tetap: segmen tanpa internet, jadi pacman, fail2ban, dan
+  Mosquitto belum terinstal. Ditulis apa adanya di checklist.
