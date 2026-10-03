@@ -4,15 +4,16 @@ Tiap skenario attack plan wajib lewat 5 tahap. Aturan main: yang tercatat
 berhasil di tahap 1 harus berakhir gagal di tahap 5. Diisi bertahap Minggu
 10–11.
 
-Status per 3 Okt 2026: skenario 1 tahap 1 sebagian jalan (scan nmap sudah
-dieksekusi, bukti di `docs/redteam/evidence/`). Tahap lainnya belum mulai.
+Status per 3 Okt 2026: skenario 1 tahap 1–2 selesai (scan terekam dan
+terdeteksi di Sguil). Tahap 3–5 skenario 1 plus seluruh skenario 2–3 jalan
+Minggu 10–11.
 
 ## Skenario 1 — Recon nmap ke 192.168.12.5
 
 | Tahap | Red team | Blue team | Bukti |
 | :--- | :--- | :--- | :--- |
 | 1. Serang | Scan `-sS -sV -O` ke target | Amati Sguil | `docs/redteam/evidence/nmap-target-after.log` |
-| 2. Deteksi | — | Identifikasi alert (atau catat bila tidak muncul) | Screenshot Sguil / grep log |
+| 2. Deteksi | — | Alert muncul: `ET SCAN Suspicious inbound` (port 3306) + `ET SCAN NMAP OS Detection`, jam 10:47 | `docs/phase-1-baseline/assets/sguil-fresh-2026-10-03.png` |
 | 3. Analisis | Jelaskan teknik scan | Root cause: kenapa lolos/terdeteksi, kontrol apa yang kurang | Catatan di Incident Report |
 | 4. Respons | — | Kontrol tambahan (alert rule / firewall) | Diff config |
 | 5. Verifikasi | Ulangi scan yang sama | Konfirmasi hasil + alert | Screenshot scan ulang |
