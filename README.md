@@ -3,6 +3,10 @@
 **Mata Kuliah:** TEK1314 - Keamanan Siber
 **Program Studi:** Teknologi Rekayasa Komputer
 **Subnet:** 192.168.12.0/24
+**Skenario:** No 10 — IoT Protocol Guardian (MQTT replay & publish tanpa izin).
+Replika backend sistem penyemprotan sapi otomatis (ESP32 + DS18B20 → Firebase
+Realtime Database → relay → solenoid valve). Detail di
+[tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md).
 
 ## Anggota
 

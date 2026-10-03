@@ -1,0 +1,5 @@
+# journald SESUDAH hardening (3 Okt 2026)
+# Storage=persistent, direktori /var/log/journal dibuat, service direstart.
+
+Storage=persistent
+Archived and active journals take up 592.2M in the file system.

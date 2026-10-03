@@ -1,0 +1,18 @@
+Starting Nmap 7.80 ( https://nmap.org ) at 2026-10-03 10:47 UTC
+Nmap scan report for 192.168.12.5
+Host is up (0.00075s latency).
+
+PORT     STATE    SERVICE VERSION
+21/tcp   filtered ftp
+22/tcp   open     ssh     OpenSSH 8.4 (protocol 2.0)
+23/tcp   filtered telnet
+80/tcp   closed   http
+1883/tcp closed   mqtt
+3306/tcp filtered mysql
+MAC Address: 08:00:27:4E:A6:F8 (Oracle VirtualBox virtual NIC)
+Aggressive OS guesses: Linux 2.6.32 (96%), Linux 3.2 - 4.9 (96%), Linux 2.6.32 - 3.10 (95%), Linux 3.4 - 3.10 (94%), Linux 3.1 (93%), Linux 3.2 (93%), Synology DiskStation Manager 5.2-5644 (93%), Netgear RAIDiator 4.2.28 (92%), AXIS 210A or 211 Network Camera (Linux 2.6.17) (92%), Linux 2.6.32 - 2.6.35 (92%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 6.34 seconds
