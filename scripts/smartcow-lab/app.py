@@ -9,6 +9,7 @@ tidak lagi ada di dalam berkas ini; nilainya diambil dari berkas .env yang
 hanya bisa dibaca akun aplikasi.
 """
 import json
+import re
 import os
 import threading
 from datetime import datetime, timedelta, timezone
@@ -168,7 +169,9 @@ class Handler(BaseHTTPRequestHandler):
     sys_version = ""
 
     def log_message(self, fmt, *args):
-        log_event("http", "%s %s" % (self.address_string(), fmt % args))
+        line = fmt % args
+        line = re.sub(r"auth=[^&\s\"]+", "auth=REDACTED", line)
+        log_event("http", "%s %s" % (self.address_string(), line))
 
     def _json(self, code, body):
         raw = json.dumps(body, indent=2, sort_keys=True).encode("utf-8")
