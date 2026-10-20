@@ -34,17 +34,41 @@ menyentuh Firebase produksi atau perangkat di kandang mitra.
 
 ## Mulai dari mana
 
-Kalau baru pertama kali buka repo ini, urutannya begini.
+Bagi pembaca yang pertama kali membuka repository ini, urutan bacaan yang
+dianjurkan adalah sebagai berikut.
 
-1. [ip_plan.md](docs/design/ip_plan.md) dulu, biar tahu siapa Target, siapa
+1. [ip_plan.md](docs/design/ip_plan.md) terlebih dahulu, agar mengetahui siapa Target, siapa
    penyerang, dan siapa yang mengawasi.
 2. Lanjut [tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md)
    untuk tahu stack proyek IoT asli dan apa yang ditiru di lab.
-3. Terus [hardening_checklist.md](docs/blueteam/hardening_checklist.md) kalau mau
+3. Terus [hardening_checklist.md](docs/blueteam/hardening_checklist.md) apabila mau
    lihat sembilan kontrol apa yang dipasang, lengkap dengan buktinya.
 4. Terakhir [attack_plan.md](docs/redteam/attack_plan.md) dan
    [purple-team-log.md](docs/purple-team-log.md) untuk sisi penyerang.
 
+## Ringkas singkat
+
+Satu lab berisi tiga VM.
+Sembilan kontrol hardening terpasang.
+Tiga skenario serangan dieksekusi.
+Seluruh bukti tersimpan di repository.
+Tiga fase, tiga folder.
+Dokumen selalu dapat diperiksa ulang.
+
+## Ruang lingkup repository
+
+Repository ini mengikuti struktur folder yang diminta Panduan PBL Minggu 9 secara
+persis, yaitu `docs/design`, `docs/presentation-minggu9`, `docs/blueteam`,
+`docs/redteam`, dan `docs/purple-team-log.md`. Materi pembelajaran yang di luar
+struktur tersebut, seperti catatan konfigurasi lengkap, simulasi insiden, dan
+runbook gladi bersih, disimpan terpisah di folder belajar PBL kelompok dan belum
+diunggah ke repository publik.
+
+Repository ini disusun agar setiap klaim pada slide presentasi dapat ditelusuri
+menuju berkas bukti yang menyertainya, sehingga pemeriksaan oleh dosen maupun
+asdos dapat dilakukan tanpa perlu menjalankan ulang lingkungan lab, dan seluruh
+angka yang dicantumkan dalam dokumen diambil langsung dari output perintah pada
+ketiga VM, bukan dari estimasi.
 ## Akses lab
 
 | Peran | Host | User | Cara masuk |
