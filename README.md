@@ -32,6 +32,19 @@ menyentuh Firebase produksi atau perangkat di kandang mitra.
 | [docs/redteam/evidence/](docs/redteam/evidence/) | Hasil eksekusi serangan |
 | [docs/purple-team-log.md](docs/purple-team-log.md) | Lima tahap Purple Team Loop per skenario |
 
+## Mulai dari mana
+
+Kalau baru pertama kali buka repo ini, urutannya begini.
+
+1. [ip_plan.md](docs/design/ip_plan.md) dulu, biar tahu siapa Target, siapa
+   penyerang, dan siapa yang mengawasi.
+2. Lanjut [tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md)
+   untuk tahu stack proyek IoT asli dan apa yang ditiru di lab.
+3. Terus [hardening_checklist.md](docs/blueteam/hardening_checklist.md) kalau mau
+   lihat sembilan kontrol apa yang dipasang, lengkap dengan buktinya.
+4. Terakhir [attack_plan.md](docs/redteam/attack_plan.md) dan
+   [purple-team-log.md](docs/purple-team-log.md) untuk sisi penyerang.
+
 ## Akses lab
 
 | Peran | Host | User | Cara masuk |
