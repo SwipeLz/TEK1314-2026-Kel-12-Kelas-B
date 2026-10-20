@@ -147,6 +147,6 @@ kontrol. Status tersebut tidak menyatakan sistem aman untuk penggunaan produksi.
 - [Rencana serangan Red Team](../redteam/attack_plan.md)
 - [Log Purple Team Loop](../purple-team-log.md)
 - [Skema alokasi IP](../design/ip_plan.md)
-- [Baseline Fase 1](../phase-1-baseline/baseline-report.md)
-- [Sumber replika backend](../../scripts/smartcow-lab/README.md)
+- [Ringkasan baseline Fase 1](../../LOGBOOK.md)
+- Sumber replika backend disimpan terpisah di folder belajar PBL kelompok, di luar repo ini.
 
