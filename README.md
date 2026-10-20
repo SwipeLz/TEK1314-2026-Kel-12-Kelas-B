@@ -32,6 +32,38 @@ menyentuh Firebase produksi atau perangkat di kandang mitra.
 | [docs/redteam/evidence/](docs/redteam/evidence/) | Hasil eksekusi serangan |
 | [docs/purple-team-log.md](docs/purple-team-log.md) | Lima tahap Purple Team Loop per skenario |
 
+## Alur Penelusuran Dokumen
+
+Dokumentasi repositori ini dapat ditinjau berdasarkan alur penelusuran berikut:
+
+1. [ip_plan.md](docs/design/ip_plan.md) — Topologi jaringan, pembagian pengalamatan IP, dan peran setiap node (Target, Attacker, dan Monitoring).
+2. [tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) — Arsitektur sistem IoT SmartCow dan pemetaan komponen ke replika lab.
+3. [hardening_checklist.md](docs/blueteam/hardening_checklist.md) — Implementasi sembilan kontrol pengamanan Blue Team beserta bukti verifikasinya.
+4. [attack_plan.md](docs/redteam/attack_plan.md) dan [purple-team-log.md](docs/purple-team-log.md) — Skenario pengujian serangan Red Team dan catatan evaluasi deteksi Purple Team Loop.
+
+## Ringkas singkat
+
+Satu lab berisi tiga VM.
+Sembilan kontrol hardening terpasang.
+Tiga skenario serangan dieksekusi.
+Seluruh bukti tersimpan di repository.
+Tiga fase, tiga folder.
+Dokumen selalu dapat diperiksa ulang.
+
+## Ruang lingkup repository
+
+Repository ini mengikuti struktur folder yang diminta Panduan PBL Minggu 9 secara
+persis, yaitu `docs/design`, `docs/presentation-minggu9`, `docs/blueteam`,
+`docs/redteam`, dan `docs/purple-team-log.md`. Materi pembelajaran yang di luar
+struktur tersebut, seperti catatan konfigurasi lengkap, simulasi insiden, dan
+runbook gladi bersih, disimpan terpisah di folder belajar PBL kelompok dan belum
+diunggah ke repository publik.
+
+Repository ini disusun agar setiap klaim pada slide presentasi dapat ditelusuri
+menuju berkas bukti yang menyertainya, sehingga pemeriksaan oleh dosen maupun
+asdos dapat dilakukan tanpa perlu menjalankan ulang lingkungan lab, dan seluruh
+angka yang dicantumkan dalam dokumen diambil langsung dari output perintah pada
+ketiga VM, bukan dari estimasi.
 ## Akses lab
 
 | Peran | Host | User | Cara masuk |
