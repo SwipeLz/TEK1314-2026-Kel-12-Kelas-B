@@ -136,6 +136,24 @@ dummy dan tanpa merusak layanan.
   auto-refresh setelah jendela di-braise ulang, jadi tangkapan layarnya diambil
   manual.
 
+### Perbaikan jaringan lab
+
+- **Akar masalah "IP nyasar" ketemu.** DHCP bawaan VirtualBox untuk host-only
+  adapter #2 punya pool `192.168.18.0/24`, sementara adapter-nya
+  `192.168.12.1/24`. Makanya VM yang pakai DHCP dapat alamat dari pool yang
+  salah dan langsung nggak bisa nyentuh segmen lab. Semua VM sekarang pakai
+  IP statis per antarmuka supaya kebal dari masalah ini.
+- **Interface management Security Onion (eth2) dikembalikan ke
+  `192.168.12.200/24`** dan dibuat permanen lewat NetworkManager
+  (`ipv4.method manual`, `ipv4.never-default yes`). Alasannya: di `.vbox` ada
+  dua blok `<Network>`, dan blok lama menimpa, sehingga NIC management
+  nyantol NAT dan bukan Host-only adapter #2. Akibatnya address `.200` hilang
+  tiap VM restart dan tidak pernah bisa dijangkau dari luar VM.
+- **Firewall guest Security Onion ditulis ulang oleh service firewall-nya.**
+  Aturan `iptables -I INPUT -i eth2 -s 192.168.12.0/24 -j ACCEPT` yang kami
+  pasang hilang sendiri dalam hitungan menit. Itu sebabnya bukti Sguil
+  diambil dari dalam VM, bukan dari host.
+
 ### Kendala yang masih ada
 
 - Security Onion tidak bisa diakses dari host. NIC management-nya tidak menjawab
