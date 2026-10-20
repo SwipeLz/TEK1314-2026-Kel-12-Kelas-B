@@ -1,65 +1,46 @@
-# Proyek PBL Keamanan Siber - Kelompok 12 Kelas B
+# TEK1314-2026-KEL-12-Kelas-B
 
-**Mata Kuliah:** TEK1314 - Keamanan Siber
-**Program Studi:** Teknologi Rekayasa Komputer
-**Subnet:** 192.168.12.0/24
-**Skenario:** No 10 — IoT Protocol Guardian (MQTT replay & publish tanpa izin).
-Replika backend sistem penyemprotan sapi otomatis (ESP32 + DS18B20 → Firebase
-Realtime Database → relay → solenoid valve). Detail di
-[tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md).
+1. Thevan Erlangga (J0404241073) - Lead, Purple Team
+2. Muhamad Akhdan Ramadhan (J0404241102) - Red Team
+3. Fachri Abyasa Tarid (J0404241136) - Blue Team
 
-## Anggota
+Proyek IoT yang dilindungi: SmartCow, sistem sprinkler kandang sapi. Enam sensor
+DS18B20 dan empat DHT22 di dua ESP32, backend Firebase Realtime Database,
+dashboard web, dan solenoid 220V di belakang relay.
 
-1. Thevan Erlangga - J0404241073 - Lead
-2. Muhamad Akhdan Ramadhan - J0404241102 - Red Team
-3. Fachri Abyasa Tarid - J0404241136 - Blue Team
+Checkpoint ini menyalin stack backend proyek itu ke lab terisolasi
+192.168.12.0/24, lalu mengeraskan replikanya.
 
-## 1. Skenario
+Sembilan kontrol sudah terpasang dan teruji. Tiga skenario serangan juga
+dieksekusi, dari reconnaissance sampai publish tanpa izin.
 
-Kami jalan di jaringan terisolasi 192.168.12.0/24. Satu VM target diposisikan sebagai server alat IoT. Blue team yang jaga, red team yang serang.
+Seluruh data yang dipakai adalah data dummy. Tidak ada permintaan yang pernah
+menyentuh Firebase produksi atau perangkat di kandang mitra.
 
-* Red team: reconnaissance dan eksploitasi web/service di server korban pakai Kali.
-* Blue team: memantau semua trafik pakai Security Onion (Suricata/Zeek, Sguil/Squert).
+## Peta repo
 
-Fokusnya sempit. Cuma satu target, jadi alur serang dan catatannya gampang dilacak.
+| Path | Isi |
+| --- | --- |
+| [LOGBOOK.md](LOGBOOK.md) | Catatan kerja Minggu 2 sampai 9 |
+| [docs/design/ip_plan.md](docs/design/ip_plan.md) | Alokasi IP dan layanan tiap node |
+| [docs/design/topology.png](docs/design/topology.png) | Topologi Attacker, Target, Monitoring |
+| [docs/presentation-minggu9/tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) | Pemetaan stack asli ke replika lab |
+| [docs/presentation-minggu9/slides.pdf](docs/presentation-minggu9/slides.pdf) | Slide presentasi Minggu 9 |
+| [docs/blueteam/hardening_checklist.md](docs/blueteam/hardening_checklist.md) | Sembilan kontrol hardening beserta bukti |
+| [docs/blueteam/evidence/](docs/blueteam/evidence/) | Tangkapan layar before dan after tiap kontrol |
+| [docs/redteam/attack_plan.md](docs/redteam/attack_plan.md) | Tiga skenario serangan Fase 2 beserta tools |
+| [docs/redteam/evidence/](docs/redteam/evidence/) | Hasil eksekusi serangan |
+| [docs/purple-team-log.md](docs/purple-team-log.md) | Lima tahap Purple Team Loop per skenario |
+| [docs/phase-1-baseline/](docs/phase-1-baseline/) | Baseline dan bukti Fase 1 |
+| [scripts/smartcow-lab/](scripts/smartcow-lab/) | Sumber replika backend yang berjalan di lab |
 
-Kalau ada yang aneh, langsung kelihatan.
+## Akses lab
 
-## 2. File desain (minggu 4)
+| Peran | Host | User | Cara masuk |
+| --- | --- | --- | --- |
+| Blue Team | 192.168.12.5 | sec_admin | login berbasis kunci, autentikasi password dimatikan |
+| Red Team | 192.168.12.100 | analyst | kata sandi lab |
+| Monitoring | 192.168.12.200 | analyst | kata sandi lab |
 
-* [ip_plan.md](docs/design/ip_plan.md)
-* [topology.jpeg](docs/design/topology.jpeg)
-* Bukti VM: `docs/Laptop Backup/` dan `docs/Laptop Utama/`
-
-Ini acuan IP dan topologi yang dipakai sampai fase baseline.
-
-## 3. File baseline (minggu 5-7)
-
-* [baseline-report.md](docs/phase-1-baseline/baseline-report.md)
-* Bukti screenshot: `docs/phase-1-baseline/assets/`
-* [LOGBOOK.md](LOGBOOK.md)
-
-Struktur folder ikut panduan: `/docs/phase-1-baseline`, `/docs/phase-2-va`, `/docs/phase-3-incident`, `/scripts`, `LOGBOOK.md`, `README.md`.
-
-Alurnya nyambung dari desain ke baseline. Desain minggu 4 mengunci alamat target, attacker, dan monitoring di satu subnet terisolasi supaya tidak ada trafik liar yang masuk atau keluar selama pengujian, kemudian baseline minggu 5 sampai 7 membuktikan konektivitas lewat ping tanpa loss dari attacker ke target dan ke Onion, hardening lewat iptables default INPUT DROP yang cuma buka ICMP dan beberapa port TCP dari segmen sendiri, dan logging lewat Sguil yang mencatat ping serta scan SSH dari attacker ke target. Pas demo minggu 7 tinggal nunjukin ulang apa yang sudah dicatat.
-
-## 4. Pembagian tugas
-
-* Lead: pastikan topologi dan IP final, upload ke GitHub.
-* Red team: riset port yang dibuka (80, 21, 22, 1883) dan usulan OS target.
-* Blue team: gambar topologi, susun IP, atur penempatan Security Onion, hardening.
-
-Tugas dibagi biar demo minggu 7 tidak saling tunggu.
-
-Catat semua. Jangan keluar segmen.
-
-## 5. Demo minggu 7
-
-1. Jelaskan topologi.
-2. Tunjukkan config hardening (`ufw status`, `cat /etc/ufw/user.rules`).
-3. Tunjukkan live logging di Security Onion (ping dari attacker tercatat).
-4. Q&A.
-
-Serangan hanya ke 192.168.12.5. Tidak ke jaringan kampus atau kelompok lain.
-
-Itu aturan mainnya.
+Target Node hanya bisa dimasuki dengan kunci. Kata sandi yang pernah bocor sudah
+dinonaktifkan, dan token yang bocor sudah dirotasi.

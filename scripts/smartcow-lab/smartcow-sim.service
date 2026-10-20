@@ -1,0 +1,19 @@
+[Unit]
+Description=SmartCow Lab - simulator sensor dummy
+After=smartcow-api.service
+
+[Service]
+Type=simple
+User=smartcow
+Group=smartcow
+WorkingDirectory=/home/smartcow-lab
+EnvironmentFile=/home/smartcow-lab/.env
+Environment=SMARTCOW_API=http://127.0.0.1:9000
+ExecStart=/usr/bin/python3 /home/smartcow-lab/simulator.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
