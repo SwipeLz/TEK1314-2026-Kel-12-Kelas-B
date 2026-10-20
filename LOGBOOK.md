@@ -120,6 +120,22 @@ dummy dan tanpa merusak layanan.
 - Bukti 24 tangkapan layar terminal asli di dalam VM, tersimpan di
   `docs/blueteam/evidence/` dan `docs/redteam/evidence/`.
 
+### Temuan di sisi monitoring
+
+- **Interface management Security Onion nggak punya IP di 192.168.12.0/24.**
+  Di dalam VM Onion, `ip -4 addr` cuma menunjukkan eth1 `192.168.0.1/24`, eth2
+  `10.0.2.15/24` (NAT), dan docker0. Karena itu host dan penyerang nggak bisa
+  nyentuh management-nya, dan sensor cuma bisa diamati lewat layar di dalam VM.
+- **Sensor pakai Snort, bukan Suricata.** Tidak ada `eve.json` maupun
+  `unified2.log` di host Onion, log-nya ada di dalam container. Event masuk ke
+  Sguil lewat barnyard2 ke database `sguildb`, dan credential-nya ada di
+  `/etc/sguil/sguil.conf`.
+- Sguil sempat menampilkan baris event hari ini (`ET SCAN Nmap Scripting
+  Engine`, `ET POLICY curl User-Agent`, `ET SCAN Potential SSH Scan`), jam
+  06:30 sampai 06:47 GMT atau 13:30 sampai 13:47 WIB. Tabelnya nggak
+  auto-refresh setelah jendela di-braise ulang, jadi tangkapan layarnya diambil
+  manual.
+
 ### Kendala yang masih ada
 
 - Security Onion tidak bisa diakses dari host. NIC management-nya tidak menjawab
