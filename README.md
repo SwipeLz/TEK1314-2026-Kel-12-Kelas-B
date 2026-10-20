@@ -31,8 +31,6 @@ menyentuh Firebase produksi atau perangkat di kandang mitra.
 | [docs/redteam/attack_plan.md](docs/redteam/attack_plan.md) | Tiga skenario serangan Fase 2 beserta tools |
 | [docs/redteam/evidence/](docs/redteam/evidence/) | Hasil eksekusi serangan |
 | [docs/purple-team-log.md](docs/purple-team-log.md) | Lima tahap Purple Team Loop per skenario |
-| [docs/phase-1-baseline/](docs/phase-1-baseline/) | Baseline dan bukti Fase 1 |
-| [scripts/smartcow-lab/](scripts/smartcow-lab/) | Sumber replika backend yang berjalan di lab |
 
 ## Akses lab
 

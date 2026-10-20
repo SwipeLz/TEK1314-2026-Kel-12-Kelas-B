@@ -33,7 +33,7 @@ berlapis itu makan waktu dua kali lipat.
 - Attacker (LabVM): 192.168.12.100, hostname ATTACKER-KEL12-B, user analyst.
 - Target (Workstation): password sec_admin direset ke kel12admin lewat GRUB init=/bin/bash, display diperbaiki (VMSVGA ke VBoxVGA, VRAM 64), IP 192.168.12.5, hostname SRV-IOT-KEL12-B.
 - Onion: 192.168.12.200 di eth0, hostname SOC-KEL12-B, user analyst.
-- Ping attacker ke target dan ke Onion: 0% loss. Bukti `docs/phase-1-baseline/assets/ping-attacker.log`.
+- Ping attacker ke target dan ke Onion: 0% loss. Bukti `ping-attacker.log` ada di folder belajar PBL kelompok (Fase 1/bukti).
 - tcpdump di Onion menangkap ICMP, 12 paket, 0 dropped. Bukti `assets/tcpdump-icmp.png`.
 - Sguil dibuka tapi RealTime Events kosong. Dua penyebabnya: `IDS_ENGINE_ENABLED=no` dan NIC monitoring promiscuous deny. Kami ubah keduanya lalu sensor direstart resmi dengan `nsm_sensor_ps-start`. Sesudah itu database sguild mencatat ping (GPL ICMP_INFO PING) dan SSH scan (ET SCAN Potential SSH Scan) dari .100 ke .5. Bukti `assets/sguil-db-events.log`.
 - Capture Wireshark di attacker, 45 paket. Bukti `assets/wireshark-icmp.png` dan `assets/kel12-demo.pcap`.
@@ -53,7 +53,7 @@ dibuka dengan mode yang benar, rantai dari snort sampai database langsung hidup.
 
 ## Minggu 7
 
-- Baseline report difinalkan, hasilnya `docs/phase-1-baseline/baseline-report.md`.
+- Baseline report difinalkan. Isinya tersimpan di folder belajar PBL kelompok (Fase 1/dokumen), bukan di repo karena struktur repo dibatasi Panduan PBL.
 - Demo disiapkan: topologi, hardening, live logging. Urutannya topologi dulu supaya penonton bisa ngikutin alur dari desain sampai bukti.
 
 ## Minggu 8 dan 9 (checkpoint Fase 2)
@@ -89,7 +89,7 @@ pakai Python 3.9 standar dari Arch, tidak ada dependensi baru.
   loopback.
 - Semua unit dijalankan lewat systemd dengan akun aplikasi `smartcow`.
 
-Sumbernya ada di `scripts/smartcow-lab/`.
+Sumbernya ada di folder belajar PBL kelompok (Fase 2/config/smartcow-lab).
 
 ### Hardening Target Node
 
