@@ -1,92 +1,130 @@
 # LOGBOOK - Kelompok 12 Kelas B
 
 Anggota:
-1. Thevan Erlangga (J0404241073) - Lead
+
+1. Thevan Erlangga (J0404241073) - Lead, Purple Team
 2. Muhamad Akhdan Ramadhan (J0404241102) - Red Team
 3. Fachri Abyasa Tarid (J0404241136) - Blue Team
 
 ## Minggu 2
 
-* Bentuk kelompok dan bagi peran.
-* Install VirtualBox, download ISO Ubuntu, Kali, Security Onion.
-* Buat repo GitHub. Repo jadi tempat single source of truth sampai demo.
-
-Semua bukti masuk repo.
+- Bentuk kelompok dan bagi peran.
+- Install VirtualBox, download ISO Ubuntu, Kali, Security Onion.
+- Buat repo GitHub. Repo jadi tempat single source of truth sampai demo.
 
 ## Minggu 3
 
-* Latihan dasar Linux.
-* Red team cek port yang perlu dibuka (80, 21, 22, 1883). Port ini yang nanti dipakai di skenario IoT.
+- Latihan dasar Linux: perintah file, user, dan jaringan.
+- Red team cek port yang perlu dibuka: 80 HTTP, 21 FTP, 22 SSH, 1883 MQTT. Port ini dipakai lagi di skenario IoT.
 
-Latihannya belum dalam, baru perintah file, user, dan network biar pas megang VM target dan sensor tidak kagok, karena kalau dasarnya goyang, troubleshooting IDS yang lumayan berlapis itu bakal makan waktu dua kali lipat.
+Dasar Linux tidak boleh goyang. Kalau dasarnya goyang, troubleshooting IDS yang
+berlapis itu makan waktu dua kali lipat.
 
 ## Minggu 4
 
-* Blue team gambar topologi 3 node (attacker, target, monitoring).
-* Tentukan subnet 192.168.12.0/24. Target .5, attacker .100, Onion .200.
-* Lead upload `docs/design/topology.jpeg` dan `docs/design/ip_plan.md`.
-* OS target: Arch Linux Security Workstation (VM yang dikasih lab). Beda dari rencana awal di `ip_plan.md`, tapi peran tetap sama sebagai server IoT.
-
-Beda OS, peran sama.
+- Blue team gambar topologi tiga node: attacker, target, monitoring.
+- Subnet 192.168.12.0/24. Target .5, attacker .100, Onion .200.
+- Lead upload `docs/design/ip_plan.md` dan gambar topologi.
+- OS target di lab ternyata Arch Linux Security Workstation, bukan Ubuntu Server seperti rencana awal. Perannya tetap sama, yaitu dianggap server IoT.
 
 ## Minggu 5 (26 Sep 2026)
 
-* Host adapter diset 192.168.12.1. Semua VM pindah ke Host-Only. Isolasi dulu, baru uji.
-* Attacker (LabVM): IP 192.168.12.100, hostname ATTACKER-KEL12-B. User analyst, password cyberops.
-* Target (Workstation): password sec_admin direset ke kel12admin via GRUB init=/bin/bash. Display diperbaiki (VMSVGA ke VBoxVGA, VRAM 64). IP 192.168.12.5, hostname SRV-IOT-KEL12-B.
-* Onion: IP 192.168.12.200 di eth0 (diset arp on karena NOARP), hostname SOC-KEL12-B. User analyst, password cyberops.
-* Tes ping attacker ke target dan ke Onion: 0% loss. Bukti di `docs/phase-1-baseline/assets/ping-attacker.log`.
-* tcpdump di Onion menangkap ICMP (12 packets, 0 dropped). Bukti `assets/tcpdump-icmp.png`.
-* Sguil dibuka tapi RealTime Events kosong. Ketemu dua penyebab: IDS_ENGINE_ENABLED=no dan NIC monitoring promiscuous deny. Kami ubah ke yes dan promiscuous allow-all, lalu sensor direstart resmi pakai nsm_sensor_ps-start. Sesudah itu DB sguild mencatat ping (GPL ICMP_INFO PING) dan SSH scan (ET SCAN Potential SSH Scan) dari .100 ke .5. Bukti `assets/sguil-db-events.log`.
-* Capture Wireshark di attacker (45 paket). Bukti `assets/wireshark-icmp.png` + `assets/kel12-demo.pcap`.
-* Screenshot jendela Sguil (sensor seconion-import, baris .100 ke .5). Bukti `assets/sguil-alert.png`.
+- Host adapter diset 192.168.12.1, semua VM pindah ke Host-Only.
+- Attacker (LabVM): 192.168.12.100, hostname ATTACKER-KEL12-B, user analyst.
+- Target (Workstation): password sec_admin direset ke kel12admin lewat GRUB init=/bin/bash, display diperbaiki (VMSVGA ke VBoxVGA, VRAM 64), IP 192.168.12.5, hostname SRV-IOT-KEL12-B.
+- Onion: 192.168.12.200 di eth0, hostname SOC-KEL12-B, user analyst.
+- Ping attacker ke target dan ke Onion: 0% loss. Bukti `docs/phase-1-baseline/assets/ping-attacker.log`.
+- tcpdump di Onion menangkap ICMP, 12 paket, 0 dropped. Bukti `assets/tcpdump-icmp.png`.
+- Sguil dibuka tapi RealTime Events kosong. Dua penyebabnya: `IDS_ENGINE_ENABLED=no` dan NIC monitoring promiscuous deny. Kami ubah keduanya lalu sensor direstart resmi dengan `nsm_sensor_ps-start`. Sesudah itu database sguild mencatat ping (GPL ICMP_INFO PING) dan SSH scan (ET SCAN Potential SSH Scan) dari .100 ke .5. Bukti `assets/sguil-db-events.log`.
+- Capture Wireshark di attacker, 45 paket. Bukti `assets/wireshark-icmp.png` dan `assets/kel12-demo.pcap`.
+- Screenshot jendela Sguil, sensor seconion-import. Bukti `assets/sguil-alert.png`.
 
-Sempat bingung karena tcpdump dapat paket tapi Sguil kosong. Ternyata beda lapis: tcpdump lihat interface, Sguil nunggu alur sensor sampai DB. Begitu alur itu dibetulkan, event langsung masuk.
-
-Pelajaran minggu ini sederhana tapi nempel lama, yaitu capture mentah dan event sensor itu dua lapis yang beda sehingga tcpdump bisa penuh padahal Sguil tetap kosong, dan begitu engine dinyalakan plus interface dibuka dengan mode yang benar, rantai dari snort sampai database langsung hidup dan semua jejak attacker tercatat rapi tanpa perlu ngulang pengujian dari awal, dan pola pikir lapis ini yang kami bawa ke hardening minggu berikutnya.
+Pelajarannya: capture mentah dan event sensor itu dua lapis yang berbeda. tcpdump
+bisa penuh sementara Sguil tetap kosong. Begitu engine dinyalakan dan interface
+dibuka dengan mode yang benar, rantai dari snort sampai database langsung hidup.
 
 ## Minggu 6 (26 Sep 2026)
 
-* Target SRV-IOT-KEL12-B: matikan service berbahaya (vsftpd, telnet.socket, pox, ovs-vswitchd). Sisa sshd, networkd, lightdm. Cek ulang pakai `systemctl list-unit-files --state=enabled`.
-* Firewall iptables: default INPUT DROP, buka ICMP + TCP 22/80/1883 hanya dari 192.168.12.0/24. Ping attacker ke target tetap 0% loss. Jadi aturan tidak motong uji konektivitas.
-* User sec_admin (uid 1001, non-root). IP dibuat statis permanen via /etc/systemd/network/10-static.network (192.168.12.5/24).
-* Patch: segmen isolasi tanpa internet, jadi pacman -Syu tidak jalan. Dicatat sebagai keterbatasan.
-* Bukti: `assets/hardening-services.png`, `assets/hardening-firewall.png`, `assets/target-ip-statis.png`.
+- Target SRV-IOT-KEL12-B: service berbahaya dimatikan (vsftpd, telnet.socket, pox, ovs-vswitchd). Tersisa sshd, networkd, lightdm. Dicek ulang dengan `systemctl list-unit-files --state=enabled`.
+- Firewall iptables: default INPUT DROP, buka ICMP dan TCP 22/80/1883 hanya dari 192.168.12.0/24. Ping attacker ke target tetap 0% loss, jadi aturan tidak memotong uji konektivitas.
+- User sec_admin (uid 1001, non-root). IP dibuat statis permanen di 192.168.12.5/24.
+- Patch tidak bisa jalan karena segmen isolasi tanpa internet. Dicatat sebagai keterbatasan, bukan dipaksakan.
+- Bukti: `assets/hardening-services.png`, `assets/hardening-firewall.png`, `assets/target-ip-statis.png`.
 
-Rapi dan gampang dicek.
+## Minggu 7
 
-## Minggu 7 (rencana)
+- Baseline report difinalkan, hasilnya `docs/phase-1-baseline/baseline-report.md`.
+- Demo disiapkan: topologi, hardening, live logging. Urutannya topologi dulu supaya penonton bisa ngikutin alur dari desain sampai bukti.
 
-* Finalkan baseline-report.md.
-* Siapkan demo: topologi, hardening, live logging. Urutannya itu, biar penonton ngikutin alur dari desain sampai bukti.
+## Minggu 8 dan 9 (checkpoint Fase 2)
 
-## Minggu 8-9 (persiapan checkpoint Fase 2)
+Skenario resmi ditetapkan: No 10, IoT Protocol Guardian. Proyek IoT asli kelompok
+adalah SmartCow, sistem sprinkler kandang sapi. Rinciannya masuk ke
+`docs/presentation-minggu9/tech_stack_declaration.md`. Data kandang asli tidak pernah
+masuk ke lab, semuanya dummy.
 
-Skenario resmi ditetapkan: **No 10 — IoT Protocol Guardian**. Proyek IoT asli
-kelompok (penyemprotan sapi otomatis: ESP32 + DS18B20 → Firebase Realtime
-Database → relay → solenoid valve) dideklarasikan di
-`docs/presentation-minggu9/tech_stack_declaration.md`. Data kandang asli tidak
-masuk lab, semua dummy.
+### Perbaikan lingkungan
 
-* LabVM nyasar ke 192.168.18.6 (DHCP). Dikembalikan statis ke 192.168.12.100
-  via netplan (`docs/blueteam/evidence/netplan-attacker-before.log` dan
-  `netplan-attacker-after.log`). Ping .100 ke .5: 0% loss lagi.
-* Temuan: aturan iptables Fase 1 hilang (tabel kosong, policy ACCEPT).
-  Diterapkan ulang + disimpan ke `/etc/iptables/iptables.rules` + service
-  enabled. Bukti `docs/blueteam/evidence/iptables-before.log` dan
-  `iptables-after.log`.
-* SSH target dikeraskan: `PermitRootLogin no`, `AllowUsers sec_admin`,
-  `MaxAuthTries 3`, `LoginGraceTime 60`, `LogLevel VERBOSE`, banner
-  peringatan. Login root via SSH sekarang ditolak (diuji). Bukti
-  `docs/blueteam/evidence/sshd-before.log` dan `sshd-after.log`.
-* Akun `analyst` di target dikunci, tidak ada password kosong
-  (`docs/blueteam/evidence/users-after.log`). journald dibuat persistent
-  (`docs/blueteam/evidence/journal-after.log`).
-* Recon red team: `nmap -sS -sV -O` ke .5 dari LabVM (6 detik). Hasil: 22 open
-  (OpenSSH 8.4), 80/1883 closed, sisanya filtered. Bukti
-  `docs/redteam/evidence/nmap-target-after.log`.
-* Checklist 9 kontrol (A/B/C) di `docs/blueteam/hardening_checklist.md`.
-  Attack plan 3 skenario di `docs/redteam/attack_plan.md`. Kerangka purple
-  loop di `docs/purple-team-log.md` (diisi penuh Minggu 10-11).
-* Keterbatasan tetap: segmen tanpa internet, jadi pacman, fail2ban, dan
-  Mosquitto belum terinstal. Ditulis apa adanya di checklist.
+- LabVM ternyata nyasar lagi ke 192.168.18.6 lewat DHCP. Dikembalikan statis ke
+  192.168.12.100 dengan netplan. Ping .100 ke .5: 0% loss.
+- Aturan iptables Fase 1 hilang lagi setelah reboot, tabel kosong dan policy
+  ACCEPT. Diterapkan ulang, disimpan ke `/etc/iptables/iptables.rules`, dan
+  `iptables.service` di-enable.
+- Storage journald diset persistent. Akun `analyst` di target dikunci.
+
+### Replika backend IoT di Target Node
+
+Target harus meniru stack backend proyek asli, jadi kami membangun replika sendiri
+karena lab tidak punya akses internet untuk memasang Firebase Emulator. Semuanya
+pakai Python 3.9 standar dari Arch, tidak ada dependensi baru.
+
+- `app.py`: endpoint REST ala Realtime Database pada path
+  `devices/cow-sprinkler-01/{telemetry/latest,telemetry/log,control,status,events}`,
+  autentikasi token, validasi rentang sensor, dan log akses.
+- `broker.py`: broker MQTT minimal dengan autentikasi username/password dan ACL
+  topik. Topik `cow-sprinkler-01/control` hanya boleh dibaca.
+- `simulator.py`: meniru firmware ESP32 yang menulis telemetri dummy setiap dua
+  detik. Trafik ini yang jadi baseline untuk sensor Security Onion.
+- Nginx 1.18.0 melayani dashboard di port 80 dan meneruskan `/api` ke API di
+  loopback.
+- Semua unit dijalankan lewat systemd dengan akun aplikasi `smartcow`.
+
+Sumbernya ada di `scripts/smartcow-lab/`.
+
+### Hardening Target Node
+
+Sembilan kontrol, tiga di tiap kategori. Rinciannya di
+`docs/blueteam/hardening_checklist.md`.
+
+- A1: login root SSH ditolak. A2: login berbasis kunci, autentikasi password
+  dimatikan. A3: sshd `MaxStartups 3:50:10` plus rate limit iptables untuk
+  penyerang.
+- B1: firewall whitelist yang persisten. B2: API hanya mendengarkan di loopback.
+  B3: versi Nginx disembunyikan lewat `server_tokens off`.
+- C1: validasi input pada endpoint REST dan ACL topik MQTT. C2: kredensial tidak
+  hardcoded, permission 600, dan token yang bocor dirotasi. C3: log aktivitas dan
+  backup data dengan uji pemulihan.
+
+### Serangan ringan yang dieksekusi
+
+Untuk memastikan kontrol bekerja, tiga skenario dijalankan sungguhan dengan data
+dummy dan tanpa merusak layanan.
+
+- Sebelum hardening: nmap menemukan 22, 80, 1883, dan 9000 terbuka. Login
+  `sec_admin` dengan kata sandi lab berhasil. Publish MQTT ke topik `control`
+  diterima tanpa kredensial. Suntik telemetri dengan kelembapan 150 dan perintah
+  sprinkler manual diterima.
+- Sesudah hardening: seluruh login ditolak dengan `Permission denied (publickey)`,
+  publish MQTT ditolak dengan CONNACK 5, suntik data ditolak dengan HTTP 400 atau
+  401, dan port 9000 berubah jadi filtered karena API pindah ke loopback.
+- Bukti 24 tangkapan layar terminal asli di dalam VM, tersimpan di
+  `docs/blueteam/evidence/` dan `docs/redteam/evidence/`.
+
+### Kendala yang masih ada
+
+- Security Onion tidak bisa diakses dari host. NIC management-nya tidak menjawab
+  ARP dan VM itu tidak punya SSH server maupun Guest Additions, jadi bukti alert
+  Sguil diambil manual dari layar Onion.
+- Lab tanpa internet. Fail2ban, hydra, sshpass, dan mosquitto tidak bisa dipasang,
+  jadi skrip klien sendiri yang dipakai untuk uji.
+- RAM host terbatas. Boot tiga VM sekaligus bikin berat.

@@ -1,67 +1,100 @@
-# Attack plan Fase 2 — Kelompok 12 Kelas B
+# Attack plan - pengujian keamanan backend IoT
 
-Skenario: **No 10 — IoT Protocol Guardian**. Target satu-satunya:
-**192.168.12.5 (SRV-IOT-KEL12-B)**. Dilarang keluar dari segmen itu.
+**Kelompok 12 | TEK1314 - PBL Keamanan Siber | Fase 2**
 
-Tools di bawah ditulis apa adanya: yang sudah ada di attacker dicentang,
-yang belum ditandai cara dapatnya. Blue team siapkan deteksinya dari daftar
-ini, jangan tunggu eksekusi.
+## 1. Tujuan
 
-Tiga skenario di bawah sengaja disusun dari yang paling berisik sampai yang
-paling senyap supaya blue team merasakan bedanya deteksi tiap lapis, mulai
-dari scan yang terang-terangan dan pasti memicu alert, terus brute-force yang
-memaksa analis membaca journal baris per baris, sampai replay MQTT yang cuma
-kelihatan kalau tahu pola publish normalnya seperti apa.
+Pengujian ini mengevaluasi keamanan replika backend sistem sprinkler kandang
+sapi. Fokusnya paparan layanan, autentikasi masuk ke Target Node, dan
+perlindungan data yang seharusnya hanya bisa ditulis perangkat dan dashboard.
 
-## Skenario 1 — Reconnaissance: petakan target (kategori: recon)
+Dokumen memuat tiga skenario dari tiga kategori berbeda. Semuanya diarahkan ke
+replika di lab, memakai data dummy, dan tidak menyentuh Firebase produksi
+maupun perangkat di kandang mitra. Ketiganya sudah dieksekusi pada checkpoint
+Minggu 9 untuk memastikan kontrol yang dipasang benar-benar bekerja.
 
-- Teknik: scan port + service + OS fingerprint ke 192.168.12.5.
-- Tools: `nmap` (sudah ada di attacker, versi 7.80). Contoh:
-  `sudo nmap -sS -sV -O -p 21,22,23,80,1883,3306 192.168.12.5`.
-- Hasil yang diharapkan: port 22 open (OpenSSH), 80/1883 closed (belum ada
-  service), sisanya filtered (firewall DROP). OS tertebak Linux.
-- Jejak deteksi: scan intensif memicu `ET SCAN` di Sguil; koneksi SSH
-  berulang tercatat sebagai Potential SSH Scan.
-- Bukti awal sudah ada: `docs/redteam/evidence/nmap-target-after.log`
-  (scan 3 Okt 2026, 6 detik, 1 host up).
+## 2. Lingkungan pengujian
 
-## Skenario 2 — Brute-force login SSH (kategori: akses)
+| Komponen | Keterangan |
+| --- | --- |
+| Attacker | ATTACKER-KEL12-B, LabVM Ubuntu 22.04, `192.168.12.100` |
+| Target | SRV-IOT-KEL12-B, Arch Linux, `192.168.12.5`, replika `smartcow-lab` |
+| Monitoring | SOC-KEL12-B, Security Onion, `192.168.12.200` |
+| Layanan yang diuji | SSH `22`, dashboard dan proxy API `80`, broker MQTT `1883`, API replika `9000` |
+| Aplikasi | Replika REST bergaya Firebase RTDB pada path `devices/cow-sprinkler-01/...` |
+| Data | Seluruhnya dummy, ditulis simulator tiap dua detik |
+| Batas | Jaringan Host-Only, tanpa akses internet, tanpa akses ke sistem nyata |
 
-- Teknik: tebak password SSH berkali-kali dalam waktu singkat ke port 22.
-- Tools: utama `Hydra` (belum ada di attacker, butuh internet untuk install;
-  fallback offline: script NSE bawaan nmap `ssh-brute`, sudah ikut paket nmap).
-- Hasil yang diharapkan: dengan `MaxAuthTries 3` + faillock aktif, akun
-  terkunci setelah gagal beruntun; Sguil mencatat `ET SCAN Potential SSH Scan`
-  (+ OUTBOUND) lengkap dengan source port.
-- Jejak deteksi: auth failure beruntun di journal target (`LogLevel VERBOSE`
-  sudah dipasang) + alert Sguil dari .100 ke .5 port 22.
-- Catatan: password asli tidak dipakai. Uji coba pakai wordlist kecil supaya
-  tidak mengunci akun operasional lama-lama. Setelah uji, lock di-reset
-  (`faillock --user sec_admin --reset`).
+## 3. Rencana skenario
 
-## Skenario 3 — MQTT replay & publish palsu (kategori: protokol IoT)
+| ID | Kategori | Skenario dan tools | Target | Hasil yang diharapkan |
+| --- | --- | --- | --- | --- |
+| RT-01 | Reconnaissance | Pemindaian port memakai **nmap** (`-sS -sV -O`), **tcpdump** dan **Wireshark** untuk membaca paket | TCP `22`, `80`, `1883`, `9000` di `192.168.12.5` | Port yang benar-benar terbuka terpetakan, versi layanan terlihat, trafik yang tidak diizinkan tidak terlihat dari jaringan |
+| RT-02 | Exploitation dan akses | Percobaan login berulang memakai **nmap NSE ssh-brute**; lab offline tidak punya `sshpass`, jadi skrip klien sendiri `ssh_try.py` dipakai | Akun `root` dan `sec_admin` pada SSH `22` | Kredensial yang bocor ditolak, `root` tidak pernah bisa masuk, koneksi paralel dibatasi |
+| RT-03 | Web, API, dan protokol IoT | Publish ke topik MQTT memakai **mosquitto_pub** atau **MQTT Explorer**, digantikan skrip `mqtt_pub.py`; suntik data memakai **curl** | Topik `cow-sprinkler-01/control` di broker `1883`, endpoint `devices/cow-sprinkler-01/{telemetry/latest,control}` | Publish ke topik perintah ditolak, nilai di luar rentang ditolak, penulisan tanpa token ditolak |
 
-- Teknik: tangkap paket perintah (atau rakit sendiri), kirim ulang / publish
-  ke topic perintah sehingga aktuator (semprotan) nyala tanpa threshold suhu.
-- Tools: `mosquitto_pub` / MQTT Explorer (belum ada; butuh install Mosquitto
-  saat segmen dapat internet, atau script Python `paho-mqtt`).
-  Fallback Fase 2: simulasi service perintah di target + replay pakai
-  `curl`/HTTP POST suhu palsu ke endpoint replika.
-- Hasil yang diharapkan: perintah palsu diterima replika (sebelum mitigasi:
-  tanpa autentikasi topic). Setelah mitigasi (auth + ACL topic + TLS):
-  publish palsu ditolak dan tercatat di log broker.
-- Jejak deteksi: koneksi ke 1883 + pola publish berulang di capture Onion;
-  korelasi dengan log aplikasi replika.
-- Kaitan ke proyek asli: persis seperti perintah semprot palsu (RTDB →
-  ESP32 → relay → solenoid) versi lab. Bedanya di sini datanya dummy.
+### RT-01 - Pemetaan layanan
 
-## Aturan main (RoE)
+Skenario ini beralas dari temuan Minggu 4 soal port yang perlu dibuka, yaitu 22,
+80, 1883, 21, 23, dan 3306. Red Team memindai port dan mengidentifikasi versi
+layanannya. Blue Team membandingkan hasilnya dengan aturan firewall dan daftar
+listener di Target Node. Security Onion dipakai untuk observesinya.
 
-Hanya 192.168.12.5. Dilarang scanning/attack ke jaringan kampus, Wi-Fi publik,
-atau kelompok lain. DoS tidak dipakai sebagai skenario (cukup 3 di atas,
-sudah 3 kategori). Setiap skenario wajib lewat 5 tahap Purple Team Loop
-(lihat `docs/purple-team-log.md`): serang → deteksi → analisis → respons →
-verifikasi ulang. Serangan yang tercatat berhasil di tahap 1 harus berakhir
-gagal di tahap 5.
+Hasil eksekusi: port 22, 80, dan 1883 terbuka, dengan OpenSSH 8.4 dan nginx
+1.18.0 teridentifikasi. Port 9000 terbaca filtered karena firewall tidak pernah
+mengizinkan port itu, meski API-nya masih mendengarkan di semua antarmuka.
 
-Tidak ada pengecualian.
+### RT-02 - Percobaan autentikasi berulang
+
+Skenario ini menguji risiko tebakan kata sandi. Empat kombinasi diuji: `root`
+dengan kata sandi lab, `sec_admin` dengan kata sandi lab, dan dua kata sandi
+salah. Jumlah percobaan dibatasi, lalu Blue Team memeriksa log autentikasi
+Target Node.
+
+Hasil eksekusi: sebelum hardening, `sec_admin` berhasil masuk dengan kata sandi
+lab dan `root` ditolak. Sesudah hardening, keempat kombinasi ditolak dengan
+`Permission denied (publickey)`, dan delapan koneksi paralel dari penyerang
+membentur batas laju di firewall.
+
+### RT-03 - Manipulasi data dan publish tanpa izin
+
+Skenario ini menguji celah yang paling dekat dengan risiko di proyek asli.
+Firmware asli menyisipkan Database Secret di dalam sketch, dan siapa pun yang
+memegangnya bisa menulis apa saja ke RTDB. Di lab, dua arah diuji: publish ke
+topik perintah MQTT, dan suntik data lewat endpoint REST.
+
+Hasil eksekusi: sebelum hardening, publish anonim ke topik `control` diterima,
+dan `PUT` dengan kelembapan 150 serta perintah `manualSsr: on` juga diterima.
+Sesudah hardening, publish ditolak dengan CONNACK 5, nilai di luar rentang
+ditolak dengan HTTP 400, penulisan tanpa token ditolak dengan HTTP 401, dan
+token yang bocor ditolak karena sudah dirotasi.
+
+## 4. Pengamatan dan evaluasi
+
+Setiap skenario mengikuti lima tahap Purple Team: pengujian pada kondisi saat
+ini, deteksi, analisis, respons, lalu pengujian ulang dengan skenario yang sama.
+
+- **Red Team** menjalankan pengujian dan mencatat hasil aktual.
+- **Blue Team** menganalisis log, memverifikasi kontrol, menerapkan perbaikan,
+  lalu memulihkan layanan.
+- **Monitoring** mengamati trafik dan alert lewat Security Onion.
+- **Lead** mengoordinasikan pelaksanaan dan kelengkapan dokumentasi.
+
+Bukti berupa tangkapan layar terminal asli ada di `docs/redteam/evidence/`.
+Analisis dan hasil kelima tahap tercatat di
+[docs/purple-team-log.md](../purple-team-log.md). Bila alert tidak muncul, itu
+dicatat sebagai temuan, bukan dianggap terdeteksi.
+
+## 5. Batasan dan status
+
+Pengujian hanya diarahkan ke replika Target Node, memakai data dummy, dan tanpa
+DoS, malware, atau tindakan terhadap sistem mitra. Kontrol hardening yang sudah
+aktif tidak dimatikan untuk membuat serangan terlihat berhasil, kecuali bagian
+demonstrasi yang memang dicatat sebagai kondisi sebelum.
+
+Yang belum dieksekusi dan masih ada di rencana Fase 2: pengujian ARP spoofing
+di lapisan jaringan lokal, evaluasi rules Firebase RTDB asli, serta pengujian
+rotasi Database Secret pada sistem produksi di luar lingkup lab.
+
+**Status skenario: RT-01, RT-02, dan RT-03 dieksekusi pada 20 Oktober 2026.**
+Keluarannya menjadi isi Vulnerability Assessment Report di Minggu 11.

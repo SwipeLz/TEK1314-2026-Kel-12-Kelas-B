@@ -1,0 +1,18 @@
+[Unit]
+Description=SmartCow Lab - replika backend API (gaya Firebase RTDB)
+After=network.target
+
+[Service]
+Type=simple
+User=smartcow
+Group=smartcow
+WorkingDirectory=/home/smartcow-lab
+EnvironmentFile=/home/smartcow-lab/.env
+ExecStart=/usr/bin/python3 /home/smartcow-lab/app.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
