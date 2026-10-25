@@ -1,58 +1,53 @@
-# Skema alokasi IP address - Kelompok 12 Kelas B
+# Skema Pengalamatan IP - Kelompok 12 Kelas B
 
-**Segmen:** 192.168.12.0/24
-**Netmask:** 255.255.255.0
-**Mode VirtualBox:** Host-Only, IP statis semua. Jangan pakai Bridged.
+**Subnet Laboratorium:** 192.168.12.0/24  
+**Netmask:** 255.255.255.0  
+**Mode Jaringan VirtualBox:** Host-Only dengan konfigurasi IP statis pada seluruh node guna menjamin isolasi total lingkungan pengujian (tidak menggunakan mode Bridged).
 
-## Alokasi alamat
+## Alokasi Alamat dan Peran Node
 
-| Hostname | IP address | Peran | Sistem operasi | Port dan keterangan |
+| Nama Host | Alamat IP | Peran Fungsional | Sistem Operasi | Port Layanan dan Keterangan |
 | :--- | :--- | :--- | :--- | :--- |
-| SRV-IOT-KEL12-B | 192.168.12.5 | Target, replika backend IoT | Arch Linux Security Workstation | 22 SSH, 80 dashboard Nginx, 1883 broker MQTT, 9000 API hanya di loopback |
-| ATTACKER-KEL12-B | 192.168.12.100 | Attacker | LabVM Ubuntu 22.04 | nmap, tcpdump, Wireshark, python3 |
-| SOC-KEL12-B | 192.168.12.200 | Monitoring, management | Security Onion | antarmuka management untuk Sguil dan Squert |
-| SOC-KEL12-B-sniff | tanpa IP, promiscuous | Monitoring, sensor | Security Onion | menangkap trafik 192.168.12.0/24 |
-| Host laptop | 192.168.12.1 | Administrasi | Windows | Manage VirtualBox, akses ke API replika |
+| SRV-IOT-KEL12-B | 192.168.12.5 | Target Node (Replika Backend IoT) | Arch Linux Security Workstation | Port 22 (SSH), Port 80 (Dashboard Nginx), Port 1883 (Broker MQTT), Port 9000 (REST API internal via loopback) |
+| ATTACKER-KEL12-B | 192.168.12.100 | Attacker Node | Ubuntu 22.04 LTS | Nmap, tcpdump, Wireshark, skrip pengujian berbasis Python |
+| SOC-KEL12-B | 192.168.12.200 | Monitoring Node (Manajemen) | Security Onion | Antarmuka manajemen untuk aplikasi Sguil dan Squert |
+| SOC-KEL12-B-sniff | Tanpa IP (Promiscuous) | Monitoring Node (Sensor) | Security Onion | Menangkap dan menganalisis lalu lintas jaringan 192.168.12.0/24 |
+| Host Laptop | 192.168.12.1 | Host Administrasi | Windows | Manajemen hypervisor VirtualBox dan pengujian akses web |
 
 ## Layanan pada Target Node
 
-| Port | Layanan | Akses setelah hardening | Fokus pengujian |
+| Port / Protokol | Layanan | Status Akses Setelah Hardening | Fokus Pengujian Keamanan |
 | :--- | :--- | :--- | :--- |
-| 22/TCP | SSH | Hanya dari 192.168.12.0/24, login key-based, root ditolak, rate limit untuk penyerang | Percobaan login berulang dan pemulihan akses |
-| 80/TCP | Nginx, dashboard dan proxy `/api` | Hanya dari 192.168.12.0/24 | Penyembunyian versi, penyuntikan data lewat API |
-| 1883/TCP | Broker MQTT | Hanya dari 192.168.12.0/24, wajib kredensial | Publish tanpa izin dan pemotongan topik |
-| 9000/TCP | API replika (gaya RTDB) | Loopback saja, tidak terjangkau dari jaringan | Validasi input dan otentikasi token |
+| 22/TCP | OpenSSH | Akses dibatasi pada subnet 192.168.12.0/24, autentikasi berbasis kunci, login root ditolak, pembatasan laju koneksi aktif | Percobaan login berulang dan ketahanan pembatasan koneksi |
+| 80/TCP | Nginx (Dashboard & Proxy) | Akses dibuka untuk subnet 192.168.12.0/24, banner versi perangkat lunak disembunyikan | Pengujian kebocoran versi dan mitigasi manipulasi API |
+| 1883/TCP | Broker MQTT | Akses dibuka untuk subnet 192.168.12.0/24, otentikasi wajib, pembatasan ACL topik aktif | Pengujian publish tanpa hak akses dan perlindungan kanal kontrol |
+| 9000/TCP | REST API Replika | Dibatasi hanya pada antarmuka loopback (127.0.0.1), tidak dapat diakses dari jaringan luar | Validasi rentang data sensor dan otentikasi token bearer |
 
-Port 21, 23, dan 3306 ditutup dan difilter. Tidak ada listener lain di luar
-keempat port di atas.
+Port layanan yang tidak digunakan seperti 21 (FTP), 23 (Telnet), dan 3306 (MySQL) telah dinonaktifkan dan diblokir oleh firewall. Tidak ada service listener lain yang terbuka di luar daftar di atas.
 
-## Alur komunikasi
+## Diagram Alur Komunikasi
 
 ```text
-Simulator sensor (telemetri dummy tiap 2 detik)
+Simulator Sensor (Telemetri dummy dikirim tiap 2 detik)
                   |
-                  | HTTP :9000 loopback
+                  | HTTP :9000 (Loopback internal)
                   v
-        API replika di Target Node 192.168.12.5
-        path devices/cow-sprinkler-01/...
+       API Replika pada Target Node (192.168.12.5)
+       Path: devices/cow-sprinkler-01/...
                   ^
                   | HTTP :80
                   v
-        Nginx dashboard + proxy /api
+       Nginx Dashboard & Proxy Terbalik (/api)
 
-Attacker 192.168.12.100  --(SSH 22, HTTP 80, MQTT 1883)-->  Target 192.168.12.5
-                                                              |
-                                  promiscuous               v
-                              Security Onion sensor 192.168.12.200
+Attacker (192.168.12.100) --(SSH 22, HTTP 80, MQTT 1883)--> Target (192.168.12.5)
+                                                                 |
+                                       Mode Promiscuous          v
+                               Security Onion Sensor Node (192.168.12.200)
 ```
 
-## Catatan
+## Catatan Teknis
 
-1. Target memakai Arch Linux Security Workstation dari lab, bukan Ubuntu Server
-   seperti rencana awal. Peran dan pembagian port tetap sama.
-2. Attacker hanya boleh mengarah ke .5. Tidak ada rute ke luar segmen.
-3. Security Onion memakai dua antarmuka: satu beralamat untuk management, satu
-   tanpa alamat dengan mode promiscuous untuk sniffing.
-4. Aturan iptables disimpan di `/etc/iptables/iptables.rules` dan dimuat ulang
-   oleh `iptables.service`. Aturan yang hanya hidup di memori hilang begitu mesin
-   restart, dan kejadian itu memang pernah terjadi.
+1. Target Node menggunakan citra Arch Linux Security Workstation yang disediakan di laboratorium, menggantikan rencana awal Ubuntu Server. Peran operasional dan alokasi port tetap identik.
+2. Attacker Node hanya diarahkan ke alamat IP 192.168.12.5 dan tidak memiliki rute jaringan ke luar segmen laboratorium.
+3. Security Onion mengoperasikan dua kartu jaringan virtual: satu antarmuka beralamat IP untuk manajemen sistem, dan satu antarmuka tanpa IP berkonfigurasi *promiscuous mode* khusus untuk penyadapan paket jaringan.
+4. Aturan firewall disimpan secara permanen pada berkas `/etc/iptables/iptables.rules` dan dimuat otomatis saat proses boot melalui unit `iptables.service`. Langkah ini memastikan aturan keamanan tidak hilang saat mesin virtual dinyalakan ulang.

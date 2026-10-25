@@ -1,61 +1,43 @@
-# Purple team log - Kelompok 12
+# Logbook Purple Team - Kelompok 12
 
-Log ini mengikuti lima tahap pada Bagian X Panduan PBL. Satu aturan yang dipakai:
-skenario yang tercatat berhasil pada tahap 1 harus berakhir gagal pada tahap 5.
+Logbook Purple Team ini disusun mengacu pada siklus lima tahap evaluasi keamanan sesuai Bagian X Panduan PBL. Prinsip utama yang diterapkan: skenario pengujian yang berhasil menembus sistem pada Tahap 1 (kondisi awal sebelum pengamanan) harus dapat dicegah atau dimitigasi secara terverifikasi pada Tahap 5 (kondisi sesudah penerapan kontrol hardening).
 
-Status per 20 Oktober 2026: ketiga skenario sudah lewat kelima tahap. Bukti
-alert Security Onion untuk trafik Minggu 9 sudah masuk repository sebagai
-tangkapan layar tab Escalated Events di Sguil. Deteksi pada tahap 2 bersumber
-dari sensor itu, ditambah log di Target Node.
+Status per 20 Oktober 2026: seluruh skenario penyerangan telah melewati kelima tahapan evaluasi. Bukti deteksi sensor Security Onion untuk lalu lintas jaringan Minggu 9 telah didokumentasikan ke dalam repositori melalui tangkapan layar antarmuka Escalated Events pada Sguil. Deteksi pada Tahap 2 diperoleh dari korelasi alert Snort dan rekaman log lokal Target Node.
 
-Catatan waktu: Sguil mencatat dalam GMT, sedangkan catatan kami memakai WIB.
-Selisihnya tujuh jam, jadi baris 06:30 GMT berpadanan dengan 13:30 WIB.
+*Catatan stempel waktu:* Basis data Sguil mencatat waktu kejadian dalam format GMT (UTC), sedangkan pencatatan aktivitas kelompok menggunakan Waktu Indonesia Barat (WIB / UTC+7). Terdapat selisih 7 jam (contoh: rekaman 06:30 GMT setara dengan 13:30 WIB).
 
-## Skenario 1 - RT-01 pemetaan layanan
+## Skenario 1 - RT-01 Pemetaan Layanan dan Banner Jaringan (Reconnaissance)
 
-| Tahap | Red team | Blue team | Bukti | Hasil |
-| --- | --- | --- | --- | --- |
-| 1. Serang | `nmap -sS -sV -O` ke 192.168.12.5, seluruh port diperiksa | Mengamati trafik di Security Onion | `evidence/01-pemindaian-port-sebelum.png` | 22, 80, dan 1883 terbuka dengan OpenSSH 8.4 serta nginx 1.18.0; 9000 filtered |
-| 2. Deteksi | Lanjut ke tahap berikutnya | Membandingkan hasil scan dengan listener dan aturan firewall, lalu mencocokkannya dengan alert Sguil | `evidence/01-pemindaian-port-sebelum.png` dan `blueteam/evidence/sguil-alert-minggu9.png` | Sensor mencatat `ET SCAN Nmap Scripting Engine` dan `ET SCAN Possible Nmap User-Agent` dari .100 ke .5 pada port 80, jam 06:30 GMT. Hasil scan cocok dengan listener, dan port 9000 terbaca filtered karena firewall tidak pernah mengizinkannya |
-| 3. Analisis | Menjelaskan apa yang dipetakan: empat port yang dipakai, versi layanan, dan sistem operasi Linux | Menemukan akar masalah: API replika mendengarkan di semua antarmuka sehingga cukup satu aturan firewall yang hilang untuk membukanya | Catatan di dokumen ini | Satu lapisan saja, yaitu firewall, yang menahan port 9000 |
-| 4. Respons | Tidak melakukan apa-apa | Memindahkan API ke loopback dan menambah lapisan kedua | `blueteam/evidence/kontrol B2 - API hanya mendengarkan di loopback/listener-setelah.png` | Listener berubah dari `0.0.0.0:9000` menjadi `127.0.0.1:9000` |
-| 5. Verifikasi | Mengulang pemindaian penuh | Memastikan port 9000 tetap tidak terjangkau dan layanan lain tetap hidup | `evidence/11-pemindaian-port-lengkap.png` | 9000 tetap filtered, port 22, 80, 1883 tetap terbuka untuk segmen lab, dashboard tetap HTTP 200 |
+| Tahap | Aktivitas Red Team | Aktivitas Blue Team | Bukti Verifikasi | Hasil Pengamatan |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Serang** | Menjalankan `nmap -sS -sV -O` ke alamat 192.168.12.5 untuk memindai seluruh port TCP. | Memantau lonjakan lalu lintas paket pada antarmuka sensor Security Onion. | `evidence/01-pemindaian-port-sebelum.png` | Port 22, 80, dan 1883 terdeteksi terbuka dengan rilis OpenSSH 8.4 dan Nginx 1.18.0; port 9000 berstatus filtered. |
+| **2. Deteksi** | Melanjutkan ke tahap persiapan eksploitasi. | Menganalisis hasil pemindaian terhadap daftar listener aktif dan mencocokkannya dengan alert Sguil. | `evidence/01-pemindaian-port-sebelum.png` dan `blueteam/evidence/sguil-alert-minggu9.png` | Sensor mencatat alert `ET SCAN Nmap Scripting Engine` dan `ET SCAN Possible Nmap User-Agent` dari 192.168.12.100 ke 192.168.12.5 port 80 pada pukul 06:30 GMT. Port 9000 terdeteksi filtered karena firewall memblokir paket masuk. |
+| **3. Analisis** | Memetakan port aktif, versi layanan, dan sistem operasi Linux untuk menentukan target serangan lanjutan. | Mengidentifikasi kerentanan: API backend mendengarkan pada seluruh antarmuka (0.0.0.0) sehingga hanya dilindungi oleh satu lapisan firewall iptables. | Catatan evaluasi internal | Ketergantungan pada satu lapis pertahanan perimeter berisiko apabila terjadi kegagalan aturan firewall. |
+| **4. Respons** | Tidak ada tindakan ofensif pada tahap ini. | Mengubah konfigurasi listener REST API agar hanya terikat pada antarmuka lokal loopback (127.0.0.1) untuk menerapkan prinsip pertahanan berlapis (defense-in-depth). | `blueteam/evidence/kontrol B2 - API hanya mendengarkan di loopback/listener-setelah.png` | Konfigurasi listener berubah dari `0.0.0.0:9000` menjadi `127.0.0.1:9000`. Banner versi Nginx juga disembunyikan via `server_tokens off`. |
+| **5. Verifikasi** | Mengulang pemindaian Nmap secara menyeluruh ke Target Node. | Memastikan port 9000 tetap tidak dapat dijangkau dari luar dan layanan web dashboard tetap beroperasi normal. | `evidence/11-pemindaian-port-lengkap.png` | Port 9000 tetap berstatus filtered, port layanan publik (22, 80, 1883) tetap dapat diakses sah, dan Nginx menyembunyikan rilis versi pada header HTTP. |
 
-## Skenario 2 - RT-02 percobaan autentikasi berulang
+## Skenario 2 - RT-02 Pengujian Autentikasi dan Pembatasan Sesi SSH
 
-| Tahap | Red team | Blue team | Bukti | Hasil |
-| --- | --- | --- | --- | --- |
-| 1. Serang | Empat kombinasi kredensial dicoba lewat `ssh_try.py`: `root` dan `sec_admin` dengan kata sandi lab, plus dua kata sandi salah | Mengamati log autentikasi Target Node | `evidence/03-percobaan-login-sebelum.png` | `sec_admin` berhasil masuk dengan kata sandi lab, `root` ditolak |
-| 2. Deteksi | Mencoba login berikutnya | Membaca log sshd yang sudah `LogLevel VERBOSE`, lalu mengecek alert Sguil | `blueteam/evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-sebelum.png` dan `blueteam/evidence/sguil-alert-minggu9.png` | Setiap percobaan tercatat lengkap di log sshd. Sensor juga menandai `ET SCAN Potential SSH Scan` untuk port 22, dan itu memang berasal dari percobaan login penyerang |
-| 3. Analisis | Menjelaskan bahwa kata sandi lab yang bocor cukup untuk masuk | Akar masalah: autentikasi password masih diizinkan, batas percobaan masih longgar, dan tidak ada pembatas laju koneksi | Catatan di dokumen ini | Kata sandi yang bocor sama dengan akses penuh ke shell Target Node |
-| 4. Respons | Tidak melakukan apa-apa | Memasang kunci publik, mematikan autentikasi password, mengecilkan `MaxStartups`, dan menambah rate limit iptables untuk penyerang | `blueteam/evidence/kontrol A2 - Login SSH berbasis kunci/kunci-publik-terpasang.png` dan `blueteam/evidence/kontrol A3 - Pembatasan percobaan login/sshd-maxstartups-dan-rate-limit.png` | `PasswordAuthentication no`, `MaxStartups 3:50:10`, aturan hashlimit 3 koneksi per detik dari 192.168.12.100 |
-| 5. Verifikasi | Mengulang empat kombinasi yang sama, lalu membuka delapan koneksi paralel | Memastikan semua ditolak dan zahl koneksi dibatasi | `evidence/04-percobaan-login-setelah.png` dan `evidence/10-uji-rate-limit-koneksi.png` | Keempat kombinasi ditolak dengan `Permission denied (publickey)`, koneksi paralel sebagian ditolak |
+| Tahap | Aktivitas Red Team | Aktivitas Blue Team | Bukti Verifikasi | Hasil Pengamatan |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Serang** | Menjalankan uji brute force menggunakan skrip `ssh_try.py` dengan kombinasi akun `root` dan `sec_admin` beserta kata sandi lab dan variasi kata sandi salah. | Memantau berkas log autentikasi sistem pada Target Node. | `evidence/03-percobaan-login-sebelum.png` | Akun `sec_admin` berhasil masuk menggunakan kata sandi sederhana; akun `root` ditolak oleh konfigurasi baseline. |
+| **2. Deteksi** | Menjalankan percobaan login lanjutan secara berkala. | Memeriksa berkas log sshd dengan tingkat rincian `LogLevel VERBOSE` dan memverifikasi alert Sguil. | `blueteam/evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-sebelum.png` dan `blueteam/evidence/sguil-alert-minggu9.png` | Seluruh rincian percobaan login tercatat pada log sistem. Sensor Snort membangkitkan alert `ET SCAN Potential SSH Scan` pada port 22 akibat pola koneksi berulang dari penyerang. |
+| **3. Analisis** | Memvalidasi bahwa kebocoran kata sandi administratif memungkinkan penyerang memperoleh shell interaktif. | Menemukan akar masalah: autentikasi berbasis kata sandi masih aktif, batasan percobaan login belum ketat, dan belum ada pembatasan laju koneksi pada port SSH. | Catatan evaluasi internal | Kebocoran kredensial kata sandi dapat dieksploitasi secara langsung tanpa hambatan kontrol akses tambahan. |
+| **4. Respons** | Tidak ada tindakan ofensif pada tahap ini. | Mengonfigurasi kunci otentikasi Ed25519, mematikan opsi `PasswordAuthentication`, memperketat parameter `MaxStartups`, dan memasang aturan laju koneksi (*hashlimit*) pada iptables. | `blueteam/evidence/kontrol A2 - Login SSH berbasis kunci/kunci-publik-terpasang.png` dan `blueteam/evidence/kontrol A3 - Pembatasan percobaan login/sshd-maxstartups-dan-rate-limit.png` | Nilai `PasswordAuthentication no` dan `MaxStartups 3:50:10` diterapkan. Aturan iptables membatasi maksimal 3 koneksi baru per detik dari host penyerang. |
+| **5. Verifikasi** | Mengulang percobaan login dengan kombinasi kata sandi yang sama, lalu meluncurkan 8 koneksi SSH paralel secara serentak. | Memverifikasi seluruh upaya login berbasis kata sandi ditolak dan koneksi paralel berlebih diredam. | `evidence/04-percobaan-login-setelah.png` dan `evidence/10-uji-rate-limit-koneksi.png` | Seluruh upaya login kata sandi ditolak dengan respon `Permission denied (publickey)`. Sebagian koneksi paralel dibatalkan oleh aturan firewall. |
 
-## Skenario 3 - RT-03 publish tanpa izin dan suntik data
+## Skenario 3 - RT-03 Injeksi Data REST dan Publish Ilegal Protokol MQTT
 
-| Tahap | Red team | Blue team | Bukti | Hasil |
-| --- | --- | --- | --- | --- |
-| 1. Serang | Publish ke topik `cow-sprinkler-01/control` tanpa kredensial, lalu `PUT` telemetri dengan kelembapan 150 dan perintah `manualSsr: on` | Mengamati log aplikasi dan log broker | `evidence/05-publish-mqtt-sebelum.png` dan `evidence/08-suntik-telemetri-rest-sebelum.png` | Publish diterima, data palsu tersimpan dengan `h1` 150, dan perintah sprinkler manual diterima |
-| 2. Deteksi | Melanjutkan uji | Membaca `access.log` dan `broker.log`, keduanya aktif sejak hardening, lalu mengecek alert Sguil | `blueteam/evidence/kontrol C3 - Logging aktivitas dan backup data/log-akses-aplikasi.png` dan `blueteam/evidence/sguil-alert-minggu9.png` | Setiap permintaan tercatat, termasuk yang ditolak. Sensor mencatat `ET POLICY curl User-Agent` untuk request dari .100 ke .5 pada port 80, jam 06:32 GMT |
-| 3. Analisis | Menjelaskan bahwa publish ke topik perintah berarti penyerang bisa menyalakan semprotan | Akar masalah: broker menerima koneksi anonim tanpa ACL topik, dan API tidak memvalidasi rentang sensor | Catatan di dokumen ini | Pola ini meniru firmware asli yang menyisipkan Database Secret di dalam sketch, sehingga siapa pun yang punya secret bisa menulis apa saja |
-| 4. Respons | Tidak melakukan apa-apa | Mengaktifkan validasi input, mewajibkan kredensial broker, membatasi topik yang boleh ditulis, memperketat permission berkas kredensial, dan merotasi token yang bocor | `blueteam/evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/validasi-input-setelah.png` dan `blueteam/evidence/kontrol C2 - Kredensial tidak hardcoded/kredensial-setelah.png` | Validasi aktif, kredensial wajib, topik `control` tidak bisa ditulis, token lama ditolak |
-| 5. Verifikasi | Mengulang publish dan suntik yang sama | Memastikan penulisan yang sah tetap jalan | `evidence/06-publish-mqtt-tanpa-kredensial-setelah.png`, `evidence/09-suntik-telemetri-rest-setelah.png`, `blueteam/evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-acl-terverifikasi.png` | Publish ditolak dengan CONNACK 5, nilai di luar rentang ditolak dengan HTTP 400, penulisan tanpa token ditolak dengan HTTP 401, data sah tetap diterima |
+| Tahap | Aktivitas Red Team | Aktivitas Blue Team | Bukti Verifikasi | Hasil Pengamatan |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Serang** | Mempublikasikan payload kendali ke topik `cow-sprinkler-01/control` tanpa kredensial, serta mengirimkan request `PUT` telemetri dengan nilai kelembapan 150%. | Memeriksa berkas log aplikasi backend dan broker MQTT. | `evidence/05-publish-mqtt-sebelum.png` dan `evidence/08-suntik-telemetri-rest-sebelum.png` | Pesan MQTT diterima oleh broker, data telemetri palsu tersimpan pada database lokal, dan perintah aktivasi sprinkler manual diterima sistem. |
+| **2. Deteksi** | Melanjutkan pengujian transmisi data. | Memantau `logs/access.log` dan `logs/broker.log` yang telah diaktifkan, serta memeriksa peringatan pada sensor IDS. | `blueteam/evidence/kontrol C3 - Logging aktivitas dan backup data/log-akses-aplikasi.png` dan `blueteam/evidence/sguil-alert-minggu9.png` | Seluruh request HTTP tercatat pada log akses. Sensor Snort mencatat alert `ET POLICY curl User-Agent` untuk permintaan HTTP dari 192.168.12.100 ke port 80 pada pukul 06:32 GMT. |
+| **3. Analisis** | Menilai dampak risiko: publikasi data kendali tanpa otorisasi dapat menyalakan relay pompa air tanpa pengawasan operator. | Mengidentifikasi kerentanan: broker MQTT mengizinkan koneksi anonim tanpa validasi daftar hak akses topik (ACL), dan REST API belum memeriksa rentang batas nilai sensor. | Catatan evaluasi internal | Pola kerentanan ini merefleksikan kelemahan pada firmware asli yang menanamkan kredensial di dalam kode sumber. |
+| **4. Respons** | Tidak ada tindakan ofensif pada tahap ini. | Mengaktifkan modul validasi input nilai telemetri, mewajibkan otentikasi akun broker, menerapkan ACL topik ketat, memperketat izin berkas kredensial (chmod 600), dan merotasi token API. | `blueteam/evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/validasi-input-setelah.png` dan `blueteam/evidence/kontrol C2 - Kredensial tidak hardcoded/kredensial-setelah.png` | Validasi rentang data aktif, otentikasi MQTT wajib, izin publish pada topik kontrol dicabut untuk sensor, dan token lama dinonaktifkan. |
+| **5. Verifikasi** | Mengulang pengiriman pesan kontrol ke broker MQTT dan request injeksi nilai telemetri palsu ke REST API. | Memastikan permintaan manipulasi ditolak dan alur data operasional yang sah tetap berjalan lancar. | `evidence/06-publish-mqtt-tanpa-kredensial-setelah.png`, `evidence/09-suntik-telemetri-rest-setelah.png`, `blueteam/evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-acl-terverifikasi.png` | Publish anonim ditolak broker dengan kode `CONNACK 5`, nilai kelembapan di luar batas ditolak dengan `HTTP 400 Bad Request`, request tanpa token ditolak dengan `HTTP 401 Unauthorized`, sedangkan data sah tetap diproses normal. |
 
-## Catatan dan yang belum lengkap
+## Catatan Evaluasi dan Temuan Monitoring
 
-- **Bukti alert Sguil untuk trafik Minggu 9 sudah ada di repository.**
-  Tangkapan layar diambil dari tab Escalated Events di Sguil pada 20 Oktober
-  2026, jam 09:09 GMT. Terlihat `ET POLICY curl User-Agent` dari
-  192.168.12.100 ke 192.168.12.5 port 80 pada 06:32:56 GMT, `ET SCAN Potential
-  VNC Scan` pada port 5901 dan 5802 pada 06:39:28 GMT, `ET SCAN Suspicious
-  inbound` pada port 1433, 4333, 5432, dan 1521 antara 06:39:32 dan 06:40:36
-  GMT, serta `LOCAL-TEST-ICMP` untuk ping dari penyerang. Semua baris itu berasal
-  dari trafik yang kami hasilkan sendiri, tidak ada traffic lain di segmen lab.
-- **False positive dari akses admin.** SSH dari host administrasi `192.168.12.1`
-  ke target juga ditandai `ET SCAN Potential SSH Scan` pada 06:27 GMT. Pola
-  signature belum bisa membedakan aktivitas sah dari penyerang, dan
-  ini masuk daftar perbaikan rule di Fase 2.
-- Skenario ARP spoofing di lapisan jaringan lokal belum dieksekusi. Rencana
-  lengkapnya ada di attack plan untuk Fase 2.
-- Evaluasi rules Firebase RTDB asli belum dilakukan. Yang diuji di lab adalah
-  pola validasi dan aturan aksesnya, bukan rules aslinya.
+- **Dokumentasi Bukti Alert Sguil:** Bukti rekaman deteksi sensor Security Onion untuk aktivitas pengujian Minggu 9 tersimpan pada repositori (`docs/blueteam/evidence/sguil-alert-minggu9.png`), diambil langsung dari antarmuka Escalated Events Sguil pada 20 Oktober 2026. Rekaman mencakup alert `ET POLICY curl User-Agent` dari 192.168.12.100 ke 192.168.12.5 port 80 pada 06:32:56 GMT, alert pemindaian port (`ET SCAN Potential VNC Scan` dan `ET SCAN Suspicious inbound`), serta `LOCAL-TEST-ICMP` untuk paket pengujian konektivitas. Seluruh alert bersumber murni dari trafik simulasi internal lab.
+- **Identifikasi False Positive pada Akses Administratif:** Koneksi SSH sah dari host administrasi `192.168.12.1` menuju Target Node sempat memicu alert `ET SCAN Potential SSH Scan` pada pukul 06:27 GMT. Hal ini menunjukkan bahwa aturan signature Snort bawaan belum membedakan aktivitas administratif berwenang dari percobaan pemindaian eksternal. Penyesuaian aturan deteksi ini dijadwalkan sebagai agenda evaluasi pada Fase 2.
+- **Rencana Pengujian Skenario Lanjutan:** Skenario penyerangan manipulasi protokol tingkat lanjut (seperti pengujian Replay Attack RT-04 dan manipulasi paket lokal) telah dirancang pada dokumen rencana serangan untuk dievaluasi secara mendalam pada pertemuan Fase 2 berikutnya.

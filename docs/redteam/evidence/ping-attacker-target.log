@@ -1,4 +1,4 @@
-# Ping attacker (.100) ke target (.5) — 3 Okt 2026, SESUDAH lab pulih
+# Ping attacker (.100) ke target (.5) - 3 Okt 2026, SESUDAH lab pulih
 # Perintah di LabVM: ping -c 3 -W 2 192.168.12.5
 # Hasil: 3 packets transmitted, 3 received, 0% packet loss, time 2003ms
 #   rtt min/avg/max/mdev = 0.847/1.202/1.740/0.386 ms

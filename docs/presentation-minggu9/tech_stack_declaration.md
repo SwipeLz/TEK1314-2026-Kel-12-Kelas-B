@@ -1,78 +1,48 @@
-# Deklarasi tech stack - Kelompok 12
+# Deklarasi Tech Stack - Kelompok 12
 
-**Proyek IoT:** SmartCow, sistem sprinkler kandang sapi. Enam sensor DS18B20 dan
-empat DHT22 di dua ESP32, backend Firebase Realtime Database, dashboard web di
-Firebase Hosting, dan solenoid 220V yang dikendalikan SSR.
+**Proyek IoT yang Dilindungi:** SmartCow, sistem pengendali sprinkler otomatis kandang sapi perah. Sistem terpasang menggunakan enam sensor suhu DS18B20 dan empat sensor kelembapan DHT22 pada dua modul ESP32, backend Firebase Realtime Database, web dashboard pada Firebase Hosting, serta aktuator solenoid 220V yang digerakkan melalui Solid State Relay (SSR).
 
-Lab kami memakai replika, bukan sistem asli. Semua data yang dipakai adalah data
-dummy, dan tidak ada satu pun permintaan yang pernah menyentuh Firebase produksi
-maupun perangkat di kandang mitra.
+Sesuai ketentuan keselamatan dan etika pengujian, seluruh pengujian keamanan dilakukan pada lingkungan replika di laboratorium. Seluruh data telemetri yang diproses merupakan data sintetis (dummy) tanpa menyentuh database produksi Firebase maupun perangkat kandang mitra.
 
-## Pemetaan teknologi
+## Pemetaan Komponen Teknologi
 
-| Komponen | Teknologi pada proyek IoT asli | Replika pada Target Node |
-| --- | --- | --- |
-| **Sistem operasi backend** | Infrastruktur Firebase terkelola Google, tanpa OS server yang dikelola kelompok | Arch Linux pada `SRV-IOT-KEL12-B` (192.168.12.5) |
-| **Database dan penyimpanan data** | Firebase Realtime Database, path `devices/cow-sprinkler-01/{telemetry,control,status,events}` | Penyimpanan JSON lokal dengan endpoint REST bergaya RTDB di `127.0.0.1:9000` (`app.py`) |
-| **Protokol komunikasi sensor ke backend** | HTTPS REST dengan Database Secret, ESP32 menulis telemetri tiap 2 detik | HTTP REST dengan token bearer, simulator menulis telemetri dummy tiap 2 detik (`simulator.py`) |
-| **Protokol lanjutan IoT** | Broker MQTT belum diputuskan, MQTT dan ArduinoJson disiapkan sebagai opsi (`PRODUCT.md`) | Broker MQTT minimal di port 1883 dengan autentikasi dan ACL topik (`broker.py`) |
-| **Komunikasi antar perangkat** | ESP-NOW 2,4 GHz antar dua ESP32, tanpa enkripsi | TCP/IP pada segmen Host-Only terisolasi 192.168.12.0/24 |
-| **Dashboard monitoring** | Firebase Hosting, web statis HTML/CSS/JavaScript tanpa build step | Nginx 1.18.0 menyajikan dashboard yang sama dan meneruskan `/api` ke API lokal |
-| **Autentikasi pengguna** | Firebase Authentication Email/Password plus rules RTDB berbasis peran di `/access/<uid>` | Token bearer pada API, kredensial broker, dan pembatasan topik |
-| **Sensor** | 6x DS18B20 pada satu bus OneWire dan 4x DHT22 di dua ESP32 | Simulator Python, angka acak di rentang suhu dan kelembapan sapi |
-| **Aktuator** | SSR pada GPIO23 menuju solenoid 220V | Perintah `control` pada API dan topik MQTT, tanpa tegangan nyata |
-| **Logging** | Firebase `events`, `status`, dan log 30 detik | journald persistent, `access.log` aplikasi, `broker.log` |
-| **Monitoring keamanan** | Tidak ada pada proyek asli | Security Onion di 192.168.12.200, sensor promiscuous |
+| Komponen Arsitektur | Teknologi Sistem Produksi | Replika pada Target Node Lab |
+| :--- | :--- | :--- |
+| **Sistem Operasi Backend** | Infrastruktur serverless terkelola Google Firebase | Arch Linux Security Workstation pada `SRV-IOT-KEL12-B` (192.168.12.5) |
+| **Database & Penyimpanan Data** | Firebase Realtime Database, struktur path `devices/cow-sprinkler-01/{telemetry,control,status,events}` | Penyimpanan berkas JSON lokal dengan antarmuka REST ala RTDB pada `127.0.0.1:9000` (`app.py`) |
+| **Protokol Telemetri Sensor** | HTTPS REST menggunakan Database Secret, ESP32 mengirim data tiap 2 detik | HTTP REST dengan token otentikasi bearer, simulator mengirim data dummy tiap 2 detik (`simulator.py`) |
+| **Protokol Komunikasi IoT** | Evaluasi protokol MQTT disiapkan sebagai opsi pengembangan (`PRODUCT.md`) | Broker MQTT mandiri pada port 1883 dengan autentikasi akun dan pembatasan hak topik (`broker.py`) |
+| **Komunikasi Antar Node IoT** | Protokol nirkabel ESP-NOW 2.4 GHz tanpa enkripsi antar modul ESP32 | Jaringan TCP/IP virtual terisolasi pada segmen Host-Only 192.168.12.0/24 |
+| **Antarmuka Monitoring** | Firebase Hosting, aplikasi web statis HTML/CSS/JavaScript | Nginx 1.18.0 menyajikan berkas antarmuka yang sama dan meneruskan rute `/api` ke backend lokal |
+| **Otentikasi & Otorisasi** | Firebase Auth berbasis email/kata sandi dan security rules RTDB berbasis peran (`/access/<uid>`) | Token otentikasi pada REST API, kredensial akun broker MQTT, serta kontrol akses topik (*topic ACL*) |
+| **Modul Sensor** | 6x DS18B20 pada bus OneWire dan 4x DHT22 pada dua mikrokontroler ESP32 | Skrip simulator Python yang membangkitkan nilai acak dalam rentang biologis suhu dan kelembapan sapi |
+| **Aktuator Fisik** | Modul SSR pada GPIO23 yang mengendalikan katup solenoid 220V | Parameter status kontrol pada REST API dan topik MQTT tanpa sambungan tegangan fisik |
+| **Pencatatan Log** | Pencatatan peristiwa pada Firebase node `events` dan `status` | Logging persisten melalui systemd-journald, `logs/access.log` pada aplikasi, dan `logs/broker.log` |
+| **Monitoring Keamanan** | Belum tersedia pada rancangan awal sistem produksi | Monitoring berbasis Security Onion pada 192.168.12.200 dengan sensor Snort mode promiscuous |
 
-## Kenapa replikanya seperti ini
+## Dasar Pemilihan dan Arsitektur Replika
 
-Bagian III panduan melarang menyentuh sistem produksi dan meminta replika tech
-stack yang sama persis. Dua hal yang paling menentukan yaitu REST dengan token
-dan struktur path `devices/cow-sprinkler-01/...`, jadi keduanya ditiru persis: nama
-path, nama field telemetri (`t1` sampai `t6`, `h1` sampai `h4`, `avg`, `thi`,
-`validMask`), dan aturan penulisan.
+Ketentuan Bagian III Panduan PBL mewajibkan penggunaan replika lingkungan uji untuk mencegah risiko operasional pada sistem produksi mitra. Dua karakteristik mendasar yang direplikasi secara presisi meliputi mekanisme REST API berbasis otentikasi token serta hierarki path Firebase Realtime Database (`devices/cow-sprinkler-01/...`). Seluruh penamaan rute, nama field telemetri (`t1` s.d. `t6`, `h1` s.d. `h4`, `avg`, `thi`, `validMask`), serta struktur data diselaraskan dengan spesifikasi produksi.
 
-Firebase Emulator tidak bisa dipasang karena segmen lab tidak punya akses
-internet. Karena itu replika memakai Python 3.9 standar dari Arch tanpa dependensi
-baru, dan bentuk datanya disimpan seperti bentuk Firebase.
+Karena jaringan laboratorium tidak memiliki akses internet untuk mengunduh Firebase Emulator, kelompok membangun replika backend mandiri menggunakan modul standar Python 3.9 bawaan Arch Linux tanpa menambah dependensi eksternal, dengan struktur berkas JSON lokal yang menyerupai cara kerja Realtime Database.
 
-MQTT ditambahkan sebagai lapisan kedua, bukan protocol utama. Pada proyek asli
-broker masih belum diputuskan, jadi keputusannya kami catat sebagai broker kedua
-yang perlu diuji di Fase 2.
+Protokol MQTT diimplementasikan sebagai lapisan komunikasi sekunder untuk melengkapi REST API. Pada dokumen rancangan proyek SmartCow, implementasi broker disiapkan sebagai jalur alternatif kendali aktuator, sehingga replika broker MQTT mandiri dibangun di port 1883 agar skenario pengujian protokol IoT dapat diuji secara objektif pada Fase 2.
 
-## Celah nyata yang jadi dasar skenario
+## Analisis Kerentanan Asli sebagai Dasar Skenario
 
-Temuan berikut diambil dari kode proyek asli dan jadi dasar tiga skenario serangan.
+Analisis keamanan pada kode sumber sistem SmartCow asli menemukan beberapa potensi celah keamanan yang menjadi landasan perancangan skenario penyerangan:
 
-1. **Database Secret tertanam di firmware.** `esp32/src/main.cpp` menyusun URL
-   dengan `?auth=` dan nilai secret itu ada di dalam sketch. Secret itu setara
-   akses penuh, jadi siapa pun yang punya bisa menulis apa saja ke RTDB. Tim
-   proyek sudah diberi tahu bahwa file `.ino` tidak boleh tersebar.
-2. **TLS firmware memakai `setInsecure()`.** Verifikasi sertifikat dimatikan, jadi
-   perangkat tidak bisa memastikan sedang berbicara dengan server Firebase.
-3. **Autentikasi dashboard berbasis peran, tapi perimeternya tipis.** Rules RTDB
-   menolak akses secara default dan `/access/<uid>` menyimpan peran, enabled, dan
-   tiga izin. Admin pertama tidak bisa diubah dari browser, tapi API pendaftaran
-   Firebase Auth secara teknis masih terbuka, dan siapa pun yang punya secret
-   firmware melewati seluruh aturan itu.
-4. **ESP-NOW tanpa enkripsi.** Paket antar dua ESP32 berjalan tanpa proteksi isi,
-   dan kanal 2,4 GHz dipakai bersama.
-5. **Kredensial pernah tersebar.** Password admin dan isi `js/firebase-config.js`
-   pernah dibagikan, sehingga rotasi kredensial masuk daftar tindak lanjut.
+1. **Penyimpanan Database Secret di Dalam Firmware:** Berkas `esp32/src/main.cpp` menyusun URL permintaan data dengan menyematkan query parameter `?auth=` secara eksplisit. Secret ini memberikan akses administratif penuh ke basis data jika berkas kode program tersebar.
+2. **Penonaktifan Verifikasi Sertifikat TLS:** Firmware menggunakan metode `setInsecure()` pada komunikasi HTTPS sehingga integritas server tujuan tidak dapat divalidasi oleh mikrokontroler.
+3. **Pembagian Hak Akses Dashboard:** Aturan keamanan RTDB menolak akses publik secara default dan memetakan hak akses lewat path `/access/<uid>`. Namun, kepemilikan secret firmware memungkinkan pembacaan dan penulisan data tanpa melewati validasi peran dashboard.
+4. **Komunikasi ESP-NOW Tanpa Enkripsi:** Transmisi data antar mikrokontroler pada frekuensi 2.4 GHz berjalan tanpa enkripsi payload sehingga rentan terhadap penyadapan lokal.
+5. **Kredensial Default yang Pernah Terbuka:** Kata sandi awal dan konfigurasi berkas `js/firebase-config.js` sempat dibagikan dalam dokumentasi internal sehingga memerlukan rotasi kredensial berkala.
 
-Nomor 1, 2, dan 5 sudah dicermati di replika lab lewat kontrol C1, C2, dan A2.
-Nomor 3 dan 4 menjadi bahan skenario yang akan diuji di Fase 2, karena
-membutuskan rules RTDB dan menambahkan enkripsi ESP-NOW berada di luar lingkup
-lab.
+Temuan pada poin 1, 2, dan 5 telah dimitigasi pada replika laboratorium melalui penerapan kontrol pengamanan C1 (validasi input dan ACL topik), C2 (manajemen kredensial dan rotasi), serta A2 (autentikasi kunci SSH). Sedangkan poin 3 dan 4 menjadi materi evaluasi lanjutan pada pengujian Fase 2.
 
-## Batasan yang kami akui
+## Batasan Lingkungan Pengujian
 
-- Replika tidak memakai Firebase sungguhan, dan rules RTDB asli tidak dievaluasi
-  langsung. Yang diuji adalah pola validasi dan aturan aksesnya.
-- Sensor dan aktuator tidak ada. Semua angka berasal dari simulator, sehingga
-  tidak ada perilaku fisik yang bisa diuji, termasuk keandalan sensor dan
-  keselamatan listrik.
-- Protokol MQTT yang dipakai hanya subset: CONNECT, SUBSCRIBE, PUBLISH, dan
-  PINGREQ. Retained message dan wildcard topic belum didukung.
-- Tidak ada layanan berbayar yang ditiru. Peran admin di proyek asli tidak
-  punya batas kuota, dan itu tidak diuji di lab.
+- Replika laboratorium tidak menjalankan layanan cloud Firebase langsung; pengujian difokuskan pada validasi struktur input dan pembatasan hak otorisasi akses.
+- Pengujian aktuasi fisik tidak menggunakan katup solenoid bertegangan tinggi demi keselamatan kerja di laboratorium; respon sistem dievaluasi melalui pencatatan status kendali pada memori dan log.
+- Protokol MQTT yang diimplementasikan mencakup fungsionalitas inti (CONNECT, SUBSCRIBE, PUBLISH, PINGREQ) tanpa fitur retained message dan wildcard topic.
+- Pengujian dibatasi pada segmen jaringan lokal tanpa melibatkan interaksi jaringan publik.
