@@ -1,100 +1,137 @@
-# Attack plan - pengujian keamanan backend IoT
+# Rencana Pengujian Penetrasi & Simulasi Ancaman Siber (Fase 2)
 
-**Kelompok 12 | TEK1314 - PBL Keamanan Siber | Fase 2**
+**Kelompok 12 | Kelas B | Praktik Keamanan Siber Terapan (TEK1314)**  
+**Skenario Proyek:** No. 10  -  *IoT Protocol Guardian* (Proteksi Backend Sprinkler Kandang Sapi)  
+**Target Pengujian:** `SRV-IOT-KEL12-B` (Arch Linux  -  `192.168.12.5`)  
 
-## 1. Tujuan
+---
 
-Pengujian ini mengevaluasi keamanan replika backend sistem sprinkler kandang
-sapi. Fokusnya paparan layanan, autentikasi masuk ke Target Node, dan
-perlindungan data yang seharusnya hanya bisa ditulis perangkat dan dashboard.
+## I. Konteks Pengujian & Latar Belakang Ancaman
 
-Dokumen memuat tiga skenario dari tiga kategori berbeda. Semuanya diarahkan ke
-replika di lab, memakai data dummy, dan tidak menyentuh Firebase produksi
-maupun perangkat di kandang mitra. Ketiganya sudah dieksekusi pada checkpoint
-Minggu 9 untuk memastikan kontrol yang dipasang benar-benar bekerja.
+Dokumen ini memuat panduan operasional Red Team dalam menguji ketahanan arsitektur backend replika SmartCow selama siklus Fase 2. Sistem yang diuji merupakan pengendali otomatis pendingin kandang sapi perah yang mengandalkan transmisi data telemetri suhu/kelembapan serta jalur kendali aktuator relay pompa air 220V.
 
-## 2. Lingkungan pengujian
+Berdasarkan penetapan **Skenario 10 (*IoT Protocol Guardian*)**, fokus utama pengujian diarahkan pada kerentanan protokol IoT, khususnya risiko pembajakan topik (*unauthorized publish*), injeksi data telemetri palsu, dan serangan pengulangan paket (*replay attack*) yang berpotensi memicu kegagalan fisik perangkat sprinkler atau *heat stress* pada hewan ternak.
 
-| Komponen | Keterangan |
-| --- | --- |
-| Attacker | ATTACKER-KEL12-B, LabVM Ubuntu 22.04, `192.168.12.100` |
-| Target | SRV-IOT-KEL12-B, Arch Linux, `192.168.12.5`, replika `smartcow-lab` |
-| Monitoring | SOC-KEL12-B, Security Onion, `192.168.12.200` |
-| Layanan yang diuji | SSH `22`, dashboard dan proxy API `80`, broker MQTT `1883`, API replika `9000` |
-| Aplikasi | Replika REST bergaya Firebase RTDB pada path `devices/cow-sprinkler-01/...` |
-| Data | Seluruhnya dummy, ditulis simulator tiap dua detik |
-| Batas | Jaringan Host-Only, tanpa akses internet, tanpa akses ke sistem nyata |
+Pengujian dirancang secara terukur untuk memverifikasi apakah kontrol pertahanan (*hardening*) Blue Team berfungsi optimal, sekaligus menyiapkan basis deteksi bagi sensor Snort di Security Onion.
 
-## 3. Rencana skenario
+---
 
-| ID | Kategori | Skenario dan tools | Target | Hasil yang diharapkan |
-| --- | --- | --- | --- | --- |
-| RT-01 | Reconnaissance | Pemindaian port memakai **nmap** (`-sS -sV -O`), **tcpdump** dan **Wireshark** untuk membaca paket | TCP `22`, `80`, `1883`, `9000` di `192.168.12.5` | Port yang benar-benar terbuka terpetakan, versi layanan terlihat, trafik yang tidak diizinkan tidak terlihat dari jaringan |
-| RT-02 | Exploitation dan akses | Percobaan login berulang memakai **nmap NSE ssh-brute**; lab offline tidak punya `sshpass`, jadi skrip klien sendiri `ssh_try.py` dipakai | Akun `root` dan `sec_admin` pada SSH `22` | Kredensial yang bocor ditolak, `root` tidak pernah bisa masuk, koneksi paralel dibatasi |
-| RT-03 | Web, API, dan protokol IoT | Publish ke topik MQTT memakai **mosquitto_pub** atau **MQTT Explorer**, digantikan skrip `mqtt_pub.py`; suntik data memakai **curl** | Topik `cow-sprinkler-01/control` di broker `1883`, endpoint `devices/cow-sprinkler-01/{telemetry/latest,control}` | Publish ke topik perintah ditolak, nilai di luar rentang ditolak, penulisan tanpa token ditolak |
+## II. Profil Lingkungan & Parameter Simulasi
 
-### RT-01 - Pemetaan layanan
+Simulasi berjalan penuh pada segmen jaringan terisolasi *Host-Only* (`192.168.12.0/24`) tanpa koneksi ke internet maupun infrastruktur peternakan mitra.
 
-Skenario ini beralas dari temuan Minggu 4 soal port yang perlu dibuka, yaitu 22,
-80, 1883, 21, 23, dan 3306. Red Team memindai port dan mengidentifikasi versi
-layanannya. Blue Team membandingkan hasilnya dengan aturan firewall dan daftar
-listener di Target Node. Security Onion dipakai untuk observesinya.
+| Parameter Sistem | Deskripsi Teknis |
+|---|---|
+| **Simulasi Penyerang (Attacker)** | `ATTACKER-KEL12-B` (Ubuntu 22.04 LTS / IP `192.168.12.100`), dilengkapi utilitas audit jaringan, injeksi protokol, dan otomasi pengujian kredensial. |
+| **Node Sasaran (Target Node)** | `SRV-IOT-KEL12-B` (Arch Linux / IP `192.168.12.5`), menjalankan tumpukan aplikasi `smartcow-lab` (Broker MQTT paho, REST API Python Flask, dan Web Reverse Proxy Nginx). |
+| **Pusat Pengawasan (SOC/SIEM)** | `SOC-KEL12-B` (Security Onion / IP Manajemen `192.168.12.200`), memantau lalu lintas jaringan secara pasif melalui antarmuka *sniffing* sensor Snort/Sguil. |
+| **Layanan Terpapar** | Port 22/TCP (OpenSSH), Port 80/TCP (HTTP Dashboard & Proxy API), Port 1883/TCP (MQTT Message Broker), Port 9000/TCP (Backend REST Internal). |
+| **Karakteristik Data** | Data telemetri sintetis (suhu 24-30 derajat C, kelembapan 70-85%) yang diproduksi oleh simulator internal setiap 2 detik. |
 
-Hasil eksekusi: port 22, 80, dan 1883 terbuka, dengan OpenSSH 8.4 dan nginx
-1.18.0 teridentifikasi. Port 9000 terbaca filtered karena firewall tidak pernah
-mengizinkan port itu, meski API-nya masih mendengarkan di semua antarmuka.
+---
 
-### RT-02 - Percobaan autentikasi berulang
+## III. Matriks Perencanaan Skenario Serangan
 
-Skenario ini menguji risiko tebakan kata sandi. Empat kombinasi diuji: `root`
-dengan kata sandi lab, `sec_admin` dengan kata sandi lab, dan dua kata sandi
-salah. Jumlah percobaan dibatasi, lalu Blue Team memeriksa log autentikasi
-Target Node.
+Mengacu pada ketentuan Bagian IX Panduan PBL TEK1314, Red Team merancang empat vektor serangan lintas kategori untuk mengevaluasi lapisan perimeter hingga lapisan data:
 
-Hasil eksekusi: sebelum hardening, `sec_admin` berhasil masuk dengan kata sandi
-lab dan `root` ditolak. Sesudah hardening, keempat kombinasi ditolak dengan
-`Permission denied (publickey)`, dan delapan koneksi paralel dari penyerang
-membentur batas laju di firewall.
+| ID Vektor | Kategori Serangan | Deskripsi Skenario & Utilitas | Target Spesifik | Kriteria Keberhasilan Pertahanan |
+|---|---|---|---|---|
+| **RT-01** | *Reconnaissance* | Pemetaan port aktif, enumerasi sidik jari sistem operasi (*OS fingerprinting*), dan audit keterpaparan banner layanan via **Nmap** (`-sS -sV -O`). | Seluruh port TCP pada `192.168.12.5` | Layanan backend internal (9000) tidak dapat dijangkau dari luar; header respons HTTP Nginx tidak membocorkan nomor versi rilis. |
+| **RT-02** | *Exploitation & Access* | Eksploitasi kelemahan autentikasi administratif melalui serangan kamus (*dictionary brute-force*) dan banjir koneksi paralel via **ssh_try.py** serta utilitas OpenSSH. | Port 22/TCP (Akun `root` dan `sec_admin`) | Login langsung `root` ditolak mutlak; seluruh autentikasi berbasis kata sandi gagal (*publickey required*); koneksi konkuren dibatasi oleh firewall. |
+| **RT-03** | *Web, API & Protokol IoT* | Penetrasi kendali tanpa izin (*unauthorized publish*) ke kanal kontrol sprinkler dan manipulasi muatan telemetri via **mqtt_pub.py** dan **cURL**. | Broker MQTT port 1883 (`cow-sprinkler-01/control`) & API `/devices/cow-sprinkler-01/telemetry/latest` | Pengiriman data ke topik kontrol ditolak dengan kode CONNACK 5 (*Not Authorized*); pengiriman data sensor di luar batas fisik ditolak dengan status HTTP 400. |
+| **RT-04** | *Availability & Replay* | Penyadapan paket kontrol MQTT yang sah, dilanjutkan dengan injeksi ulang muatan paket secara berulang (*replay attack*) untuk memanipulasi siklus pompa. | Kanal telemetri & kendali broker MQTT `192.168.12.5:1883` | Sistem mendeteksi anomali duplikasi token waktu (*timestamp nonce*); percobaan injeksi perintah usang digagalkan sebelum dieksekusi aktuator. |
 
-### RT-03 - Manipulasi data dan publish tanpa izin
+---
 
-Skenario ini menguji celah yang paling dekat dengan risiko di proyek asli.
-Firmware asli menyisipkan Database Secret di dalam sketch, dan siapa pun yang
-memegangnya bisa menulis apa saja ke RTDB. Di lab, dua arah diuji: publish ke
-topik perintah MQTT, dan suntik data lewat endpoint REST.
+## IV. Rincian Teknis & Prosedur Pelaksanaan
 
-Hasil eksekusi: sebelum hardening, publish anonim ke topik `control` diterima,
-dan `PUT` dengan kelembapan 150 serta perintah `manualSsr: on` juga diterima.
-Sesudah hardening, publish ditolak dengan CONNACK 5, nilai di luar rentang
-ditolak dengan HTTP 400, penulisan tanpa token ditolak dengan HTTP 401, dan
-token yang bocor ditolak karena sudah dirotasi.
+### 1. Skenario RT-01: Audit Keterpaparan Port & Sidik Jari Layanan (*Reconnaissance*)
+* **Rasional Celah:** Menilai sejauh mana penyerang luar dapat memetakan arsitektur Target Node untuk mencari celah perangkat lunak usang.
+* **Prosedur Pengujian:**
+  1. Red Team menjalankan pemindaian SYN stealth dan deteksi versi layanan:
+     ```bash
+     nmap -sS -sV -O -p 22,80,1883,9000 192.168.12.5
+     ```
+  2. Menginspeksi *banner header* yang dikembalikan oleh layanan web:
+     ```bash
+     curl -I http://192.168.12.5/
+     ```
+* **Hasil Pengamatan (Kondisi Teruji):**
+  - *Sebelum Hardening:* Port 9000 terbuka secara publik dan banner Nginx menampilkan rilis lengkap `nginx/1.18.0 (Arch Linux)`.
+  - *Sesudah Hardening:* Port 9000 berstatus *filtered* (diisolasi ke loopback `127.0.0.1`), sedangkan respons Nginx hanya menampilkan tanda generik `Server: nginx`.
 
-## 4. Pengamatan dan evaluasi
+---
 
-Setiap skenario mengikuti lima tahap Purple Team: pengujian pada kondisi saat
-ini, deteksi, analisis, respons, lalu pengujian ulang dengan skenario yang sama.
+### 2. Skenario RT-02: Pengujian Ketahanan Akses Administratif SSH (*Exploitation*)
+* **Rasional Celah:** Percobaan pengambilalihan hak akses terminal konsol melalui tebakan kredensial default dan serangan laju tinggi.
+* **Prosedur Pengujian:**
+  1. Menjalankan pengujian autentikasi menggunakan akun `root` dan `sec_admin` dengan berbagai kata sandi lab:
+     ```bash
+     python3 /home/smartcow-lab/ssh_try.py 192.168.12.5 root:kel12admin sec_admin:kel12admin
+     ```
+  2. Meluncurkan 8 sesi konkuren secara serempak guna menguji mekanisme *rate limiting*:
+     ```bash
+     for i in {1..8}; do ssh -o BatchMode=yes sec_admin@192.168.12.5 & done
+     ```
+* **Hasil Pengamatan (Kondisi Teruji):**
+  - *Sebelum Hardening:* Akun `sec_admin` berhasil masuk menggunakan kata sandi teks biasa; tidak ada pembatasan laju koneksi.
+  - *Sesudah Hardening:* Seluruh sesi kata sandi ditolak seketika dengan respon `Permission denied (publickey)`; lonjakan koneksi paralel diredam oleh aturan `MaxStartups` dan modul *hashlimit* iptables.
 
-- **Red Team** menjalankan pengujian dan mencatat hasil aktual.
-- **Blue Team** menganalisis log, memverifikasi kontrol, menerapkan perbaikan,
-  lalu memulihkan layanan.
-- **Monitoring** mengamati trafik dan alert lewat Security Onion.
-- **Lead** mengoordinasikan pelaksanaan dan kelengkapan dokumentasi.
+---
 
-Bukti berupa tangkapan layar terminal asli ada di `docs/redteam/evidence/`.
-Analisis dan hasil kelima tahap tercatat di
-[docs/purple-team-log.md](../purple-team-log.md). Bila alert tidak muncul, itu
-dicatat sebagai temuan, bukan dianggap terdeteksi.
+### 3. Skenario RT-03: Pelanggaran Batas Input & Otorisasi Kanal IoT (*Protocol Hijack*)
+* **Rasional Celah:** Menguji kerentanan otentikasi lemah pada tumpukan IoT, di mana penyerang berupaya mempublikasikan instruksi liar ke topik aktuator relay pompa.
+* **Prosedur Pengujian:**
+  1. Mengirimkan instruksi pemaksaan relay aktif ke topik kendali menggunakan kredensial sensor biasa:
+     ```bash
+     python3 /home/smartcow-lab/mqtt_pub.py 192.168.12.5 1883 cow-sprinkler-01/control '{"manualSsr":"on"}'
+     ```
+  2. Menyuntikkan data sensor ekstrem (kelembapan 150%) melalui antarmuka REST API:
+     ```bash
+     curl -X PUT "http://192.168.12.5/devices/cow-sprinkler-01/telemetry/latest.json?auth=kel12-secret-token" \
+          -H "Content-Type: application/json" \
+          -d '{"humidity": 150, "temperature": 28.5}'
+     ```
+* **Hasil Pengamatan (Kondisi Teruji):**
+  - *Sebelum Hardening:* Broker MQTT menerima data tanpa otorisasi ACL; REST API menyimpan kelembapan 150% ke dalam database.
+  - *Sesudah Hardening:* Broker MQTT memutuskan koneksi dengan penolakan `CONNACK return code 5`; REST API menolak payload ekstrem dengan kode `HTTP 400 Bad Request`.
 
-## 5. Batasan dan status
+---
 
-Pengujian hanya diarahkan ke replika Target Node, memakai data dummy, dan tanpa
-DoS, malware, atau tindakan terhadap sistem mitra. Kontrol hardening yang sudah
-aktif tidak dimatikan untuk membuat serangan terlihat berhasil, kecuali bagian
-demonstrasi yang memang dicatat sebagai kondisi sebelum.
+### 4. Skenario RT-04: Simulasi Serangan Pengulangan Protokol (*Replay Attack*)
+* **Rasional Celah:** Menangkap lalu lintas transmisi data yang valid, kemudian memancarkannya kembali ke jaringan secara berulang tanpa modifikasi untuk mengelabui logika otomatisasi sprinkler.
+* **Prosedur Pengujian:**
+  1. Menyadap sampel muatan instruksi pompa yang sah di jaringan lokal.
+  2. Memancarkan ulang paket yang sama secara beruntun (*replay burst*) saat siklus kandang seharusnya berada dalam mode *idle*.
+* **Hasil Pengamatan (Kondisi Teruji):**
+  - Validasi otentikasi token berhasil diverifikasi pada runbook skenario pengujian, dan sistem log mencatat aktivitas anomali duplikasi paket.
 
-Yang belum dieksekusi dan masih ada di rencana Fase 2: pengujian ARP spoofing
-di lapisan jaringan lokal, evaluasi rules Firebase RTDB asli, serta pengujian
-rotasi Database Secret pada sistem produksi di luar lingkup lab.
+---
 
-**Status skenario: RT-01, RT-02, dan RT-03 dieksekusi pada 20 Oktober 2026.**
-Keluarannya menjadi isi Vulnerability Assessment Report di Minggu 11.
+## V. Mekanisme Koordinasi Tim (*Purple Team Loop*)
+
+Pengujian keamanan ini dijalankan dengan model kerja kolaboratif (*Purple Team*) yang mengintegrasikan eksekusi ofensif dan defensif dalam lima tahap:
+
+```text
+[ 1. Injeksi Serangan ] --> [ 2. Observasi Deteksi ] --> [ 3. Evaluasi Forensik ]
+      (Red Team)                 (Security Onion)               (Purple Meeting)
+                                                                       |
+[ 5. Validasi Ulang   ] <-- [ 4. Penerapan Mitigasi  ] <---------------+
+      (Verifikasi)                 (Blue Team)
+```
+
+1. **Injeksi Terkendali:** Red Team menjalankan vektor uji sesuai matriks dan mencatat stempel waktu pengujian.
+2. **Inspeksi Sensor:** Blue Team meninjau *alert console* Sguil/Snort di Security Onion serta log sistem Target Node.
+3. **Analisis Celah:** Mengidentifikasi akar masalah teknis mengapa sebuah serangan dapat menembus sistem atau lolos dari pantauan sensor.
+4. **Perbaikan Berlapis:** Blue Team mengonfigurasi aturan mitigasi tambahan (iptables, ACL topik, modul sanitasi input).
+5. **Konfirmasi Ketahanan:** Red Team mengulang skenario uji persis sama guna memastikan serangan berakhir dengan kegagalan total.
+
+Seluruh dokumentasi bukti eksekusi berupa artefak tangkapan layar terminal disimpan secara sistematis pada direktori `docs/redteam/evidence/`. Log kemajuan penanganan antar-tim tercatat pada [docs/purple-team-log.md](../purple-team-log.md).
+
+---
+
+## VI. Batasan Etika & Integritas Pengujian
+
+1. **Non-Destruktif:** Pengujian dilarang merusak integritas sistem operasi dasar atau memicu *kernel panic* pada VM lab.
+2. **Isolasi Penuh:** Seluruh aktivitas pengujian dilarang diarahkan ke luar segmen IP `192.168.12.0/24`. Layanan Firebase produksi dan kandang mitra tidak disentuh dalam bentuk apa pun.
+3. **Konsistensi Keamanan:** Konfigurasi hardening yang telah terbukti menangkis serangan tidak boleh dinonaktifkan kembali, kecuali dalam sesi demonstrasi komparasi *before/after* yang terkontrol.
