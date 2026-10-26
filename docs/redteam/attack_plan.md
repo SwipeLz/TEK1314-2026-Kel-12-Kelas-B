@@ -99,12 +99,25 @@ Mengikuti ketentuan Panduan PBL TEK1314 Bagian IX, skenario penyerangan dibagi k
 ---
 
 ### 4. Skenario RT-04: Pengujian Serangan Pengulangan Paket (*Replay Attack*)
-* **Alasan Pengujian:** Memastikan perintah kendali pompa yang disadap tidak dapat dipakai kembali di lain waktu untuk memanipulasi jadwal penyiraman kandang.
+* **Alasan Pengujian:** Memastikan perintah kendali pompa yang disadap tidak dapat dipakai kembali di lain waktu untuk memanipulasi status penyemprotan air kandang secara tidak sah.
 * **Langkah Kerja:**
-  1. Menangkap paket data perintah pompa yang sah saat siklus normal berjalan.
-  2. Mengirimkan kembali paket yang persis sama ke broker MQTT saat sistem dalam status istirahat (*idle*).
+  1. Menangkap muatan paket kendali sprinkler yang sah saat sistem beroperasi normal:
+     ```json
+     {"manualSsr": "on", "source": "operator", "timestamp": 1771987654321}
+     ```
+  2. Mengirimkan kembali paket yang persis sama dari Attacker Node (`192.168.12.100`) ke broker MQTT `192.168.12.5:1883` pada kanal kontrol:
+     ```bash
+     python3 /home/smartcow-lab/mqtt_pub.py 192.168.12.5 1883 cow-sprinkler-01/control '{"manualSsr":"on","source":"replay"}'
+     ```
+  3. Menguji pengiriman ulang request kendali ke antarmuka REST API menggunakan token yang sudah dicabut:
+     ```bash
+     curl -X PUT "http://192.168.12.5/devices/cow-sprinkler-01/control.json?auth=sc-old-revoked-token" \
+          -H "Content-Type: application/json" \
+          -d '{"manualSsr":"on"}'
+     ```
 * **Hasil Pengamatan Lapangan:**
-  - Payload yang dikirim ulang tercatat sebagai anomali pada log sistem dan verifikasi parameter waktu menggagalkan eksekusi berulang pada relay.
+  - *Sebelum Hardening:* Broker MQTT menerima pengiriman ulang paket dari klien anonim tanpa otorisasi topik, status relay berubah, dan ketiadaan validasi token membiarkan perubahan kendali tanpa pengawasan operator.
+  - *Sesudah Hardening:* Pengiriman pesan ke topik kendali langsung diputus oleh broker sesuai aturan ACL (`broker.log` mencatat *denied publish ke topik terlarang*). Request REST dengan token lama ditolak dengan respons `HTTP 401 Unauthorized`. Pada Monitoring Node, sensor Snort mendeteksi paket kendali ilegal dan membangkitkan alert SID 1000002 (`SMARTCOW-MQTT Unauthorized Control Topic Access`) pada antarmuka Sguil (CID 6127). Status sprinkler tetap aman.
 
 ---
 
