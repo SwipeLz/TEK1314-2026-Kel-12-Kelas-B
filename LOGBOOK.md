@@ -94,3 +94,26 @@ Seluruh skenario penyerangan diuji secara nyata menggunakan data dummy untuk mem
 - **Karakteristik Sensor:** Sensor Security Onion menggunakan mesin Snort dengan korelasi basis data via barnyard2 ke `sguildb`.
 - **Verifikasi Alert Sguil:** Antarmuka Sguil berhasil memvalidasi rekaman alert lalu lintas penyerangan (`ET SCAN Nmap Scripting Engine`, `ET POLICY curl User-Agent`, dan `ET SCAN Potential SSH Scan`) yang terjadi antara pukul 06:30 hingga 06:47 GMT (13:30 hingga 13:47 WIB). Bukti tangkapan layar didokumentasikan pada repositori (`docs/blueteam/evidence/sguil-alert-minggu9.png`).
 - **Identifikasi Kendala Isolasi Lab:** Mengingat lingkungan lab terisolasi dari internet dan memori fisik host terbatas, pengujian dijalankan secara terukur menggunakan skrip pengujian berbasis Python mandiri dengan pemanfaatan sumber daya komputasi yang efisien.
+
+## Minggu 10
+
+- Red Team merancang dan menguji skenario serangan ofensif Fase 2 (RT-01 pemetaan port, RT-02 exploitasi SSH, RT-03 manipulasi MQTT dan injeksi REST, RT-04 replay attack kontrol pompa).
+- Blue Team menambahkan aturan signature Snort kustom pada Security Onion (`/etc/nsm/rules/local.rules`) untuk mendeteksi pola lalu lintas serangan spesifik SmartCow:
+  - SID 1000001: `LOCAL-TEST-ICMP` untuk verifikasi keterhubungan jaringan.
+  - SID 1000002: `SMARTCOW-MQTT Unauthorized Control Topic Access` untuk mendeteksi penulisan tanpa izin ke topik kontrol pompa.
+  - SID 1000003: `SMARTCOW-HTTP Telemetry Attack Injection` untuk mendeteksi upaya injeksi telemetri tidak sah.
+- Verifikasi rule update pada Security Onion: proses Snort dan Barnyard2 berhasil memuat aturan baru tanpa galat.
+- Penyesuaian antarmuka jaringan Attacker Node: alamat IP disetel permanen ke `192.168.12.100/24` melalui konfigurasi Netplan agar komunikasi antar-node berjalan stabil pada segmen Host-Only.
+
+## Minggu 11 (Finalisasi Evaluasi Fase 2)
+
+- Replikasi antarmuka web SmartCow pada Target Node: memindahkan seluruh aset web asli (dashboard Overview, kartu suhu dan kelembapan, status SSR sprinkler, tabel riwayat telemetri, log aktivitas pompa air, dan manajemen akses admin) ke `/usr/share/nginx/html/` dengan adapter JavaScript offline mandiri tanpa dependensi CDN Google Firebase eksternal.
+- Penyesuaian performa web: mematikan efek visual berat (animasi CSS, blur, dan bayangan kompleks) serta mengatur interval polling data ke 4 detik untuk menjaga pemakaian CPU Target Node tetap rendah (sekitar 4%).
+- Penyelesaian siklus Purple Team 5 tahap untuk skenario RT-01 hingga RT-04 secara menyeluruh:
+  - RT-01: pemindaian Nmap dari Attacker Node memastikan port 9000 berstatus filtered dan header web server menyembunyikan nomor versi.
+  - RT-02: pengujian brute force kata sandi ditolak seluruhnya oleh autentikasi berbasis kunci Ed25519, serta laju koneksi konkuren diredam firewall.
+  - RT-03: pengiriman pesan ke broker tanpa otentikasi ditolak dengan kode CONNACK 5, dan injeksi data sensor ke REST API ditolak dengan respons HTTP 400.
+  - RT-04: pengiriman ulang (replay) paket kendali pompa ditolak oleh aturan hak topik broker (ACL drop), token lama ditolak dengan HTTP 401, serta percobaan serangan terdeteksi oleh Snort pada Security Onion (CID 6127).
+- Verifikasi prosedur pemulihan data (C3): menguji skrip `/usr/local/bin/smartcow-restore` dengan mensimulasikan berkas data yang rusak (ukuran 0 byte). Hasil pemeriksaan nilai hash SHA256 membuktikan berkas pulih sempurna sesuai kondisi sebelum kerusakan (`d66f76c894af5e76579119d283e05bbc6c006266273e8881b59c285cd8be610f`).
+- Penyusunan dokumen Vulnerability Assessment Report (VAR) sebagai laporan formal penyelesaian Fase 2 pada `docs/vulnerability-assessment-report.md`.
+- Pemutakhiran repositori GitHub kelompok dengan seluruh artefak hasil pengujian dan dokumentasi lengkap.
