@@ -18,7 +18,7 @@ Seluruh pengujian pertahanan dan simulasi serangan Red Team dijalankan secara be
 | [docs/design/ip_plan.md](docs/design/ip_plan.md) | Skema pengalamatan IP, peran node, dan alokasi port layanan |
 | [docs/design/topology.png](docs/design/topology.png) | Diagram topologi jaringan lab (Target, Attacker, Monitoring) |
 | [docs/presentation-minggu9/tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) | Deklarasi arsitektur teknologi asli dan pemetaannya ke lab |
-| [docs/presentation-minggu9/slides.pdf](docs/presentation-minggu9/slides.pdf) | Salinan berkas slide presentasi evaluasi Minggu 9 |
+| [Presentasi Minggu 9](docs/presentation-minggu9/README.md) | PDF dan pratinjau gambar delapan slide evaluasi Minggu 9 |
 | [docs/blueteam/hardening_checklist.md](docs/blueteam/hardening_checklist.md) | Dokumentasi 9 kontrol hardening beserta bukti verifikasi |
 | [docs/blueteam/evidence/](docs/blueteam/evidence/) | Tangkapan layar terminal sebelum dan sesudah hardening |
 | [docs/redteam/attack_plan.md](docs/redteam/attack_plan.md) | Rancangan skenario serangan Red Team (RT-01 s.d. RT-04) |
