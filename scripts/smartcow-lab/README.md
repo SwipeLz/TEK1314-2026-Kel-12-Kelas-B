@@ -24,6 +24,8 @@ Folder ini dapat dipakai ulang di lab baru selama tiga hal dijaga: token disimpa
 | `nginx-smartcow.conf` | Server block Nginx untuk dashboard dan proxy `/api` |
 | `patch-nginx.py` | Menambal `nginx.conf` dengan blok proxy; opsi `tokens` menambahkan `server_tokens off` |
 | `patch-app-secrets.py` | Menghapus literal token dari `app.py` dan memindahkannya ke environment |
+| `patch-redact-log.py` | Menambal `app.py` agar parameter `auth` pada log akses ditulis `auth=REDACTED` |
+| `test_app_fresh_start.py` | Uji start bersih: direktori data kosong tidak membuat layanan gagal, token kosong ditolak, body JSON non-objek dibalas 400 |
 | `install-lab.sh` | Memasang pengguna aplikasi, folder, unit systemd, dan Nginx sebagai root |
 | `smartcow-api.service`, `smartcow-broker.service`, `smartcow-sim.service` | Unit systemd untuk tiga layanan |
 | `smartcow-backup` | Skrip pencadangan: membekukan `data/` dengan `cp -a`, mengarsipkan salinan beku, menulis checksum dan manifest sha256, publikasi atomik melalui `.part`, retensi tujuh arsip |
