@@ -1,6 +1,6 @@
 # Rekaman paket: berkas besar, tidak diperlukan di dalam repository
 *.pcap
-!docs/phase-1-baseline/assets/kel12-demo.pcap
+!docs/blueteam/evidence/baseline/kel12-demo.pcap
 
 # Berkas presentasi lokal. Panduan PBL mewajibkan format PDF, bukan .pptx,
 # sehingga berkas PowerPoint, Keynote, dan Impress tidak boleh ikut terunggah.

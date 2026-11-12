@@ -1,6 +1,6 @@
 # Baseline report fase 1 (minggu 7) - Kelompok 12 Kelas B
 
-> **Status dokumen.** Ini potret kondisi akhir minggu 7 (fase 1, sebelum penyerangan). Isinya sengaja tidak diperbarui agar tetap jadi pembanding "before". Perubahan sesudahnya ada di `../phase-2-va/` dan `../blueteam/hardening_checklist.md`. Pemeriksaan ulang seluruh node pada 12 November 2026 ada di `../phase-2-va/evidence/2026-11-12/`.
+> **Status dokumen.** Ini potret kondisi akhir minggu 7 (fase 1, sebelum penyerangan). Isinya sengaja tidak diperbarui agar tetap jadi pembanding "before". Perubahan sesudahnya ada di `hardening_checklist.md`, `../vulnerability-assessment-report.md`, dan `../purple-team-log.md`. Pemeriksaan ulang seluruh node pada 12 November 2026 ada di `evidence/verifikasi-2026-11-12/`.
 
 Subnet 192.168.12.0/24. Kondisi before attack. Sistem sudah di-hardening sebelum diserang.
 
@@ -53,15 +53,15 @@ Hasil uji (attacker .100 ke target .5):
 
 * 10x ping: tercatat sebagai GPL ICMP_INFO PING *NIX.
 * 12x koneksi SSH ke port 22: tercatat sebagai ET SCAN Potential SSH Scan (+ OUTBOUND), lengkap dengan source port.
-* Bukti database: `assets/sguil-db-events.log` (timestamp, src, dst, signature).
-* Bukti jendela Sguil: `assets/sguil-alert.png` (pilih sensor seconion-import, terlihat baris 192.168.12.100 ke .5).
+* Bukti database: `evidence/baseline/sguil-db-events.log` (timestamp, src, dst, signature).
+* Bukti jendela Sguil: `evidence/baseline/sguil-alert.png` (pilih sensor seconion-import, terlihat baris 192.168.12.100 ke .5).
 
-Bukti lain di `assets/`:
+Bukti lain di `evidence/baseline/`:
 
 * `ping-attacker.log` (ping 0% loss)
 * `tcpdump-icmp.png` (capture live di Onion)
 * `wireshark-icmp.png` + `kel12-demo.pcap` (45 paket, Plan B)
-* Tiga tangkapan layar identitas node (`target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`) ditarik dari repositori karena memuat kata sandi. Bukti IP dan hostname yang bebas kredensial ada pada `docs/phase-2-va/evidence/2026-11-12/06-target-state-recon.log` dan `04-onion-state.log`.
+* Tiga tangkapan layar identitas node (`target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`) ditarik dari repositori karena memuat kata sandi. Bukti IP dan hostname yang bebas kredensial ada pada `evidence/verifikasi-2026-11-12/06-target-state-recon.log` dan `evidence/verifikasi-2026-11-12/04-onion-state.log`.
 * `hardening-services.png`, `hardening-firewall.png`
 
 ## 4. Demo minggu 7
@@ -71,4 +71,4 @@ Bukti lain di `assets/`:
 3. Tunjukkan live ping tercatat di Onion.
 4. Q&A alasan pilih hardening tersebut. Intinya: tutup yang tidak perlu, buka seperlunya, catat semua.
 
-Demo diurut dari topologi ke hardening ke live logging supaya penonton yang belum pernah buka Security Onion tetap bisa ngikutin, karena tiap langkah nunjukin layar yang sama dengan yang ada di screenshot assets, dan sesi tanya jawab di akhir khusus ngebahas alasan tiap aturan dibuka atau ditutup. Urutan ini juga ngebantu kami sendiri, karena tiap klaim di laporan ini kepakai langsung sebagai bahan omongan tanpa perlu nyiapin slide tambahan.
+Demo diurut dari topologi ke hardening ke live logging supaya penonton yang belum pernah buka Security Onion tetap bisa ngikutin, karena tiap langkah nunjukin layar yang sama dengan yang ada di screenshot pada evidence/baseline, dan sesi tanya jawab di akhir khusus ngebahas alasan tiap aturan dibuka atau ditutup. Urutan ini juga ngebantu kami sendiri, karena tiap klaim di laporan ini kepakai langsung sebagai bahan omongan tanpa perlu nyiapin slide tambahan.

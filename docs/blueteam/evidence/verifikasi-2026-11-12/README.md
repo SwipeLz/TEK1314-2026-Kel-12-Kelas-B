@@ -1,10 +1,10 @@
-# Fase 2 - Vulnerability Assessment dan Verifikasi Kontrol
+# Verifikasi Kontrol 12 November 2026
 
-Folder ini memuat verifikasi ulang kontrol pengamanan fase 2 pada lingkungan lab yang benar-benar berjalan, beserta berkas bukti teks yang bisa dibaca ulang tanpa perlu mesin virtualnya hidup.
+Folder ini memuat bukti teks verifikasi ulang kontrol pengamanan fase 2 pada lingkungan lab yang benar-benar berjalan. Berkas dapat dibaca ulang tanpa menyalakan mesin virtual.
 
-## Bukti 12 November 2026
+Seluruh berkas pada folder ini adalah keluaran perintah asli, bukan rekonstruksi. Nilai rahasia (token API, sandi akun broker, isi `.env`) tidak ikut tercetak.
 
-Direktori `evidence/2026-11-12/` berisi keluaran perintah asli, bukan rekonstruksi. Semua nilai rahasia (token API, sandi akun broker, isi `.env`) tidak ikut tercetak.
+## Daftar Berkas
 
 | Berkas | Isi | Hasil |
 | :--- | :--- | :--- |
@@ -30,4 +30,3 @@ Direktori `evidence/2026-11-12/` berisi keluaran perintah asli, bukan rekonstruk
 - Kredensial broker MQTT akun `esp32` dirotasi pada 12 November 2026 karena nilainya terlihat pada tangkapan layar lama. Berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600, kredensial lama ditolak sedangkan yang baru diterima, dan uji C1 dijalankan ulang setelah rotasi dengan hasil 6/6 lulus (`10-mqtt-credential-rotation.log`).
 - Kata sandi akun sistem (bukan kredensial broker) tidak dirotasi karena nilainya dipakai untuk login konsol dan Sguil pada panduan demo; rotasi tetap keputusan pemilik lab. Sebagai gantinya jalur kata sandi SSH ditutup: Target Node memang sudah menolak kata sandi sejak hardening, dan pada 12 November 2026 Attacker Node serta Monitoring Node disetel `PasswordAuthentication no` (cadangan `sshd_config.bak-hardening-20261112`). Ketiga node kini hanya menawarkan `publickey`, kata sandi akun tidak berubah sehingga tidak ada akun yang terkunci (`15-ssh-password-auth-disabled.log`).
 - Belum ada tangkapan layar khusus untuk RT-04; deteksinya terbukti lewat query basis data.
-- Fase 3 tidak disentuh pada pekerjaan ini.
