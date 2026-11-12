@@ -2,7 +2,7 @@
 # C3 restore verification: extract newest archive to a temp dir and verify every
 # file against the manifest written at backup time. Prints PASS/FAIL lines only.
 set -eu
-DEST=/home/smartcow-lab/backup
+DEST=/var/lib/smartcow/backup
 TMP=$(mktemp -d /tmp/restore-check.XXXXXX)
 trap 'rm -rf "$TMP"' EXIT INT TERM
 

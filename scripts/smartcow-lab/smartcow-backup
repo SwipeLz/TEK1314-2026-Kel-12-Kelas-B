@@ -7,12 +7,15 @@
 # pernah terlihat sebagai arsip terbaru oleh pemulihan.
 #
 # Batas kepercayaan: skrip ini berjalan sebagai root, sedangkan data/ dapat
-# ditulis pengguna layanan. Karena itu direktori arsip dimiliki root:root mode
-# 700, sehingga smartcow tidak bisa menaruh arsip atau checksum palsu.
+# ditulis pengguna layanan. Arsip karena itu disimpan di luar /home/smartcow-lab
+# dan dimiliki root:root mode 700. Kalau arsip ditaruh di dalam home layanan,
+# smartcow tetap bisa menghapus seluruh direktori arsip itu (home-nya sendiri
+# milik smartcow) lalu menggantinya dengan arsip dan checksum palsu.
 set -euo pipefail
 
 LAB=/home/smartcow-lab
-DEST=$LAB/backup
+BASE=/var/lib/smartcow
+DEST=$BASE/backup
 OWNER=root:root
 KEEP=7
 
@@ -29,9 +32,9 @@ trap cleanup EXIT INT TERM
 
 [ -d "$LAB/data" ] || { echo "GAGAL: $LAB/data tidak ada" >&2; exit 1; }
 
-mkdir -p "$DEST"
-chown "$OWNER" "$DEST"
-chmod 700 "$DEST"
+mkdir -p "$BASE" "$DEST"
+chown "$OWNER" "$BASE" "$DEST"
+chmod 700 "$BASE" "$DEST"
 
 # 1. Bekukan isi data, lalu arsipkan salinan beku tersebut.
 cp -a "$LAB/data" "$SNAP/data"

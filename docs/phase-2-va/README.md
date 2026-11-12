@@ -20,11 +20,14 @@ Direktori `evidence/2026-11-12/` berisi keluaran perintah asli, bukan rekonstruk
 | `10-mqtt-credential-rotation.log` | Kredensial broker lama dan baru setelah rotasi | lama ditolak `CONNACK 5`, baru diterima |
 | `11-external-port-check.log` | Pemeriksaan dari Attacker Node | 22/80/1883 terbuka, 9000 tertutup, API lewat 80 membalas 401 tanpa token |
 | `12-target-redaction-and-env.log` | Redaksi `auth` pada log akses dan kunci `.env` | `auth=REDACTED`, kunci `.env` terdaftar tanpa nilai |
+| `13-backup-relocation-and-deploy.log` | Pemasangan skrip repositori di Target Node, pemindahan arsip ke `/var/lib/smartcow/backup`, pencadangan, uji pemulihan, dan uji tolak pengguna layanan | skrip `root:root` mode 750; direktori arsip `root:root` mode 700 di luar home layanan; backup `Succeeded`; pemulihan 4/4 cocok; `smartcow` tidak dapat menulis, membaca, atau menghapus arsip |
+| `14-c1-credential-and-liveness-recheck.log` | Verifikasi C1 sesudah pemasangan, penolakan kredensial lama, izin berkas rahasia, dan aliran telemetri | C1 6/6 lulus; token API lama dibalas 401; dua sandi broker lama ditolak `CONNACK 5`; kredensial aktif diterima; telemetri tetap mengalir |
+| `15-ssh-password-auth-disabled.log` | Kebijakan `sshd` efektif dan metode autentikasi yang ditawarkan ketiga node | `passwordauthentication no` pada .100 dan .200; ketiga node hanya menawarkan `publickey`; login kunci berhasil; tanggal ubah kata sandi tidak berubah hari ini |
 
 ## Catatan status dan batasan
 
 - Rantai deteksi Sguil berjalan penuh dan sudah diuji ulang: alert kustom SID 1000002 dan 1000003 yang dihasilkan pada 12 November 2026 masuk ke basis data sebagai CID 6356 dan 6352 (`09-sguil-alerts.log`).
 - Kredensial broker MQTT akun `esp32` dirotasi pada 12 November 2026 karena nilainya terlihat pada tangkapan layar lama. Berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600, kredensial lama ditolak sedangkan yang baru diterima, dan uji C1 dijalankan ulang setelah rotasi dengan hasil 6/6 lulus (`10-mqtt-credential-rotation.log`).
-- Kata sandi akun sistem (bukan kredensial broker) belum dirotasi. Nilainya masih tercatat pada riwayat Git lama, tetapi tidak dapat dipakai masuk ke Target Node dari jaringan karena autentikasi kata sandi SSH dimatikan di sana. Attacker Node dan Monitoring Node pada 12 November 2026 masih menawarkan autentikasi kata sandi, sehingga rotasi kata sandi di kedua node itu tetap wajib.
+- Kata sandi akun sistem (bukan kredensial broker) tidak dirotasi karena nilainya dipakai untuk login konsol dan Sguil pada panduan demo; rotasi tetap keputusan pemilik lab. Sebagai gantinya jalur kata sandi SSH ditutup: Target Node memang sudah menolak kata sandi sejak hardening, dan pada 12 November 2026 Attacker Node serta Monitoring Node disetel `PasswordAuthentication no` (cadangan `sshd_config.bak-hardening-20261112`). Ketiga node kini hanya menawarkan `publickey`, kata sandi akun tidak berubah sehingga tidak ada akun yang terkunci (`15-ssh-password-auth-disabled.log`).
 - Belum ada tangkapan layar khusus untuk RT-04; deteksinya terbukti lewat query basis data.
 - Fase 3 tidak disentuh pada pekerjaan ini.

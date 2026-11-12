@@ -1,0 +1,50 @@
+# Tanggal: 2026-11-12 (sekitar 12:19 WIB), Target Node 192.168.12.5
+# Perintah: skrip verifikasi dikirim lewat SSH (sec_admin) lalu dijalankan sebagai root: sudo bash -s
+# Konteks: pemasangan skrip backup/restore versi repositori dan pemindahan arsip ke /var/lib/smartcow/backup
+
+# SmartCow lab - deploy and verify on Target Node
+# host=SRV-IOT-KEL12-B date=2026-11-12T12:17:09+07:00
+
+## 1. Installed files
+-rwxr-x--- smartcow:smartcow /home/smartcow-lab/app.py
+-rwxr-x--- root:root /usr/local/bin/smartcow-backup
+-rwxr-x--- root:root /usr/local/bin/smartcow-restore
+-rwxr-x--- root:root /usr/local/bin/smartcow-restore-check
+3f76d64c1bff4cc720f7082c3578982ec69f3ae6f3eb4734219dfc20c851ac87  /home/smartcow-lab/app.py
+c479c8b365c64d176ee39f19a3685052f414afffde515410f0349e182e1cb68f  /usr/local/bin/smartcow-backup
+99f8bfa08224841f016bc4a88c12389d3eebc01b6e046da65e1a14033dcb7ddc  /usr/local/bin/smartcow-restore
+18b151d04a0ad45db45a7f0d1c301f6f7d673752b89d1017d7f15756a5c634b6  /usr/local/bin/smartcow-restore-check
+
+## 2. Services
+smartcow-api=active
+smartcow-broker=active
+smartcow-sim=active
+backup_timer=active enabled=enabled
+
+## 3. Archive storage moved outside service home
+drwx------ root:root /var/lib/smartcow
+drwx------ root:root /var/lib/smartcow/backup
+old_backup_dir_present=no
+state-20261112-121633-8641.tar.gz.sha256
+state-20261112-121633-8641.tar.gz.sha256sums
+state-20261112-121633-8641.tar.gz
+state-20261112-121542-8436.tar.gz.sha256
+archive_count=9
+
+## 4. Backup run (root, oneshot)
+backup_result=success
+  2026-11-12T12:17:09+07:00 backup ok file=state-20261112-121709-8828.tar.gz bytes=15414
+  smartcow-backup.service: Succeeded.
+  Finished SmartCow lab data backup.
+
+## 5. Non-destructive restore verification
+archive=state-20261112-121709-8828.tar.gz
+PASS archive-checksum
+PASS restore-content-matches-manifest files=4
+SUMMARY restored_files=4
+restore_check_rc=0
+
+## 6. Trust boundary: service user must not touch archives
+smartcow[touch /var/lib/smartcow/backup/palsu] rc=1 :: touch: cannot touch '/var/lib/smartcow/backup/palsu': Permission denied
+smartcow[ls /var/lib/smartcow/backup] rc=2 :: ls: cannot access '/var/lib/smartcow/backup': Permission denied
+smartcow[rm -rf /var/lib/smartcow/backup] rc=1 :: rm: cannot remove '/var/lib/smartcow/backup': Permission denied

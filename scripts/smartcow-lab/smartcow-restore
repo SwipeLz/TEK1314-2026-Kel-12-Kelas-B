@@ -12,7 +12,7 @@
 set -euo pipefail
 
 LAB=/home/smartcow-lab
-BACKUP_DIR=$LAB/backup
+BACKUP_DIR=/var/lib/smartcow/backup
 LIVE=$LAB/data
 ARCH=${1:-}
 

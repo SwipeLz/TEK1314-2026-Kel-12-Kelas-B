@@ -45,7 +45,9 @@ yang mengalir ke API tidak pernah berisi data operasional.
   `install -o root -g root -m 750 smartcow-backup smartcow-restore /usr/local/bin/`
   lalu salin `smartcow-backup.service`/`.timer` ke `/etc/systemd/system/` dan
   jalankan `systemctl enable --now smartcow-backup.timer`. Skrip berjalan sebagai
-  root dan memiliki `backup/` sendiri (`root:root` mode 700).
+ root dan menyimpan arsip di `/var/lib/smartcow/backup` (`root:root` mode 700),
+ di luar `/home/smartcow-lab` supaya pengguna layanan tidak bisa mengganti arsip
+ atau menaruh checksum palsu.
 
 Semua service berjalan sebagai pengguna `smartcow` tanpa login, dengan
 `NoNewPrivileges=yes` dan `PrivateTmp=yes`.
