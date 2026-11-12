@@ -1,4 +1,4 @@
-# Verifikasi Kontrol 12 November 2026
+# Verifikasi Ulang Kontrol Fase 2
 
 Folder ini memuat bukti teks verifikasi ulang kontrol pengamanan Fase 2 pada lingkungan lab yang benar-benar berjalan. Berkas dapat dibaca ulang tanpa menyalakan mesin virtual.
 
@@ -31,8 +31,8 @@ Seluruh berkas adalah keluaran perintah asli, bukan rekonstruksi. Nilai rahasia 
 
 ## Catatan Status dan Batasan
 
-- Rantai deteksi Sguil berjalan penuh dan sudah diuji ulang. Alert kustom SID 1000002 dan 1000003 yang dihasilkan 12 November 2026 masuk ke basis data sebagai CID 6356 dan 6352 (`09-sguil-alerts.log`).
-- Kredensial broker MQTT akun `esp32` dirotasi pada 12 November 2026 karena nilainya terlihat pada tangkapan layar lama. Berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600; kredensial lama ditolak, kredensial baru diterima, dan uji C1 dijalankan ulang setelah rotasi dengan hasil 6 dari 6 lulus (`10-mqtt-credential-rotation.log`).
-- Kata sandi akun sistem (bukan kredensial broker) tidak dirotasi karena masih dipakai untuk login konsol dan Sguil pada panduan demo; rotasi tetap keputusan pemilik lab. Sebagai gantinya jalur kata sandi SSH ditutup. Target Node sudah menolak kata sandi sejak hardening, dan pada 12 November 2026 Attacker Node serta Monitoring Node disetel `PasswordAuthentication no` dengan cadangan `sshd_config.bak-hardening-20261112`. Ketiga node hanya menawarkan `publickey`; kata sandi akun tidak berubah sehingga tidak ada akun terkunci (`15-ssh-password-auth-disabled.log`).
+- Rantai deteksi Sguil berjalan penuh dan sudah diuji ulang. Alert kustom SID 1000002 dan 1000003 yang dihasilkan pada verifikasi ulang masuk ke basis data sebagai CID 6356 dan 6352 (`09-sguil-alerts.log`).
+- Kredensial broker MQTT akun `esp32` dirotasi pada verifikasi ulang karena nilainya terlihat pada tangkapan layar lama. Berkas lama disimpan sebagai `mqtt_users.json.bak-<stempel>` mode 600; kredensial lama ditolak, kredensial baru diterima, dan uji C1 dijalankan ulang setelah rotasi dengan hasil 6 dari 6 lulus (`10-mqtt-credential-rotation.log`).
+- Kata sandi akun sistem (bukan kredensial broker) tidak dirotasi karena masih dipakai untuk login konsol dan Sguil pada panduan demo; rotasi tetap keputusan pemilik lab. Sebagai gantinya jalur kata sandi SSH ditutup. Target Node sudah menolak kata sandi sejak hardening, dan pada verifikasi ulang Attacker Node serta Monitoring Node disetel `PasswordAuthentication no` dengan cadangan `sshd_config.bak-hardening-<stempel>`. Ketiga node hanya menawarkan `publickey`; kata sandi akun tidak berubah sehingga tidak ada akun terkunci (`15-ssh-password-auth-disabled.log`).
 - Bukti RT-04 tersedia sebagai tangkapan layar: `docs/redteam/evidence/15-replay-sebelum-diterima.png` (replay diterima sebelum perbaikan), `16-replay-sesudah-ditolak.png` (replay ditolak setelah anti-replay aktif), dan `17-catatan-broker-replay.png` (catatan `broker.log`). Alert Sguil dibuktikan melalui query basis data pada `09-sguil-alerts.log`.
-- Berkas `11-external-port-check.log` diambil pada 12 November 2026 sebelum kontrol B4 diterapkan. Sesudah B4, port 1883 tidak lagi terbuka dari Attacker Node (`docs/redteam/evidence/14-pemindaian-port-mqtt-setelah.png`).
+- Berkas `11-external-port-check.log` diambil sebelum kontrol B4 diterapkan. Sesudah B4, port 1883 tidak lagi terbuka dari Attacker Node (`docs/redteam/evidence/14-pemindaian-port-mqtt-setelah.png`).

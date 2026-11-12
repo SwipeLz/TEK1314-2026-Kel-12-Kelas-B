@@ -19,7 +19,7 @@
 - [Minggu 8 dan 9 - Checkpoint Evaluasi Fase 2](#minggu-8-dan-9---checkpoint-evaluasi-fase-2)
 - [Minggu 10](#minggu-10)
 - [Minggu 11 - Finalisasi Fase 2](#minggu-11---finalisasi-fase-2)
-- [Minggu 12 (12 November 2026) - Verifikasi Ulang Fase 2](#minggu-12-12-november-2026---verifikasi-ulang-fase-2)
+- [Minggu 12 - Verifikasi Ulang Fase 2](#minggu-12---verifikasi-ulang-fase-2)
 
 ## Minggu 2
 
@@ -59,7 +59,7 @@
 - Firewall iptables: kebijakan default INPUT DROP, dengan izin ICMP dan TCP 22, 80, serta 1883 khusus dari `192.168.12.0/24`. Ping dari Attacker Node tetap 0% loss, sehingga aturan tidak mengganggu konektivitas sah.
 - Hak akses: akun non-root `sec_admin` (UID 1001) ditetapkan sebagai akun operasional. IP disetel permanen pada `192.168.12.5/24`.
 - Keterbatasan lingkungan: `pacman -Syu` tidak dapat dijalankan karena isolasi jaringan lab tanpa internet. Kondisi ini dicatat sebagai batasan uji.
-- Bukti: `docs/blueteam/evidence/baseline/hardening-services.png` dan `hardening-firewall.png`. Tangkapan layar `target-ip-statis.png` ditarik dari repositori karena memuat kata sandi; bukti IP dan hostname terkini ada pada `docs/blueteam/evidence/verifikasi-2026-11-12/06-target-state-recon.log`.
+- Bukti: `docs/blueteam/evidence/baseline/hardening-services.png` dan `hardening-firewall.png`. Tangkapan layar `target-ip-statis.png` ditarik dari repositori karena memuat kata sandi; bukti IP dan hostname terkini ada pada `docs/blueteam/evidence/verifikasi-ulang/06-target-state-recon.log`.
 
 ## Minggu 7
 
@@ -127,27 +127,27 @@ Seluruh skenario diuji nyata memakai data dummy untuk memverifikasi efektivitas 
   - RT-01: Nmap dari Attacker Node memastikan port 9000 filtered dan header web server menyembunyikan nomor versi.
   - RT-02: brute force kata sandi ditolak autentikasi kunci Ed25519, dan laju koneksi konkuren diredam firewall.
   - RT-03: publish tanpa otentikasi ditolak dengan `CONNACK 5`, dan injeksi data sensor ditolak dengan `HTTP 400`.
-  - RT-04: replay paket kendali ditolak aturan ACL broker dan oleh anti-replay stempel waktu pada kanal tulis (`SMARTCOW_MQTT_ANTIREPLAY=1`, jendela 120 detik); token lama ditolak `HTTP 401`; percobaan terdeteksi Snort dengan CID 6127, diverifikasi ulang lewat query basis data pada 12 November 2026. Bukti: `docs/redteam/evidence/15-replay-sebelum-diterima.png` sampai `17-catatan-broker-replay.png`.
-- Verifikasi C3: uji coba 20 Oktober 2026 berhenti di langkah pencadangan karena `tar` gagal membaca berkas arsip yang belum ada, sehingga klaim pemulihan berbasis hash SHA256 pada catatan sebelumnya belum punya bukti. Penjadwalan dan pengujian ulang yang valid dilakukan pada 12 November 2026.
+  - RT-04: replay paket kendali ditolak aturan ACL broker dan oleh anti-replay stempel waktu pada kanal tulis (`SMARTCOW_MQTT_ANTIREPLAY=1`, jendela 120 detik); token lama ditolak `HTTP 401`; percobaan terdeteksi Snort dengan CID 6127, diverifikasi ulang lewat query basis data pada sesi verifikasi ulang. Bukti: `docs/redteam/evidence/15-replay-sebelum-diterima.png` sampai `17-catatan-broker-replay.png`.
+- Verifikasi C3: uji coba 20 Oktober 2026 berhenti di langkah pencadangan karena `tar` gagal membaca berkas arsip yang belum ada, sehingga klaim pemulihan berbasis hash SHA256 pada catatan sebelumnya belum punya bukti. Penjadwalan dan pengujian ulang yang valid dilakukan pada sesi verifikasi ulang.
 - Penyusunan Vulnerability Assessment Report sebagai laporan formal Fase 2 di `docs/vulnerability-assessment-report.md`.
 - Pemutakhiran repositori dengan seluruh artefak pengujian dan dokumentasi.
 
-## Minggu 12 (12 November 2026) - Verifikasi Ulang Fase 2
+## Minggu 12 - Verifikasi Ulang Fase 2
 
 - Pemulihan struktur Fase 1: artefak baseline yang terhapus pada commit restrukturisasi dikembalikan dari riwayat repositori dan ditempatkan sesuai Bagian XI Panduan PBL, yaitu `docs/blueteam/baseline-report.md` dan `docs/blueteam/evidence/baseline/`. Diagram kondisi akhir Fase 2 dipasang sebagai `docs/design/topology-akhir-fase2.png` dan dipakai pada `README.md` serta `ip_plan.md`, sedangkan `docs/design/topology-minggu9.png` dipertahankan sebagai snapshot Minggu 9 dan `topology.png` dirujuk pada `ip_plan.md` sebagai rancangan awal Minggu 4. Folder `scripts/smartcow-lab/` juga dikembalikan agar kode yang terpasang di Target Node dapat ditelusuri.
 - Perbaikan topologi: server DHCP VirtualBox pada jaringan Host-Only dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254`, lalu antarmuka Attacker disetel statis `192.168.12.100/24` dengan gateway `192.168.12.1`. Ketiga node saling terhubung dan merespons ping dari host tanpa kehilangan paket.
 - Uji ulang C1 di Target Node yang hidup: 6 dari 6 pemeriksaan lulus. Tangkapan layar `mqtt-acl-terverifikasi.png` dari 20 Oktober 2026 hanya memuat kegagalan `Permission denied` saat skrip dijalankan dan memperlihatkan kredensial broker, sehingga berkas itu ditarik dan bukti utama diganti log eksekusi.
 - Perbaikan C3: skrip `/usr/local/bin/smartcow-backup` dilengkapi checksum arsip dan manifest sha256 per berkas, ditambah retensi tujuh arsip. Skrip dipasang `root:root` mode 750 agar tidak dapat ditimpa pengguna layanan. Unit `smartcow-backup.service` dan `smartcow-backup.timer` diaktifkan, lalu pencadangan dijalankan. Uji gerbang keamanan dengan manifest yang dirusak ditolak tanpa menyentuh data (`rc=1`), sedangkan pemulihan sah berhasil, menyisakan salinan `data.prev-<stempel>`, dan `/health` kembali `200`.
 - Monitoring: rantai deteksi lengkap berjalan (`snort`, `barnyard2`, `sguild`, `mysqld`). Pengujian ulang dari Attacker Node menghasilkan alert kustom yang masuk basis data, yaitu CID 6352 (SID 1000003, injeksi HTTP) dan CID 6356 (SID 1000002, publish topik kontrol). Alert lama CID 6125 dan 6127 masih tersimpan. Catatan: kolom `event.sid` pada basis data Sguil berisi ID sensor, bukan SID Snort; SID Snort ada pada kolom `signature_id`.
-- Penanganan kredensial: sebelas tangkapan layar yang memuat kata sandi atau token ditarik dari repositori dan tautannya dialihkan ke bukti log tersanitasi. Kredensial broker MQTT akun `esp32` dirotasi karena nilainya terlihat pada tangkapan layar lama; berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600, dan uji C1 dijalankan ulang setelah rotasi (6/6 lulus).
-- Seluruh hasil pemeriksaan tersimpan sebagai berkas teks di `docs/blueteam/evidence/verifikasi-2026-11-12/` (berkas `01` sampai `15`).
+- Penanganan kredensial: sebelas tangkapan layar yang memuat kata sandi atau token ditarik dari repositori dan tautannya dialihkan ke bukti log tersanitasi. Kredensial broker MQTT akun `esp32` dirotasi karena nilainya terlihat pada tangkapan layar lama; berkas lama disimpan sebagai `mqtt_users.json.bak-<stempel>` mode 600, dan uji C1 dijalankan ulang setelah rotasi (6/6 lulus).
+- Seluruh hasil pemeriksaan tersimpan sebagai berkas teks di `docs/blueteam/evidence/verifikasi-ulang/` (berkas `01` sampai `15`).
 - Pemasangan skrip repositori di Target Node: `app.py` versi repositori (validasi body JSON, token gagal-tertutup saat kosong, direktori data dirapikan) menggantikan versi lama, bersama `smartcow-backup`, `smartcow-restore`, dan `smartcow-restore-check` milik `root:root` mode 750. Salinan versi lama disimpan di `/root/rollback-<stempel>` sebelum penggantian.
 - Batas kepercayaan arsip diperbaiki: arsip dipindahkan dari `/home/smartcow-lab/backup` ke `/var/lib/smartcow/backup` milik `root:root` mode 700. Direktori arsip di dalam home layanan masih dapat dihapus dan dibuat ulang oleh `smartcow`, sehingga checksum palsu mungkin ditanam. Setelah pemindahan, `smartcow` gagal membuka, menulis, dan menghapus direktori arsip, sedangkan uji pemulihan non-destruktif tetap lulus 4 dari 4 berkas.
 - Verifikasi ulang C1/C2 setelah pemasangan: 6 dari 6 pemeriksaan lulus. Token API lama ditolak `HTTP 401`, kedua sandi broker lama ditolak `CONNACK 5`, dan kredensial aktif tetap diterima. Telemetri tetap mengalir dan `/health` membalas 200.
-- Jalur kata sandi SSH ditutup pada Attacker Node dan Monitoring Node (`PasswordAuthentication no`, cadangan `sshd_config.bak-hardening-20261112`). Kata sandi akun tidak diubah, sehingga login konsol dan Sguil tetap memakai nilai yang sama dan tidak ada akun terkunci; ketiga node kini hanya menerima `publickey`.
+- Jalur kata sandi SSH ditutup pada Attacker Node dan Monitoring Node (`PasswordAuthentication no`, cadangan `sshd_config.bak-hardening-<stempel>`). Kata sandi akun tidak diubah, sehingga login konsol dan Sguil tetap memakai nilai yang sama dan tidak ada akun terkunci; ketiga node kini hanya menerima `publickey`.
 - Bukti baru: `13-backup-relocation-and-deploy.log`, `14-c1-credential-and-liveness-recheck.log`, dan `15-ssh-password-auth-disabled.log`.
-- Penutupan celah Fase 1-2 pada sesi lanjutan hari yang sama:
+- Penutupan celah Fase 1-2 pada sesi lanjutan yang sama:
   - Kontrol B4 diterapkan: aturan ACCEPT `tcp/1883` dihapus dari INPUT dan tabel disimpan ulang ke `/etc/iptables/iptables.rules`. Pemindaian Nmap dari Attacker Node turun dari tiga port terbuka (22, 80, 1883) menjadi dua (22, 80); pemindaian penuh `-p-` hanya menemukan 22 dan 80. Rollback terkontrol: `iptables -I INPUT -s 192.168.12.0/24 -p tcp --dport 1883 -j ACCEPT` lalu `iptables-save > /etc/iptables/iptables.rules`.
   - Anti-replay MQTT (CWE-294) diterapkan pada `broker.py` (`SMARTCOW_MQTT_ANTIREPLAY=1`, `SMARTCOW_MQTT_TS_WINDOW=120`, urutan `ts` wajib naik per topik) dan dipasang di Target Node. Uji unit 8/8 lulus; replay byte-identik dari Attacker Node ditolak dan tercatat `replay ditolak ... stempel waktu mundur atau duplikat` pada `broker.log`.
-  - Jendela demonstrasi RT-02: `PasswordAuthentication` dikembalikan sementara ke `yes` (cadangan di `/root/backup-phase12-20261112`), `ssh_try.py` dijalankan dari Attacker Node (`sec_admin` BERHASIL, `root` GAGAL, kata sandi disamarkan), lalu konfigurasi dipulihkan ke `no` dan diverifikasi dengan `sshd -T` pada hari yang sama.
+  - Jendela demonstrasi RT-02: `PasswordAuthentication` dikembalikan sementara ke `yes` (cadangan di `/root/backup-phase12-<stempel>`), `ssh_try.py` dijalankan dari Attacker Node (`sec_admin` BERHASIL, `root` GAGAL, kata sandi disamarkan), lalu konfigurasi dipulihkan ke `no` dan diverifikasi dengan `sshd -T` pada sesi yang sama.
   - Tangkapan layar pengganti: `docs/redteam/evidence/03-...`, `04-...`, `11-...`, `12-...`, `13-...` sampai `17-...`, serta `docs/blueteam/evidence/kontrol A1/A2/B1/C2/C3` (lihat `hardening_checklist.md` dan `purple-team-log.md`).

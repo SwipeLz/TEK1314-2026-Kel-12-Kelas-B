@@ -31,7 +31,7 @@ Untuk praktikum keamanan siber, seluruh arsitektur backend direplikasi ke lingku
 
 ![Diagram topologi akhir Fase 2 Kelompok 12: Host Administrasi, Attacker Node, Target Node, dan Monitoring Node pada subnet 192.168.12.0/24, dengan port 22 dan 80 terbuka serta 1883 dan 9000 hanya loopback](docs/design/topology-akhir-fase2.png)
 
-*Gambar 1. Topologi kondisi akhir Fase 2 per 12 November 2026. Hanya port 22 (SSH) dan 80 (HTTP) terbuka bagi segmen lab; port 1883 (MQTT) ditutup dari jaringan oleh B4 dan port 9000 (REST API) hanya melayani loopback setelah B2. Snapshot kondisi Minggu 9, saat 1883 masih dibuka, tersedia pada [topology-minggu9.png](docs/design/topology-minggu9.png).*
+*Gambar 1. Topologi kondisi akhir Fase 2. Hanya port 22 (SSH) dan 80 (HTTP) terbuka bagi segmen lab; port 1883 (MQTT) ditutup dari jaringan oleh B4 dan port 9000 (REST API) hanya melayani loopback setelah B2. Snapshot kondisi Minggu 9, saat 1883 masih dibuka, tersedia pada [topology-minggu9.png](docs/design/topology-minggu9.png).*
 
 ## Peta Berkas Repositori
 
@@ -44,7 +44,7 @@ Untuk praktikum keamanan siber, seluruh arsitektur backend direplikasi ke lingku
 | [docs/blueteam/baseline-report.md](docs/blueteam/baseline-report.md) | Baseline report Fase 1 (Minggu 7): aset, hardening awal, dan bukti logging |
 | [docs/blueteam/hardening_checklist.md](docs/blueteam/hardening_checklist.md) | Sepuluh kontrol hardening (A1-A3, B1-B4, C1-C3) beserta bukti verifikasi |
 | [docs/blueteam/evidence/](docs/blueteam/evidence/) | Tangkapan layar dan log before/after, baseline, serta verifikasi kontrol |
-| [docs/blueteam/evidence/verifikasi-2026-11-12/README.md](docs/blueteam/evidence/verifikasi-2026-11-12/README.md) | Indeks bukti teks verifikasi ulang 12 November 2026 |
+| [docs/blueteam/evidence/verifikasi-ulang/README.md](docs/blueteam/evidence/verifikasi-ulang/README.md) | Indeks bukti teks verifikasi ulang Fase 2 |
 | [docs/redteam/attack_plan.md](docs/redteam/attack_plan.md) | Rancangan skenario serangan RT-01 sampai RT-04 |
 | [docs/redteam/evidence/](docs/redteam/evidence/) | Bukti eksekusi pengujian penyerangan dan keluaran Nmap |
 | [docs/purple-team-log.md](docs/purple-team-log.md) | Siklus lima tahap Purple Team dan evaluasi deteksi |
@@ -63,7 +63,7 @@ Urutan berikut memudahkan pembaca baru menelusuri bukti dari rancangan sampai ha
 4. [hardening_checklist.md](docs/blueteam/hardening_checklist.md) - Implementasi sepuluh kontrol Blue Team pada Target Node.
 5. [attack_plan.md](docs/redteam/attack_plan.md) dan [purple-team-log.md](docs/purple-team-log.md) - Skenario penyerangan serta evaluasi deteksi di Security Onion.
 6. [vulnerability-assessment-report.md](docs/vulnerability-assessment-report.md) - Rekap enam temuan, status mitigasi, dan kesiapan Fase 3.
-7. [verifikasi-2026-11-12/README.md](docs/blueteam/evidence/verifikasi-2026-11-12/README.md) - Hasil verifikasi ulang kontrol Fase 2 beserta bukti teksnya.
+7. [verifikasi-ulang/README.md](docs/blueteam/evidence/verifikasi-ulang/README.md) - Hasil verifikasi ulang kontrol Fase 2 beserta bukti teksnya.
 
 ## Akses Lingkungan Lab
 
@@ -73,12 +73,12 @@ Urutan berikut memudahkan pembaca baru menelusuri bukti dari rancangan sampai ha
 | Attacker Node | 192.168.12.100 | `analyst` | Konsol VirtualBox atau SSH dengan kunci |
 | Monitoring Node | 192.168.12.200 | `analyst` | Konsol, Sguil, dan SSH dengan kunci |
 
-Kata sandi lingkungan lab tidak disimpan di repositori. Pada 12 November 2026 jalur kata sandi SSH ditutup di ketiga node (`PasswordAuthentication no`), sehingga hanya autentikasi `publickey` yang diterima. Ketiga alamat terverifikasi saling terhubung pada tanggal yang sama (`docs/blueteam/evidence/verifikasi-2026-11-12/03-topology-reachability.log`).
+Kata sandi lingkungan lab tidak disimpan di repositori. Pada verifikasi ulang Fase 2 jalur kata sandi SSH ditutup di ketiga node (`PasswordAuthentication no`), sehingga hanya autentikasi `publickey` yang diterima. Ketiga alamat terverifikasi saling terhubung pada sesi yang sama (`docs/blueteam/evidence/verifikasi-ulang/03-topology-reachability.log`).
 
-Kata sandi akun sistem sengaja tidak dirotasi karena masih dipakai untuk login konsol dan Sguil pada panduan demo. Selama jalur SSH berbasis kata sandi tertutup, nilai tersebut tidak dapat dipakai masuk dari jaringan; rotasi tetap menjadi keputusan pemilik lab (`docs/blueteam/evidence/verifikasi-2026-11-12/15-ssh-password-auth-disabled.log`).
+Kata sandi akun sistem sengaja tidak dirotasi karena masih dipakai untuk login konsol dan Sguil pada panduan demo. Selama jalur SSH berbasis kata sandi tertutup, nilai tersebut tidak dapat dipakai masuk dari jaringan; rotasi tetap menjadi keputusan pemilik lab (`docs/blueteam/evidence/verifikasi-ulang/15-ssh-password-auth-disabled.log`).
 
 ## Ruang Lingkup dan Batasan
 
 Repositori ini mengikuti struktur direktori Panduan PBL Minggu 9: `docs/design`, `docs/presentation-minggu9`, `docs/blueteam`, `docs/redteam`, dan `docs/purple-team-log.md`. Naskah presentasi, lembar catatan latihan, dan prosedur pengujian insiden disimpan pada direktori kerja internal kelompok di luar repositori publik ini.
 
-Setiap pernyataan teknis disertai tangkapan layar atau berkas log asli. Pemeriksaan ulang pada 12 November 2026 menemukan dua tangkapan layar lama yang isinya justru memperlihatkan kegagalan perintah, yaitu `mqtt-acl-terverifikasi.png` pada kontrol C1 dan salinan lama `backup-dan-pemulihan-data.png` pada kontrol C3. Keduanya tidak dipakai lagi. C1 kini dibuktikan log eksekusi `docs/blueteam/evidence/verifikasi-2026-11-12/01-c1-live-verification.log` beserta tangkapan layar penolakan publish, sedangkan C3 memakai tangkapan layar pengganti `backup-dan-pemulihan-data.png` yang memuat eksekusi nyata 12 November 2026 (unit backup `Succeeded`, `PASS archive-checksum`, `PASS manifest 4/4`) dan diperkuat log `02`, `07`, serta `13`. Status penggantian dicatat pada `hardening_checklist.md`.
+Setiap pernyataan teknis disertai tangkapan layar atau berkas log asli. Pemeriksaan ulang menemukan dua tangkapan layar lama yang isinya justru memperlihatkan kegagalan perintah, yaitu `mqtt-acl-terverifikasi.png` pada kontrol C1 dan salinan lama `backup-dan-pemulihan-data.png` pada kontrol C3. Keduanya tidak dipakai lagi. C1 kini dibuktikan log eksekusi `docs/blueteam/evidence/verifikasi-ulang/01-c1-live-verification.log` beserta tangkapan layar penolakan publish, sedangkan C3 memakai tangkapan layar pengganti `backup-dan-pemulihan-data.png` yang memuat eksekusi nyata (unit backup `Succeeded`, `PASS archive-checksum`, `PASS manifest 4/4`) dan diperkuat log `02`, `07`, serta `13`. Status penggantian dicatat pada `hardening_checklist.md`.

@@ -1,6 +1,6 @@
 # Baseline Report Fase 1 (Minggu 7) - Kelompok 12 Kelas B
 
-> **Status dokumen.** Dokumen ini adalah potret kondisi akhir Minggu 7 (Fase 1, sebelum penyerangan). Isinya sengaja tidak diperbarui agar tetap menjadi pembanding kondisi *before*. Perubahan sesudahnya ada pada [hardening_checklist.md](hardening_checklist.md), [vulnerability-assessment-report.md](../vulnerability-assessment-report.md), dan [purple-team-log.md](../purple-team-log.md). Pemeriksaan ulang seluruh node pada 12 November 2026 ada di [evidence/verifikasi-2026-11-12/](evidence/verifikasi-2026-11-12/).
+> **Status dokumen.** Dokumen ini adalah potret kondisi akhir Minggu 7 (Fase 1, sebelum penyerangan). Isinya sengaja tidak diperbarui agar tetap menjadi pembanding kondisi *before*. Perubahan sesudahnya ada pada [hardening_checklist.md](hardening_checklist.md), [vulnerability-assessment-report.md](../vulnerability-assessment-report.md), dan [purple-team-log.md](../purple-team-log.md). Pemeriksaan ulang seluruh node ada di [evidence/verifikasi-ulang/](evidence/verifikasi-ulang/).
 
 Lingkungan uji: subnet `192.168.12.0/24`, kondisi sebelum penyerangan Fase 2. Sistem sudah di-hardening pada Fase 1. Seluruh angka pada dokumen ini dapat dicek ulang pada berkas bukti yang ditautkan.
 
@@ -75,7 +75,7 @@ Bukti lain di `evidence/baseline/`:
 - [tcpdump-icmp.png](evidence/baseline/tcpdump-icmp.png): capture langsung di Onion.
 - [wireshark-icmp.png](evidence/baseline/wireshark-icmp.png) dan [kel12-demo.pcap](evidence/baseline/kel12-demo.pcap): 45 paket, rencana cadangan.
 - [hardening-services.png](evidence/baseline/hardening-services.png) dan [hardening-firewall.png](evidence/baseline/hardening-firewall.png).
-- Tiga tangkapan layar identitas node (`target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`) ditarik dari repositori karena memuat kata sandi. Bukti bebas kredensial ada pada [06-target-state-recon.log](evidence/verifikasi-2026-11-12/06-target-state-recon.log) dan [04-onion-state.log](evidence/verifikasi-2026-11-12/04-onion-state.log).
+- Tiga tangkapan layar identitas node (`target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`) ditarik dari repositori karena memuat kata sandi. Bukti bebas kredensial ada pada [06-target-state-recon.log](evidence/verifikasi-ulang/06-target-state-recon.log) dan [04-onion-state.log](evidence/verifikasi-ulang/04-onion-state.log).
 
 ## 4. Demo Minggu 7
 

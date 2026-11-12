@@ -120,7 +120,7 @@ Skenario mengikuti Bagian IX Panduan PBL TEK1314.
 - **Hasil Pengamatan Lapangan:**
   - *Sebelum Hardening:* Broker menerima pengiriman ulang dari klien anonim tanpa otorisasi topik, status relay berubah, dan ketiadaan validasi token membiarkan perubahan kendali tanpa pengawasan operator.
   - *Sesudah Hardening:* Publish ke topik kendali diputus broker sesuai ACL (`broker.log` mencatat penolakan publish ke topik terlarang). Request REST dengan token lama ditolak `HTTP 401 Unauthorized`. Sensor Snort membangkitkan alert SID 1000002 (`SMARTCOW-MQTT Unauthorized Control Topic Access`) dengan CID 6127 yang diverifikasi melalui query basis data. Status sprinkler tetap aman.
-  - *Uji anti-replay 12 November 2026:* pada broker sebelum perbaikan, payload 60 byte yang sama diterima dua kali (`15-replay-sebelum-diterima.png`). Setelah `SMARTCOW_MQTT_ANTIREPLAY=1` dipasang, pengiriman pertama diterima dan replay ditolak dengan entri `replay ditolak ... stempel waktu mundur atau duplikat` (`16-replay-sesudah-ditolak.png` dan `17-catatan-broker-replay.png`).
+  - *Uji anti-replay:* pada broker sebelum perbaikan, payload 60 byte yang sama diterima dua kali (`15-replay-sebelum-diterima.png`). Setelah `SMARTCOW_MQTT_ANTIREPLAY=1` dipasang, pengiriman pertama diterima dan replay ditolak dengan entri `replay ditolak ... stempel waktu mundur atau duplikat` (`16-replay-sesudah-ditolak.png` dan `17-catatan-broker-replay.png`).
 
 ## V. Alur Kerja Purple Team
 
