@@ -18,7 +18,7 @@ yang mengalir ke API tidak pernah berisi data operasional.
 | Berkas | Fungsi |
 | --- | --- |
 | `app.py` | API REST bergaya Firebase RTDB dengan autentikasi token, validasi rentang sensor, dan log akses |
-| `broker.py` | Broker MQTT minimal: CONNECT dengan kredensial, SUBSCRIBE, PUBLISH, PINGREQ, plus ACL topik |
+| `broker.py` | Broker MQTT minimal: CONNECT dengan kredensial, SUBSCRIBE, PUBLISH, PINGREQ, ACL topik, dan anti-replay stempel waktu (`SMARTCOW_MQTT_ANTIREPLAY`) |
 | `simulator.py` | Meniru firmware ESP32 yang menulis telemetri dummy tiap dua detik |
 | `mqtt_pub.py` | Klien publish MQTT sisi penyerang, dipakai skenario RT-03 |
 | `ssh_try.py` | Klien percobaan login SSH berbasis pty, pengganti NSE ssh-brute yang butuh `sshpass` |

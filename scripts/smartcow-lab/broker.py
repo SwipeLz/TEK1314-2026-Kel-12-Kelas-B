@@ -12,11 +12,14 @@ import os
 import socket
 import struct
 import threading
+import time
 
 BIND = os.environ.get("SMARTCOW_MQTT_BIND", "0.0.0.0")
 PORT = int(os.environ.get("SMARTCOW_MQTT_PORT", "1883"))
 REQUIRE_AUTH = os.environ.get("SMARTCOW_MQTT_AUTH", "0") == "1"
 ENFORCE_ACL = os.environ.get("SMARTCOW_MQTT_ACL", "0") == "1"
+ANTI_REPLAY = os.environ.get("SMARTCOW_MQTT_ANTIREPLAY", "0") == "1"
+TS_WINDOW_S = float(os.environ.get("SMARTCOW_MQTT_TS_WINDOW", "120"))
 CRED_FILE = os.environ.get("SMARTCOW_MQTT_CRED", "/home/smartcow-lab/secrets/mqtt_users.json")
 LOG_PATH = os.environ.get("SMARTCOW_MQTT_LOG", "")
 READ_TOPICS = ("cow-sprinkler-01/control", "cow-sprinkler-01/status", "cow-sprinkler-01/telemetry/latest")
@@ -24,6 +27,7 @@ WRITE_TOPICS = ("cow-sprinkler-01/telemetry/latest",)
 
 _clients = []
 _lock = threading.Lock()
+_last_ts = {}   # topik -> stempel waktu terakhir yang diterima (detik)
 
 
 def log_event(kind, detail):
@@ -47,6 +51,27 @@ def read_credentials():
             return json.load(fh)
     except (OSError, ValueError):
         return {}
+
+
+def replay_problem(topic, payload, now_s=None):
+    """Periksa stempel waktu payload tulis. None = lolos, selain itu alasan penolakan."""
+    if not ANTI_REPLAY:
+        return None
+    try:
+        data = json.loads(payload.decode("utf-8"))
+        ts = data["ts"]
+    except (ValueError, KeyError, TypeError, UnicodeDecodeError):
+        return "payload tanpa stempel waktu ts"
+    if isinstance(ts, bool) or not isinstance(ts, (int, float)):
+        return "stempel waktu bukan angka"
+    ts_s = float(ts) / 1000.0 if float(ts) > 1e11 else float(ts)
+    now_s = time.time() if now_s is None else now_s
+    if abs(now_s - ts_s) > TS_WINDOW_S:
+        return "stempel waktu kedaluwarsa"
+    if ts_s <= _last_ts.get(topic, 0.0):
+        return "stempel waktu mundur atau duplikat"
+    _last_ts[topic] = ts_s
+    return None
 
 
 def topic_allowed(topic, write):
@@ -177,6 +202,11 @@ def handle_client(conn, addr):
                 data = payload[offset:]
                 if not topic_allowed(topic, write=True):
                     log_event("denied", "publish ke topik terlarang dari %s id=%s topik=%s" % (peer, client["id"], topic))
+                    conn.close()
+                    return
+                problem = replay_problem(topic, data)
+                if problem:
+                    log_event("denied", "replay ditolak dari %s id=%s topik=%s: %s" % (peer, client["id"], topic, problem))
                     conn.close()
                     return
                 log_event("publish", "id=%s topik=%s ukuran=%dB" % (client["id"], topic, len(data)))

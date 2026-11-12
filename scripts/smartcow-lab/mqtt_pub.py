@@ -101,12 +101,12 @@ def main():
     try:
         peek = conn.recv(1)
         if peek == b"":
-            print("GAGAL: broker menutup koneksi setelah publish (ACL tolak topik)")
+            print("GAGAL: broker menutup koneksi setelah publish (ditolak: ACL topik atau replay)")
             return 4
     except (socket.timeout, BlockingIOError):
         pass
     except (ConnectionError, OSError):
-        print("GAGAL: broker memutuskan koneksi (ACL tolak topik)")
+        print("GAGAL: broker memutuskan koneksi (ditolak: ACL topik atau replay)")
         return 4
     conn.close()
     print("PUBLISH diterima broker (koneksi tetap hidup)")

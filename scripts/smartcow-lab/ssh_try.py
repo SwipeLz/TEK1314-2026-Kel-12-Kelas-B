@@ -68,7 +68,7 @@ def main():
     for combo in sys.argv[2:]:
         user, password = combo.split(":", 1)
         status, text = try_login(host, user, password)
-        print("user=%-10s password=%-14s -> %s" % (user, password, status))
+        print("user=%-10s password=%-14s -> %s" % (user, "*" * len(password), status))
         lines = [line for line in text.strip().splitlines() if line.strip()]
         for line in lines[-2:]:
             print("    " + line.strip())
