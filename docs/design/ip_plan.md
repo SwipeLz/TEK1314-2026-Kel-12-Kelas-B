@@ -7,6 +7,7 @@
 ## Daftar Isi
 
 - [Alokasi Alamat dan Peran Node](#alokasi-alamat-dan-peran-node)
+- [Diagram Topologi](#diagram-topologi)
 - [Layanan pada Target Node](#layanan-pada-target-node)
 - [Diagram Alur Komunikasi](#diagram-alur-komunikasi)
 - [Catatan Teknis](#catatan-teknis)
@@ -19,7 +20,21 @@
 | `ATTACKER-KEL12-B` | 192.168.12.100 | Attacker Node | Ubuntu 22.04 LTS (Cisco LabVM) | Nmap, tcpdump, Wireshark, dan skrip pengujian Python |
 | `SOC-KEL12-B` | 192.168.12.200 | Monitoring Node (manajemen) | Security Onion | Antarmuka manajemen aplikasi Sguil dan Squert |
 | `SOC-KEL12-B-sniff` | Tanpa IP (promiscuous) | Monitoring Node (sensor) | Security Onion | Menangkap dan menganalisis lalu lintas `192.168.12.0/24` |
-| Host Laptop | 192.168.12.1 | Host administrasi | Windows | Manajemen hypervisor VirtualBox dan pengujian akses web |
+| Host Administrasi | 192.168.12.1 | Host administrasi | Windows | Manajemen hypervisor VirtualBox dan pengujian akses web |
+
+## Diagram Topologi
+
+![Diagram topologi kondisi akhir Fase 2: Host Administrasi, Attacker Node, Target Node, dan Monitoring Node pada subnet 192.168.12.0/24](topology-akhir-fase2.png)
+
+*Gambar 1. Kondisi akhir Fase 2 per 12 November 2026. Port 22 dan 80 terbuka bagi segmen lab, port 1883 ditutup dari jaringan oleh B4, dan port 9000 hanya melayani loopback setelah B2.*
+
+![Snapshot topologi lab Minggu 9 saat port 1883 masih dibuka untuk subnet lab](topology-minggu9.png)
+
+*Gambar 2. Snapshot Minggu 9. Diagram ini masih mencantumkan 1883/TCP pada whitelist firewall; kontrol B4 menutup akses tersebut pada 12 November 2026. Sumber gambar: [topology-minggu9.excalidraw](topology-minggu9.excalidraw).*
+
+![Rancangan awal topologi Minggu 4 di Packet Tracer: Attacker Kali Linux, Target Metasploitable atau DVWA, Monitoring Security Onion, dan switch 2960-24TT](topology.png)
+
+*Gambar 3. Rancangan awal Minggu 4 di Cisco Packet Tracer. Alamat `.100`, `.5`, dan `.200` sudah mengikuti rencana, tetapi Target digambarkan sebagai Metasploitable atau DVWA dengan port 80, 443, dan 3306. Implementasi lab memakai Arch Linux dengan layanan SmartCow pada port 22, 80, 1883, dan 9000.*
 
 ## Layanan pada Target Node
 
@@ -57,4 +72,4 @@ Seluruh lalu lintas segmen Host-Only disadap Monitoring Node
 2. Attacker Node hanya diarahkan ke `192.168.12.5` dan tidak memiliki rute ke luar segmen laboratorium.
 3. Security Onion mengoperasikan dua kartu jaringan virtual: satu antarmuka ber-IP untuk manajemen, dan satu antarmuka tanpa IP bermode promiscuous untuk penyadapan paket.
 4. Aturan firewall disimpan permanen pada `/etc/iptables/iptables.rules` dan dimuat saat boot melalui `iptables.service`, sehingga aturan tidak hilang setelah VM dinyalakan ulang.
-5. Ketiga node diperiksa ulang pada 12 November 2026 dan merespons ping dari host administrasi tanpa kehilangan paket. Attacker Node memakai alamat statis `192.168.12.100/24` dengan gateway `192.168.12.1`; server DHCP VirtualBox dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254` agar klien tidak menerima alamat dari subnet lain. Bukti: `../blueteam/evidence/verifikasi-2026-11-12/03-topology-reachability.log` dan `04-onion-state.log`.
+5. Ketiga node diperiksa ulang pada 12 November 2026 dan merespons ping dari host administrasi tanpa kehilangan paket. Attacker Node memakai alamat statis `192.168.12.100/24` dengan gateway `192.168.12.1`; server DHCP VirtualBox dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254` agar klien tidak menerima alamat dari subnet lain. Bukti: `../blueteam/evidence/verifikasi-2026-11-12/03-topology-reachability.log` dan `../blueteam/evidence/verifikasi-2026-11-12/04-onion-state.log`.

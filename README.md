@@ -29,9 +29,9 @@ Untuk praktikum keamanan siber, seluruh arsitektur backend direplikasi ke lingku
 - **Kondisi Akhir Port:** Setelah kontrol B4, hanya port 22 (SSH) dan 80 (HTTP) terbuka bagi segmen lab. Port 1883 (MQTT) ditutup dari jaringan, dan port 9000 (REST API) hanya melayani loopback.
 - **Integritas Pengujian:** Seluruh data uji bersifat dummy; tidak ada kredensial produksi di repositori.
 
-![Diagram topologi laboratorium Kelompok 12: Attacker Node, Target Node, Monitoring Node, dan host administrasi pada subnet 192.168.12.0/24](docs/design/topology-minggu9.png)
+![Diagram topologi akhir Fase 2 Kelompok 12: Host Administrasi, Attacker Node, Target Node, dan Monitoring Node pada subnet 192.168.12.0/24, dengan port 22 dan 80 terbuka serta 1883 dan 9000 hanya loopback](docs/design/topology-akhir-fase2.png)
 
-*Gambar 1. Topologi lab Minggu 9. Diagram ini menggambarkan kondisi saat 1883 masih dibuka untuk segmen lab; kontrol B4 menutup akses tersebut pada 12 November 2026.*
+*Gambar 1. Topologi kondisi akhir Fase 2 per 12 November 2026. Hanya port 22 (SSH) dan 80 (HTTP) terbuka bagi segmen lab; port 1883 (MQTT) ditutup dari jaringan oleh B4 dan port 9000 (REST API) hanya melayani loopback setelah B2. Snapshot kondisi Minggu 9, saat 1883 masih dibuka, tersedia pada [topology-minggu9.png](docs/design/topology-minggu9.png).*
 
 ## Peta Berkas Repositori
 
@@ -39,7 +39,8 @@ Untuk praktikum keamanan siber, seluruh arsitektur backend direplikasi ke lingku
 | :--- | :--- |
 | [LOGBOOK.md](LOGBOOK.md) | Kronologi teknis mingguan, dari pembentukan tim sampai verifikasi ulang Fase 2 |
 | [docs/design/ip_plan.md](docs/design/ip_plan.md) | Skema pengalamatan IP, peran node, dan alokasi port layanan |
-| [docs/design/topology-minggu9.png](docs/design/topology-minggu9.png) | Diagram topologi jaringan lab Minggu 9 |
+| [docs/design/topology-akhir-fase2.png](docs/design/topology-akhir-fase2.png) | Diagram topologi kondisi akhir Fase 2 (22 dan 80 terbuka, 1883 dan 9000 loopback) |
+| [docs/design/topology-minggu9.png](docs/design/topology-minggu9.png) | Snapshot diagram topologi jaringan lab Minggu 9, saat 1883 masih dibuka |
 | [docs/blueteam/baseline-report.md](docs/blueteam/baseline-report.md) | Baseline report Fase 1 (Minggu 7): aset, hardening awal, dan bukti logging |
 | [docs/blueteam/hardening_checklist.md](docs/blueteam/hardening_checklist.md) | Sepuluh kontrol hardening (A1-A3, B1-B4, C1-C3) beserta bukti verifikasi |
 | [docs/blueteam/evidence/](docs/blueteam/evidence/) | Tangkapan layar dan log before/after, baseline, serta verifikasi kontrol |
@@ -80,4 +81,4 @@ Kata sandi akun sistem sengaja tidak dirotasi karena masih dipakai untuk login k
 
 Repositori ini mengikuti struktur direktori Panduan PBL Minggu 9: `docs/design`, `docs/presentation-minggu9`, `docs/blueteam`, `docs/redteam`, dan `docs/purple-team-log.md`. Naskah presentasi, lembar catatan latihan, dan prosedur pengujian insiden disimpan pada direktori kerja internal kelompok di luar repositori publik ini.
 
-Setiap pernyataan teknis disertai tangkapan layar atau berkas log asli. Pemeriksaan ulang pada 12 November 2026 menemukan dua tangkapan layar lama yang isinya justru memperlihatkan kegagalan perintah, yaitu pada kontrol C1 dan C3. Keduanya sudah diganti dengan bukti log eksekusi baru di `docs/blueteam/evidence/verifikasi-2026-11-12/`, dan status penggantian dicatat pada `hardening_checklist.md`.
+Setiap pernyataan teknis disertai tangkapan layar atau berkas log asli. Pemeriksaan ulang pada 12 November 2026 menemukan dua tangkapan layar lama yang isinya justru memperlihatkan kegagalan perintah, yaitu `mqtt-acl-terverifikasi.png` pada kontrol C1 dan salinan lama `backup-dan-pemulihan-data.png` pada kontrol C3. Keduanya tidak dipakai lagi. C1 kini dibuktikan log eksekusi `docs/blueteam/evidence/verifikasi-2026-11-12/01-c1-live-verification.log` beserta tangkapan layar penolakan publish, sedangkan C3 memakai tangkapan layar pengganti `backup-dan-pemulihan-data.png` yang memuat eksekusi nyata 12 November 2026 (unit backup `Succeeded`, `PASS archive-checksum`, `PASS manifest 4/4`) dan diperkuat log `02`, `07`, serta `13`. Status penggantian dicatat pada `hardening_checklist.md`.

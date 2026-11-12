@@ -15,7 +15,7 @@ Jika pratinjau PDF di GitHub tidak terbuka, seluruh slide dapat dibaca sebagai g
 5. [Slide 5: Status pengamanan data dan aplikasi](#slide-5)
 6. [Slide 6: Hasil pemantauan Security Onion](#slide-6)
 7. [Slide 7: Rencana dan status pengujian Red Team](#slide-7)
-8. [Slide 8: Pekerjaan lanjutan menuju Fase 2](#slide-8)
+8. [Slide 8: Prioritas verifikasi sebelum pengujian lanjutan](#slide-8)
 
 ## Slide 1
 
@@ -61,6 +61,6 @@ Rencana dan status pengujian Red Team.
 
 ## Slide 8
 
-Pekerjaan lanjutan menuju Fase 2.
+Prioritas verifikasi C1, C3, dan RT-04 sebelum pengujian lanjutan, dengan target Minggu 11.
 
-![Slide 8: pekerjaan lanjutan menuju Fase 2](preview/slide-08.png)
+![Slide 8: prioritas verifikasi sebelum pengujian lanjutan](preview/slide-08.png)

@@ -32,6 +32,7 @@ Peta folder kontrol: A1 `kontrol A1 - Menolak login root langsung`, A2 `kontrol 
 Catatan bukti:
 
 - Rilis yang terdeteksi pada kondisi awal: OpenSSH 8.4 dan Nginx 1.18.0.
+- Keterhubungan Attacker Node ke Target Node sebelum pengujian dicatat pada `ping-attacker-target.log` (0% packet loss).
 - Port 9000 terdeteksi filtered karena firewall memblokir paket masuk.
 - Tangkapan Sguil menampilkan antrean alert yang sama-sama aktif, yaitu SMARTCOW-HTTP, SMARTCOW-MQTT, dan `ET SCAN Potential SSH Scan`. Nomor CID alert Nmap tidak terlihat pada layar, sehingga dibuktikan melalui query basis data.
 - Sebelum penutupan 1883, Attacker Node mencatat tiga port terbuka (22, 80, 1883); sesudah B4 tinggal dua.
@@ -59,7 +60,7 @@ Catatan bukti:
 | **1. Serang** | Mempublikasikan payload ke `cow-sprinkler-01/control` tanpa kredensial dan mengirim `PUT` telemetri kelembapan 150% | Memeriksa log aplikasi dan broker | `05-publish-mqtt-sebelum.png`, `08-suntik-telemetri-rest-sebelum.png` | Pesan MQTT diterima broker, telemetri palsu tersimpan, perintah sprinkler manual diterima |
 | **2. Deteksi** | Melanjutkan pengujian transmisi data | Memantau `logs/access.log`, `logs/broker.log`, dan peringatan IDS | `verifikasi-2026-11-12/12-target-redaction-and-env.log`, `sguil-alert-minggu9.png` | Request HTTP tercatat pada log akses; Snort mencatat `ET POLICY curl User-Agent` dari `.100` ke port 80 pukul 06:32 GMT |
 | **3. Analisis** | Menilai dampak: publish tanpa otorisasi dapat menyalakan relay tanpa operator | Mengidentifikasi broker yang menerima klien anonim tanpa ACL dan API tanpa validasi rentang | Catatan evaluasi internal | Pola ini mencerminkan kelemahan firmware asli yang menanamkan kredensial di kode sumber |
-| **4. Respons** | Tidak ada tindakan ofensif | Mengaktifkan validasi input, mewajibkan otentikasi broker, menerapkan ACL topik, memperketat izin berkas, merotasi token | `kontrol C1/validasi-input-setelah.png`, `kontrol C2/kredensial-setelah.png` | Validasi aktif, otentikasi MQTT wajib, hak publish topik kontrol dicabut, token lama dinonaktifkan |
+| **4. Respons** | Tidak ada tindakan ofensif | Mengaktifkan validasi input, mewajibkan otentikasi broker, menerapkan ACL topik, memperketat izin berkas, merotasi token | `kontrol C1/validasi-input-setelah.png`, `kontrol C1/mqtt-topik-terlarang-ditolak.png`, `07-publish-mqtt-topik-terlarang-setelah.png`, `kontrol C2/kredensial-setelah.png` | Validasi aktif, otentikasi MQTT wajib, hak publish topik kontrol dicabut, kredensial lama ditolak, token lama dinonaktifkan |
 | **5. Verifikasi** | Mengulang publish kontrol dan injeksi telemetri | Memastikan manipulasi ditolak dan alur data sah tetap berjalan | `06-publish-mqtt-tanpa-kredensial-setelah.png`, `09-suntik-telemetri-rest-setelah.png`, `verifikasi-2026-11-12/01-c1-live-verification.log` | `CONNACK 5`, `HTTP 400 Bad Request`, dan `HTTP 401 Unauthorized`; data sah tetap diproses |
 
 ## Skenario 4 - RT-04 Pengujian Serangan Pengulangan Pesan Kendali
@@ -81,7 +82,7 @@ Catatan bukti:
 
 ## Catatan Validitas Artefak
 
-Tiga berkas bukti diperiksa ulang pada 12 November 2026 dan statusnya dicatat apa adanya. Ketiganya sudah diganti dengan tangkapan layar eksekusi nyata.
+Tiga berkas bukti diperiksa ulang pada 12 November 2026 dan statusnya dicatat apa adanya. Dua tangkapan layar sudah diganti dengan tangkapan layar eksekusi nyata, sedangkan satu log Nmap dipertahankan sebagai arsip.
 
 - `redteam/evidence/11-pemindaian-port-lengkap.png` kini memuat keluaran `nmap -sT -Pn -p-` dari Attacker Node (65,73 detik, 65533 port filtered, 22 dan 80 terbuka). Gambar lama yang kosong tidak dipakai.
 - `redteam/evidence/03-percobaan-login-sebelum.png` kini memuat eksekusi `ssh_try.py` pada jendela demonstrasi terkontrol (`sec_admin` BERHASIL, `root` GAGAL) dengan kata sandi disamarkan. Berkas `04-percobaan-login-setelah.png` memuat pengujian ulang setelah konfigurasi dipulihkan (`DITOLAK` untuk kedua akun). Gambar NSE yang gagal dan gambar lama yang mencetak kata sandi tidak dipakai.

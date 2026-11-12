@@ -57,8 +57,8 @@ Seluruh pengujian berjalan di jaringan virtual Host-Only. Ruang lingkup tidak me
 ### A1. Penolakan Login Langsung Akun Root Melalui SSH - Done
 
 - **Tujuan Pengamanan:** Mencegah pengambilalihan hak akses tertinggi melalui SSH dan memastikan aktivitas administratif memakai akun pengguna terdaftar.
-- **Kondisi Awal (Before):** Berkas `sshd_config.bak-kel12` dari baseline Minggu 6 masih memakai konfigurasi bawaan tanpa direktif eksplisit. Nilai efektifnya `permitrootlogin without-password` (setara `prohibit-password`) dan `maxstartups 10:30:100`, diukur dengan `sshd -T -f` pada 12 November 2026.
-- **Implementasi:** `PermitRootLogin no` dan `AllowUsers sec_admin` diterapkan pada konfigurasi sshd, divalidasi dengan `sshd -t`, lalu diuji melalui simulasi login dari Attacker Node.
+- **Kondisi Awal (Before):** Berkas `sshd_config.bak-kel12` (salinan konfigurasi sebelum hardening Minggu 6) masih memakai nilai bawaan tanpa direktif eksplisit. Nilai efektif berkas itu `permitrootlogin without-password` (setara `prohibit-password`) dan `maxstartups 10:30:100`, diukur dengan `sshd -T -f` pada 12 November 2026. Konfigurasi aktif sendiri sudah memakai `PermitRootLogin no` sejak hardening Minggu 6 (`evidence/baseline/sshd-after.log`), sehingga A1 pada Fase 2 berfokus pada verifikasi ulang nilai tersebut.
+- **Implementasi:** `PermitRootLogin no` dan `AllowUsers sec_admin` dipertahankan pada konfigurasi sshd, divalidasi dengan `sshd -t`, lalu diuji melalui simulasi login dari Attacker Node.
 - **Hasil Verifikasi (After):** `sshd -T` mengonfirmasi `permitrootlogin no` dan `allowusers sec_admin`. Empat variasi percobaan login root dari penyerang seluruhnya ditolak.
 - **Cakupan dan Batasan:** Kontrol ini melindungi akses SSH jarak jauh. Hak administratif di dalam server tetap dapat dipakai `sec_admin` melalui `sudo`.
 - **Tautan Bukti:** [Konfigurasi sebelum](<evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-sebelum.png>), [Konfigurasi setelah](<evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-setelah.png>), [Login root ditolak](<evidence/kontrol A1 - Menolak login root langsung/login-root-ditolak.png>).

@@ -29,7 +29,7 @@ Catatan sistem operasi: `ip_plan.md` awalnya merencanakan Ubuntu Server 22.04 at
 
 - Kebijakan default INPUT DROP dan OUTPUT ACCEPT.
 - ICMP serta TCP 22, 80, dan 1883 dibuka hanya dari `192.168.12.0/24`.
-- Pemeriksaan memakai `sudo iptables -L -n -v --line-numbers`.
+- Pemeriksaan memakai `sudo iptables -L -n -v --line-numbers`. Keluaran sebelum dan sesudah aturan dimuat tersimpan pada [iptables-before.log](evidence/baseline/iptables-before.log) dan [iptables-after.log](evidence/baseline/iptables-after.log).
 
 **Sistem:**
 
@@ -37,6 +37,9 @@ Catatan sistem operasi: `ip_plan.md` awalnya merencanakan Ubuntu Server 22.04 at
 - Layanan yang tidak dipakai dimatikan: `vsftpd`, `telnet.socket`, `pox`, dan `ovs-vswitchd`, diverifikasi dengan `systemctl list-unit-files --state=enabled`.
 - Pembaruan paket melalui pacman tidak berjalan karena segmen terisolasi tanpa internet. Kondisi ini dicatat sebagai keterbatasan, bukan disembunyikan.
 - Mosquitto belum diinstal karena membutuhkan internet. Port 1883 dibuka di firewall sebagai persiapan skenario IoT Fase 2.
+- Konfigurasi `sshd` efektif dan status akun tercatat pada [sshd-before.log](evidence/baseline/sshd-before.log), [sshd-after.log](evidence/baseline/sshd-after.log), dan [users-after.log](evidence/baseline/users-after.log). Nilai sesudah hardening mencakup `PermitRootLogin no`, `MaxAuthTries 3`, `LogLevel VERBOSE`, dan akun `analyst` terkunci.
+- Penyimpanan journald disetel persisten; bukti pada [journal-after.log](evidence/baseline/journal-after.log).
+- Alamat Attacker Node disetel statis melalui Netplan; konfigurasi sebelum dan sesudah ada pada [netplan-attacker-before.log](evidence/baseline/netplan-attacker-before.log) dan [netplan-attacker-after.log](evidence/baseline/netplan-attacker-after.log).
 
 **Identitas:**
 
@@ -56,6 +59,8 @@ Hasil uji dari Attacker Node `.100` ke Target Node `.5`:
 - 12 koneksi SSH ke port 22 tercatat sebagai `ET SCAN Potential SSH Scan` dan `ET SCAN Potential SSH Scan OUTBOUND`, lengkap dengan source port.
 - Bukti basis data: [sguil-db-events.log](evidence/baseline/sguil-db-events.log) (timestamp, src, dst, signature).
 - Bukti jendela Sguil: [sguil-alert.png](evidence/baseline/sguil-alert.png), sensor `seconion-import`, terlihat baris `192.168.12.100` ke `.5`.
+- Rekaman lanjutan 3 Oktober 2026 pada [sguil-fresh-2026-10-03.png](evidence/baseline/sguil-fresh-2026-10-03.png) memperlihatkan antrean alert `ET SCAN` dari `192.168.12.100`, termasuk pemindaian SSH dan probe OS Nmap.
+- Konfigurasi antarmuka Monitoring Node didokumentasikan pada [sebelum-eth2-dhcp-nat.png](evidence/monitoring-node/sebelum-eth2-dhcp-nat.png) (kondisi `eth1` dan `eth2` sebelum penyesuaian) dan [daftar-listener-onion.png](evidence/monitoring-node/daftar-listener-onion.png) (daftar listener layanan Security Onion).
 
 Bukti lain di `evidence/baseline/`:
 

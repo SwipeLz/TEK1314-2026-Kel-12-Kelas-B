@@ -18,7 +18,7 @@ Sesuai ketentuan keselamatan dan etika pengujian, seluruh pengujian keamanan dil
 | **Sistem Operasi Backend** | Infrastruktur serverless terkelola Google Firebase | Arch Linux Security Workstation pada `SRV-IOT-KEL12-B` (`192.168.12.5`) |
 | **Database dan Penyimpanan** | Firebase Realtime Database, path `devices/cow-sprinkler-01/{telemetry,control,status,events}` | Berkas JSON lokal dengan REST ala RTDB pada `127.0.0.1:9000` (`app.py`) |
 | **Protokol Telemetri** | HTTPS REST dengan Database Secret; ESP32 mengirim tiap 2 detik | HTTP REST dengan token bearer; simulator mengirim data dummy tiap 2 detik |
-| **Protokol Komunikasi IoT** | MQTT disiapkan sebagai opsi pengembangan (`PRODUCT.md`) | Broker MQTT mandiri pada 1883 dengan otentikasi dan ACL topik; akses jaringan ditutup lewat B4 |
+| **Protokol Komunikasi IoT** | MQTT disiapkan sebagai opsi pengembangan pada dokumen produk SmartCow (`PRODUCT.md` di repositori proyek asli) | Broker MQTT mandiri pada 1883 dengan otentikasi dan ACL topik; akses jaringan ditutup lewat B4 |
 | **Komunikasi Antar Node** | ESP-NOW 2.4 GHz tanpa enkripsi antar modul ESP32 | TCP/IP virtual terisolasi pada segmen Host-Only `192.168.12.0/24` |
 | **Antarmuka Monitoring** | Firebase Hosting, aplikasi web statis HTML/CSS/JavaScript | Nginx 1.18.0 menyajikan antarmuka yang sama dan meneruskan `/api` ke backend lokal |
 | **Otentikasi dan Otorisasi** | Firebase Auth email/kata sandi dan security rules RTDB berbasis peran (`/access/<uid>`) | Token bearer REST, kredensial broker MQTT, dan ACL topik |
