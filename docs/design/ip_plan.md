@@ -1,54 +1,60 @@
 # Skema Pengalamatan IP - Kelompok 12 Kelas B
 
-**Subnet Laboratorium:** 192.168.12.0/24  
-**Netmask:** 255.255.255.0  
-**Mode Jaringan VirtualBox:** Host-Only dengan konfigurasi IP statis pada seluruh node guna menjamin isolasi total lingkungan pengujian (tidak menggunakan mode Bridged).
+**Subnet Laboratorium:** `192.168.12.0/24`  
+**Netmask:** `255.255.255.0`  
+**Mode Jaringan VirtualBox:** Host-Only dengan IP statis pada seluruh node untuk menjamin isolasi lingkungan pengujian (tanpa mode Bridged).
+
+## Daftar Isi
+
+- [Alokasi Alamat dan Peran Node](#alokasi-alamat-dan-peran-node)
+- [Layanan pada Target Node](#layanan-pada-target-node)
+- [Diagram Alur Komunikasi](#diagram-alur-komunikasi)
+- [Catatan Teknis](#catatan-teknis)
 
 ## Alokasi Alamat dan Peran Node
 
-| Nama Host | Alamat IP | Peran Fungsional | Sistem Operasi | Port Layanan dan Keterangan |
+| Nama Host | Alamat IP | Peran Fungsional | Sistem Operasi | Layanan dan Keterangan |
 | :--- | :--- | :--- | :--- | :--- |
-| SRV-IOT-KEL12-B | 192.168.12.5 | Target Node (Replika Backend IoT) | Arch Linux Security Workstation | Port 22 (SSH), Port 80 (Dashboard Nginx), Port 1883 (Broker MQTT), Port 9000 (REST API internal via loopback) |
-| ATTACKER-KEL12-B | 192.168.12.100 | Attacker Node | Ubuntu 22.04 LTS (Cisco LabVM) | Nmap, tcpdump, Wireshark, skrip pengujian berbasis Python |
-| SOC-KEL12-B | 192.168.12.200 | Monitoring Node (Manajemen) | Security Onion | Antarmuka manajemen untuk aplikasi Sguil dan Squert |
-| SOC-KEL12-B-sniff | Tanpa IP (Promiscuous) | Monitoring Node (Sensor) | Security Onion | Menangkap dan menganalisis lalu lintas jaringan 192.168.12.0/24 |
-| Host Laptop | 192.168.12.1 | Host Administrasi | Windows | Manajemen hypervisor VirtualBox dan pengujian akses web |
+| `SRV-IOT-KEL12-B` | 192.168.12.5 | Target Node (replika backend IoT) | Arch Linux Security Workstation | SSH 22, dashboard Nginx 80, broker MQTT 1883 (kini hanya loopback), REST API 9000 (loopback) |
+| `ATTACKER-KEL12-B` | 192.168.12.100 | Attacker Node | Ubuntu 22.04 LTS (Cisco LabVM) | Nmap, tcpdump, Wireshark, dan skrip pengujian Python |
+| `SOC-KEL12-B` | 192.168.12.200 | Monitoring Node (manajemen) | Security Onion | Antarmuka manajemen aplikasi Sguil dan Squert |
+| `SOC-KEL12-B-sniff` | Tanpa IP (promiscuous) | Monitoring Node (sensor) | Security Onion | Menangkap dan menganalisis lalu lintas `192.168.12.0/24` |
+| Host Laptop | 192.168.12.1 | Host administrasi | Windows | Manajemen hypervisor VirtualBox dan pengujian akses web |
 
 ## Layanan pada Target Node
 
 | Port / Protokol | Layanan | Status Akses Setelah Hardening | Fokus Pengujian Keamanan |
 | :--- | :--- | :--- | :--- |
-| 22/TCP | OpenSSH | Akses dibatasi pada subnet 192.168.12.0/24, autentikasi berbasis kunci, login root ditolak, pembatasan laju koneksi aktif | Percobaan login berulang dan ketahanan pembatasan koneksi |
-| 80/TCP | Nginx (Dashboard & Proxy) | Akses dibuka untuk subnet 192.168.12.0/24, banner versi perangkat lunak disembunyikan | Pengujian kebocoran versi dan mitigasi manipulasi API |
-| 1883/TCP | Broker MQTT | Akses dibuka untuk subnet 192.168.12.0/24, otentikasi wajib, pembatasan ACL topik aktif | Pengujian publish tanpa hak akses dan perlindungan kanal kontrol |
-| 9000/TCP | REST API Replika | Dibatasi hanya pada antarmuka loopback (127.0.0.1), tidak dapat diakses dari jaringan luar | Validasi rentang data sensor dan otentikasi token bearer |
+| 22/TCP | OpenSSH | Terbuka hanya untuk `192.168.12.0/24`; autentikasi kunci, login root ditolak, pembatasan laju koneksi aktif | Percobaan login berulang dan ketahanan pembatasan koneksi |
+| 80/TCP | Nginx (dashboard dan proxy) | Terbuka untuk `192.168.12.0/24`; banner versi disembunyikan; rute `/api` diteruskan ke loopback | Kebocoran versi dan manipulasi data melalui API |
+| 1883/TCP | Broker MQTT | Ditutup dari jaringan lewat B4 (12 November 2026); hanya loopback yang lolos; otentikasi dan ACL topik wajib | Publish tanpa hak akses dan perlindungan kanal kontrol |
+| 9000/TCP | REST API replika | Hanya pada `127.0.0.1` (kontrol B2), tidak dapat dihubungi dari jaringan | Validasi rentang data sensor dan otentikasi token bearer |
 
-Port layanan yang tidak digunakan seperti 21 (FTP), 23 (Telnet), dan 3306 (MySQL) telah dinonaktifkan dan diblokir oleh firewall. Tidak ada service listener lain yang terbuka di luar daftar di atas.
+Port yang tidak digunakan, yaitu 21 (FTP), 23 (Telnet), dan 3306 (MySQL), diblokir firewall dan tidak memiliki listener. Tidak ada layanan lain yang terbuka di luar daftar di atas.
 
 ## Diagram Alur Komunikasi
 
 ```text
-Simulator Sensor (Telemetri dummy dikirim tiap 2 detik)
-                  |
-                  | HTTP :9000 (Loopback internal)
-                  v
-       API Replika pada Target Node (192.168.12.5)
-       Path: devices/cow-sprinkler-01/...
-                  ^
-                  | HTTP :80
-                  v
-       Nginx Dashboard & Proxy Terbalik (/api)
+Attacker Node (192.168.12.100)
+   |  SSH :22 dan HTTP :80
+   |  (1883 dan 9000 tidak dapat dihubungi sejak B2/B4)
+   v
+Target Node (192.168.12.5)
+   |-- sshd         :22     whitelist subnet lab, kunci Ed25519
+   |-- Nginx        :80     dashboard + proxy /api
+   |       |
+   |       +--> 127.0.0.1:9000  app.py (REST API replika)
+   |-- broker.py    :1883   hanya loopback
+   +-- simulator.py         menulis telemetri dummy tiap 2 detik
 
-Attacker (192.168.12.100) --(SSH 22, HTTP 80, MQTT 1883)--> Target (192.168.12.5)
-                                                                 |
-                                       Mode Promiscuous          v
-                               Security Onion Sensor Node (192.168.12.200)
+Seluruh lalu lintas segmen Host-Only disadap Monitoring Node
+(192.168.12.200, NIC sensor promiscuous tanpa IP).
 ```
 
 ## Catatan Teknis
 
-1. Target Node menggunakan citra Arch Linux Security Workstation yang disediakan di laboratorium, menggantikan rencana awal Ubuntu Server. Peran operasional dan alokasi port tetap identik.
-2. Attacker Node hanya diarahkan ke alamat IP 192.168.12.5 dan tidak memiliki rute jaringan ke luar segmen laboratorium.
-3. Security Onion mengoperasikan dua kartu jaringan virtual: satu antarmuka beralamat IP untuk manajemen sistem, dan satu antarmuka tanpa IP berkonfigurasi *promiscuous mode* khusus untuk penyadapan paket jaringan.
-4. Aturan firewall disimpan secara permanen pada berkas `/etc/iptables/iptables.rules` dan dimuat otomatis saat proses boot melalui unit `iptables.service`. Langkah ini memastikan aturan keamanan tidak hilang saat mesin virtual dinyalakan ulang.
-5. Ketiga node diperiksa ulang pada 12 November 2026 dan semuanya merespons dari host administrasi tanpa kehilangan paket. Attacker Node memakai alamat statis `192.168.12.100/24` dengan gateway `192.168.12.1`; server DHCP VirtualBox pada jaringan Host-Only dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254` agar klien DHCP tidak lagi menerima alamat dari subnet lain. Bukti ada di `../blueteam/evidence/verifikasi-2026-11-12/03-topology-reachability.log` dan `04-onion-state.log`.
+1. Target Node memakai citra Arch Linux Security Workstation dari laboratorium, menggantikan rencana awal Ubuntu Server. Peran operasional dan alokasi port tidak berubah.
+2. Attacker Node hanya diarahkan ke `192.168.12.5` dan tidak memiliki rute ke luar segmen laboratorium.
+3. Security Onion mengoperasikan dua kartu jaringan virtual: satu antarmuka ber-IP untuk manajemen, dan satu antarmuka tanpa IP bermode promiscuous untuk penyadapan paket.
+4. Aturan firewall disimpan permanen pada `/etc/iptables/iptables.rules` dan dimuat saat boot melalui `iptables.service`, sehingga aturan tidak hilang setelah VM dinyalakan ulang.
+5. Ketiga node diperiksa ulang pada 12 November 2026 dan merespons ping dari host administrasi tanpa kehilangan paket. Attacker Node memakai alamat statis `192.168.12.100/24` dengan gateway `192.168.12.1`; server DHCP VirtualBox dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254` agar klien tidak menerima alamat dari subnet lain. Bukti: `../blueteam/evidence/verifikasi-2026-11-12/03-topology-reachability.log` dan `04-onion-state.log`.

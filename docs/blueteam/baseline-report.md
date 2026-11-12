@@ -1,74 +1,75 @@
-# Baseline report fase 1 (minggu 7) - Kelompok 12 Kelas B
+# Baseline Report Fase 1 (Minggu 7) - Kelompok 12 Kelas B
 
-> **Status dokumen.** Ini potret kondisi akhir minggu 7 (fase 1, sebelum penyerangan). Isinya sengaja tidak diperbarui agar tetap jadi pembanding "before". Perubahan sesudahnya ada di `hardening_checklist.md`, `../vulnerability-assessment-report.md`, dan `../purple-team-log.md`. Pemeriksaan ulang seluruh node pada 12 November 2026 ada di `evidence/verifikasi-2026-11-12/`.
+> **Status dokumen.** Dokumen ini adalah potret kondisi akhir Minggu 7 (Fase 1, sebelum penyerangan). Isinya sengaja tidak diperbarui agar tetap menjadi pembanding kondisi *before*. Perubahan sesudahnya ada pada [hardening_checklist.md](hardening_checklist.md), [vulnerability-assessment-report.md](../vulnerability-assessment-report.md), dan [purple-team-log.md](../purple-team-log.md). Pemeriksaan ulang seluruh node pada 12 November 2026 ada di [evidence/verifikasi-2026-11-12/](evidence/verifikasi-2026-11-12/).
 
-Subnet 192.168.12.0/24. Kondisi before attack. Sistem sudah di-hardening sebelum diserang.
+Lingkungan uji: subnet `192.168.12.0/24`, kondisi sebelum penyerangan Fase 2. Sistem sudah di-hardening pada Fase 1. Seluruh angka pada dokumen ini dapat dicek ulang pada berkas bukti yang ditautkan.
 
-Semua bisa dicek ulang.
+## Daftar Isi
+
+- [1. Aset](#1-aset)
+- [2. Hardening](#2-hardening)
+- [3. Pemeriksaan Logging Minggu 5](#3-pemeriksaan-logging-minggu-5)
+- [4. Demo Minggu 7](#4-demo-minggu-7)
 
 ## 1. Aset
 
-| Hostname | IP | OS | Service |
+| Hostname | IP | Sistem Operasi | Layanan |
 | :--- | :--- | :--- | :--- |
-| SRV-IOT-KEL12-B | 192.168.12.5 | Arch Linux (Security Workstation) | SSH 22 (iptables hanya buka 22/80/1883) |
-| ATTACKER-KEL12-B | 192.168.12.100 | Cisco LabVM Ubuntu (user analyst) | nmap, ping, dumpcap/Wireshark |
-| SOC-KEL12-B | 192.168.12.200 | Security Onion | tcpdump, Sguil server (sensor IDS sempat belum provisioned, jadi capture paket dipakai sebagai Plan B) |
+| `SRV-IOT-KEL12-B` | 192.168.12.5 | Arch Linux Security Workstation | SSH 22; firewall hanya membuka 22, 80, dan 1883 |
+| `ATTACKER-KEL12-B` | 192.168.12.100 | Ubuntu 22.04 LTS (Cisco LabVM), pengguna `analyst` | Nmap, ping, dumpcap/Wireshark |
+| `SOC-KEL12-B` | 192.168.12.200 | Security Onion | tcpdump dan server Sguil |
 
-Detail IP ada di `../design/ip_plan.md`. Diagram ada di `../design/topology.png`.
+Sensor IDS pada Monitoring Node belum terprovisioning saat itu, sehingga penangkapan paket langsung dipakai sebagai rencana cadangan. Detail alamat ada di [ip_plan.md](../design/ip_plan.md) dan diagram topologi di [topology-minggu9.png](../design/topology-minggu9.png).
 
-Catatan soal OS: `ip_plan.md` nulis rencana Ubuntu Server 22.04 atau Metasploitable 2. Yang kepakai di lab ternyata Arch Linux Security Workstation. Service dan port yang dibuka menyesuaikan kondisi itu.
-
-Fungsinya tetap sama.
+Catatan sistem operasi: `ip_plan.md` awalnya merencanakan Ubuntu Server 22.04 atau Metasploitable 2, sedangkan lab memakai Arch Linux Security Workstation. Layanan dan port yang dibuka menyesuaikan kondisi tersebut; fungsi tiap node tetap sama.
 
 ## 2. Hardening
 
-Network (iptables, karena target Arch tanpa UFW):
+**Jaringan (iptables, karena Target Arch Linux tidak memakai UFW):**
 
-* Default INPUT DROP, OUTPUT ACCEPT.
-* Buka ICMP + TCP 22/80/1883 hanya dari 192.168.12.0/24.
-* Cek pakai `sudo iptables -L -n -v --line-numbers`.
+- Kebijakan default INPUT DROP dan OUTPUT ACCEPT.
+- ICMP serta TCP 22, 80, dan 1883 dibuka hanya dari `192.168.12.0/24`.
+- Pemeriksaan memakai `sudo iptables -L -n -v --line-numbers`.
 
-System:
+**Sistem:**
 
-* Login pakai user biasa sec_admin (uid 1001, non-root).
-* Matikan service tidak dipakai: vsftpd, telnet.socket, pox, ovs-vswitchd (cek `systemctl list-unit-files --state=enabled`).
-* Patch via pacman tidak jalan karena segmen isolasi tanpa internet. Kami catat sebagai keterbatasan, bukan diumpetin.
-* Mosquitto/MQTT belum diinstal (butuh internet). Port 1883 dibuka di firewall sebagai persiapan skenario IoT fase 2.
+- Login memakai pengguna biasa `sec_admin` (UID 1001, non-root).
+- Layanan yang tidak dipakai dimatikan: `vsftpd`, `telnet.socket`, `pox`, dan `ovs-vswitchd`, diverifikasi dengan `systemctl list-unit-files --state=enabled`.
+- Pembaruan paket melalui pacman tidak berjalan karena segmen terisolasi tanpa internet. Kondisi ini dicatat sebagai keterbatasan, bukan disembunyikan.
+- Mosquitto belum diinstal karena membutuhkan internet. Port 1883 dibuka di firewall sebagai persiapan skenario IoT Fase 2.
 
-Identitas:
+**Identitas:**
 
-* Hostname: SRV-IOT-KEL12-B, ATTACKER-KEL12-B, SOC-KEL12-B.
-* IP: .5, .100, .200 di segmen 192.168.12.0/24.
-* Cek pakai `hostnamectl` dan `ip addr`. Singkat. Kalau hostname atau IP meleset, log Onion susah dibaca.
+- Hostname: `SRV-IOT-KEL12-B`, `ATTACKER-KEL12-B`, dan `SOC-KEL12-B`.
+- Alamat IP: `.5`, `.100`, dan `.200` pada `192.168.12.0/24`.
+- Pemeriksaan memakai `hostnamectl` dan `ip addr`. Konsistensi hostname dan IP penting agar log Security Onion mudah ditelusuri.
 
-## 3. Logging check minggu 5
+## 3. Pemeriksaan Logging Minggu 5
 
-Awalnya Sguil kosong. Kami kira sensor rusak.
+Awalnya tabel Sguil kosong dan sempat diduga sensor rusak. Investigasi menemukan dua penyebab: mesin IDS dimatikan pada konfigurasi (`IDS_ENGINE_ENABLED=no`), dan NIC monitoring berstatus promiscuous deny sehingga tidak melihat trafik antar-VM. Setelah `IDS_ENGINE_ENABLED=yes`, izin promiscuous diubah menjadi allow, dan sensor dijalankan ulang dengan `nsm_sensor_ps-start`, rantai deteksi berjalan dan event tercatat.
 
-Ternyata dua hal. IDS engine sensor mati di config (IDS_ENGINE_ENABLED=no). Dan NIC monitoring mode promiscuous deny, jadi tidak melihat trafik antar VM. Setelah dibetulkan (IDS_ENGINE_ENABLED=yes + promiscuous allow-all + sensor direstart resmi pakai nsm_sensor_ps-start), rantai deteksi jalan. Sebelum diperbaiki, Sguil cuma pajangan karena tidak ada satu pun event yang nyangkut, dan setelah dua setelan itu dibetulkan plus sensor direstart dengan prosedur resmi, semua pengujian yang tadinya sepi langsung tercatat satu per satu, dan sejak saat itu semua pengujian tercatat rapi tanpa jeda sama sekali.
+Alur pemrosesan: `snort (eth0) -> unified2 -> barnyard2 -> sguild -> MySQL (sguildb.event)`.
 
-snort (eth0) -> unified2 -> barnyard2 -> sguild -> MySQL (sguildb.event).
+Hasil uji dari Attacker Node `.100` ke Target Node `.5`:
 
-Hasil uji (attacker .100 ke target .5):
-
-* 10x ping: tercatat sebagai GPL ICMP_INFO PING *NIX.
-* 12x koneksi SSH ke port 22: tercatat sebagai ET SCAN Potential SSH Scan (+ OUTBOUND), lengkap dengan source port.
-* Bukti database: `evidence/baseline/sguil-db-events.log` (timestamp, src, dst, signature).
-* Bukti jendela Sguil: `evidence/baseline/sguil-alert.png` (pilih sensor seconion-import, terlihat baris 192.168.12.100 ke .5).
+- 10 kali ping tercatat sebagai `GPL ICMP_INFO PING *NIX`.
+- 12 koneksi SSH ke port 22 tercatat sebagai `ET SCAN Potential SSH Scan` dan `ET SCAN Potential SSH Scan OUTBOUND`, lengkap dengan source port.
+- Bukti basis data: [sguil-db-events.log](evidence/baseline/sguil-db-events.log) (timestamp, src, dst, signature).
+- Bukti jendela Sguil: [sguil-alert.png](evidence/baseline/sguil-alert.png), sensor `seconion-import`, terlihat baris `192.168.12.100` ke `.5`.
 
 Bukti lain di `evidence/baseline/`:
 
-* `ping-attacker.log` (ping 0% loss)
-* `tcpdump-icmp.png` (capture live di Onion)
-* `wireshark-icmp.png` + `kel12-demo.pcap` (45 paket, Plan B)
-* Tiga tangkapan layar identitas node (`target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`) ditarik dari repositori karena memuat kata sandi. Bukti IP dan hostname yang bebas kredensial ada pada `evidence/verifikasi-2026-11-12/06-target-state-recon.log` dan `evidence/verifikasi-2026-11-12/04-onion-state.log`.
-* `hardening-services.png`, `hardening-firewall.png`
+- [ping-attacker.log](evidence/baseline/ping-attacker.log): ping 0% loss.
+- [tcpdump-icmp.png](evidence/baseline/tcpdump-icmp.png): capture langsung di Onion.
+- [wireshark-icmp.png](evidence/baseline/wireshark-icmp.png) dan [kel12-demo.pcap](evidence/baseline/kel12-demo.pcap): 45 paket, rencana cadangan.
+- [hardening-services.png](evidence/baseline/hardening-services.png) dan [hardening-firewall.png](evidence/baseline/hardening-firewall.png).
+- Tiga tangkapan layar identitas node (`target-ip-hostname.png`, `target-ip-statis.png`, `onion-ip.png`) ditarik dari repositori karena memuat kata sandi. Bukti bebas kredensial ada pada [06-target-state-recon.log](evidence/verifikasi-2026-11-12/06-target-state-recon.log) dan [04-onion-state.log](evidence/verifikasi-2026-11-12/04-onion-state.log).
 
-## 4. Demo minggu 7
+## 4. Demo Minggu 7
 
-1. Jelaskan topologi.
-2. Tunjukkan file hardening.
-3. Tunjukkan live ping tercatat di Onion.
-4. Q&A alasan pilih hardening tersebut. Intinya: tutup yang tidak perlu, buka seperlunya, catat semua.
+1. Menjelaskan topologi.
+2. Menunjukkan berkas hardening.
+3. Menunjukkan ping langsung yang tercatat di Security Onion.
+4. Sesi tanya jawab tentang alasan pemilihan hardening: tutup layanan yang tidak perlu, buka seperlunya, dan catat semua aktivitas.
 
-Demo diurut dari topologi ke hardening ke live logging supaya penonton yang belum pernah buka Security Onion tetap bisa ngikutin, karena tiap langkah nunjukin layar yang sama dengan yang ada di screenshot pada evidence/baseline, dan sesi tanya jawab di akhir khusus ngebahas alasan tiap aturan dibuka atau ditutup. Urutan ini juga ngebantu kami sendiri, karena tiap klaim di laporan ini kepakai langsung sebagai bahan omongan tanpa perlu nyiapin slide tambahan.
+Urutan demo dibuat dari topologi, hardening, lalu live logging, agar penonton yang belum pernah membuka Security Onion dapat mengikuti. Setiap langkah menampilkan layar yang sama dengan tangkapan pada `evidence/baseline/`, sehingga klaim pada laporan ini dapat dipakai langsung sebagai bahan penjelasan tanpa slide tambahan.

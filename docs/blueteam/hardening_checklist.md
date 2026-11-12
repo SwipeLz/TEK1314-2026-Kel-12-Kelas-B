@@ -1,43 +1,54 @@
 # Checklist Pengamanan (Hardening) - Target Node
 
-**Kelompok 12 | TEK1314 - Praktik Keamanan Siber Terapan | Fase 2 (Minggu 9 - 11)**
+**Kelompok 12 | TEK1314 Praktik Keamanan Siber Terapan | Fase 2 (Minggu 9-11)**
+
+## Daftar Isi
+
+- [1. Tujuan dan Ruang Lingkup](#1-tujuan-dan-ruang-lingkup)
+- [2. Ringkasan Hasil Implementasi Kontrol](#2-ringkasan-hasil-implementasi-kontrol)
+- [3. Kategori A - Access and Authentication](#3-kategori-a---access-and-authentication)
+- [4. Kategori B - Service and Attack Surface](#4-kategori-b---service-and-attack-surface)
+- [5. Kategori C - Data and Application](#5-kategori-c---data-and-application)
+- [6. Rencana Peningkatan dan Batasan Kontrol](#6-rencana-peningkatan-dan-batasan-kontrol)
+- [7. Referensi Dokumen Terkait](#7-referensi-dokumen-terkait)
 
 ## 1. Tujuan dan Ruang Lingkup
 
-Dokumen ini menyajikan implementasi sepuluh kontrol pengamanan (*hardening*) pada Target Node (3 Access and Authentication, 4 Service and Attack Surface, 3 Data and Application) yang menjalankan replika backend sistem SmartCow (sistem sprinkler kandang sapi perah). Seluruh kontrol dikelompokkan secara terstruktur ke dalam tiga kategori utama sesuai standar Bagian VIII Panduan PBL: *Access and Authentication*, *Service and Attack Surface*, serta *Data and Application*.
+Dokumen ini menyajikan implementasi sepuluh kontrol pengamanan (*hardening*) pada Target Node yang menjalankan replika backend SmartCow, sistem pengendali sprinkler kandang sapi perah. Kontrol dikelompokkan ke tiga kategori sesuai Bagian VIII Panduan PBL: Access and Authentication (3 kontrol), Service and Attack Surface (4 kontrol), dan Data and Application (3 kontrol).
 
-- **Target Node:** `SRV-IOT-KEL12-B`, sistem operasi Arch Linux Security Workstation, alamat IP laboratorium `192.168.12.5`.
-- **Perangkat Penguji:** `ATTACKER-KEL12-B` (`192.168.12.100`) dan host administrasi (`192.168.12.1`).
-- **Monitoring Node:** `SOC-KEL12-B`, Security Onion, alamat IP `192.168.12.200`.
-- **Layanan Aktif:** OpenSSH (port 22), web server Nginx (port 80), broker MQTT (port 1883), dan REST API internal (port 9000).
-- **Replika Backend:** Modul aplikasi `smartcow-lab` pada `/home/smartcow-lab`, dijalankan di bawah akun sistem `smartcow` melalui unit layanan systemd.
-- **Identitas Perangkat IoT:** `cow-sprinkler-01`, seluruh data yang diproses merupakan data sintetis (dummy).
-- **Dokumentasi Bukti:** Tangkapan layar terminal asli tersimpan pada direktori `docs/blueteam/evidence/` dan ditautkan pada masing-masing kontrol terkait.
+- **Target Node:** `SRV-IOT-KEL12-B`, Arch Linux Security Workstation, `192.168.12.5`.
+- **Attacker Node:** `ATTACKER-KEL12-B`, `192.168.12.100`, dipakai sebagai mesin penguji.
+- **Monitoring Node:** `SOC-KEL12-B`, Security Onion, `192.168.12.200`.
+- **Host administrasi:** `192.168.12.1`.
+- **Layanan aktif:** OpenSSH 22 dan Nginx 80 bagi segmen lab; broker MQTT 1883 dan REST API 9000 hanya melayani loopback setelah B2 dan B4.
+- **Replika backend:** kode `smartcow-lab` pada `/home/smartcow-lab`, dijalankan sebagai akun sistem `smartcow` melalui unit systemd.
+- **Identitas perangkat IoT:** `cow-sprinkler-01`; seluruh data yang diproses bersifat sintetis (dummy).
+- **Bukti:** tangkapan layar terminal dan log asli pada `docs/blueteam/evidence/`, ditautkan pada tiap kontrol.
 
-Seluruh pengujian dijalankan di dalam jaringan virtual lokal bertipe Host-Only. Ruang lingkup evaluasi laboratorium ini tidak melibatkan infrastruktur cloud Firebase produksi, sensor fisik, maupun pengendalian perangkat relay tegangan tinggi.
+Seluruh pengujian berjalan di jaringan virtual Host-Only. Ruang lingkup tidak mencakup infrastruktur Firebase produksi, sensor fisik, maupun pengendalian relay tegangan tinggi.
 
 ### Kriteria Status Verifikasi
 
-- **Done:** Kontrol telah diterapkan secara penuh dan diverifikasi melalui bukti konfigurasi teknis maupun hasil pengujian operasional.
-- **Partial:** Penerapan atau verifikasi kontrol baru terpenuhi pada sebagian aspek.
-- **Not Yet:** Kontrol belum diterapkan atau belum dilengkapi dengan bukti verifikasi teknis.
+- **Done:** kontrol diterapkan penuh dan diverifikasi melalui bukti konfigurasi maupun hasil pengujian operasional.
+- **Partial:** kontrol baru terpenuhi pada sebagian aspek.
+- **Not Yet:** kontrol belum diterapkan atau belum memiliki bukti teknis.
 
 ## 2. Ringkasan Hasil Implementasi Kontrol
 
-| ID | Kategori Pengamanan | Rincian Kontrol | Hasil Verifikasi Teknis | Status |
+| ID | Kategori | Rincian Kontrol | Hasil Verifikasi | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **A1** | Access & Authentication | Penolakan login langsung akun root melalui SSH | Parameter konfigurasi efektif `PermitRootLogin no`; seluruh upaya autentikasi user root ditolak sistem. | Done |
-| **A2** | Access & Authentication | Autentikasi SSH berbasis kunci kriptografis dan penonaktifan kata sandi | Login menggunakan pasangan kunci Ed25519 berhasil; percobaan login berbasis kata sandi ditolak dengan respon `Permission denied (publickey)`. | Done |
-| **A3** | Access & Authentication | Pembatasan sesi login konkuren dan pembatasan laju koneksi | Parameter `MaxStartups 3:50:10` aktif dan aturan rate limit iptables diterapkan; koneksi paralel berlebih berhasil diredam. | Done |
-| **B1** | Service & Attack Surface | Konfigurasi firewall iptables whitelist yang persisten | Kebijakan default INPUT DROP; hanya port 22, 80, dan 1883 yang diizinkan dari subnet lab; aturan tersimpan permanen pada disk. | Done |
-| **B2** | Service & Attack Surface | Isolasi REST API internal pada antarmuka loopback | Konfigurasi listener berubah dari `0.0.0.0:9000` menjadi `127.0.0.1:9000`; port 9000 tidak dapat dijangkau dari luar Target Node. | Done |
-| **B3** | Service & Attack Surface | Penyembunyian identitas dan nomor versi web server Nginx | Header HTTP berubah dari `nginx/1.18.0` menjadi `Server: nginx`; web dashboard tetap dapat diakses dengan kode HTTP 200. | Done |
-| **B4** | Service & Attack Surface | Penutupan akses jaringan ke broker MQTT (hanya loopback) | Aturan ACCEPT `1883` dihapus; pemindaian Nmap dari Attacker Node menunjukkan 22 dan 80 terbuka, 1883 dan 9000 *filtered*; simulator dan broker tetap berjalan. | Done |
-| **C1** | Data & Application | Validasi batasan input REST API dan pembatasan hak topik MQTT (*ACL*) | Nilai kelembapan 150% ditolak dengan respon HTTP 400; publikasi pesan ke topik kontrol ditolak broker; data sah tetap diterima. | Done |
-| **C2** | Data & Application | Pengelolaan kredensial aman, izin berkas ketat, dan rotasi token | Berkas kredensial disetel ke mode 600; token akses dipindahkan ke environment variable; token lama berhasil dinonaktifkan. | Done |
-| **C3** | Data & Application | Pencatatan log aktivitas, prosedur backup, dan uji pemulihan data | Berkas log akses aplikasi dan broker aktif; skrip backup otomatis dan verifikasi pemulihan data berhasil diuji. | Done |
+| **A1** | Access & Authentication | Penolakan login root langsung via SSH | `PermitRootLogin no` efektif; seluruh upaya login root ditolak | Done |
+| **A2** | Access & Authentication | Autentikasi kunci dan penonaktifan kata sandi | Login kunci Ed25519 berhasil; login kata sandi ditolak `Permission denied (publickey)` | Done |
+| **A3** | Access & Authentication | Pembatasan sesi konkuren dan laju koneksi | `MaxStartups 3:50:10` aktif; hashlimit iptables meredam koneksi paralel | Done |
+| **B1** | Service & Attack Surface | Firewall iptables whitelist persisten | INPUT DROP; whitelist 22, 80, 1883 untuk subnet lab saat penerapan; aturan tersimpan permanen | Done |
+| **B2** | Service & Attack Surface | Isolasi REST API pada loopback | Listener berubah dari `0.0.0.0:9000` ke `127.0.0.1:9000`; port tidak terjangkau dari luar | Done |
+| **B3** | Service & Attack Surface | Penyembunyian versi web server | Header berubah dari `nginx/1.18.0` menjadi `Server: nginx`; dashboard tetap 200 | Done |
+| **B4** | Service & Attack Surface | Penutupan akses jaringan ke broker MQTT | Aturan ACCEPT 1883 dihapus; scan mencatat 22 dan 80 terbuka, 1883 dan 9000 filtered | Done |
+| **C1** | Data & Application | Validasi input REST API dan ACL topik MQTT | Kelembapan 150% ditolak `HTTP 400`; publish ke topik kontrol ditolak broker | Done |
+| **C2** | Data & Application | Manajemen kredensial, izin berkas, dan rotasi token | Berkas rahasia mode 600; token di environment; token lama ditolak | Done |
+| **C3** | Data & Application | Logging aktivitas, backup, dan uji pemulihan | Log akses dan broker aktif; backup otomatis serta pemulihan terverifikasi | Done |
 
-**Rekapitulasi: 10 Kontrol Berstatus Done (0 Partial, 0 Not Yet).** Komposisi kontrol terdiri dari 3 kontrol Kategori A, 4 kontrol Kategori B, dan 3 kontrol Kategori C. Jumlah ini memenuhi ketentuan minimal delapan kontrol dengan sedikitnya dua kontrol pada tiap kategori sesuai standar evaluasi Bagian VIII Panduan PBL. Status dievaluasi berdasarkan bukti pengujian langsung di laboratorium dan dibatasi oleh ruang lingkup simulasi.
+**Rekapitulasi: 10 kontrol Done, 0 Partial, 0 Not Yet.** Komposisinya 3 kontrol kategori A, 4 kategori B, dan 3 kategori C. Jumlah tersebut memenuhi ketentuan minimal delapan kontrol dengan sedikitnya dua kontrol per kategori pada Bagian VIII Panduan PBL. Status dinilai berdasarkan bukti pengujian langsung di laboratorium dan dibatasi oleh ruang lingkup simulasi.
 
 ---
 
@@ -45,30 +56,30 @@ Seluruh pengujian dijalankan di dalam jaringan virtual lokal bertipe Host-Only. 
 
 ### A1. Penolakan Login Langsung Akun Root Melalui SSH - Done
 
-- **Tujuan Pengamanan:** Mencegah upaya pengambilalihan hak akses tertinggi secara langsung via SSH serta memastikan seluruh aktivitas administratif dilakukan melalui akun pengguna khusus yang terdaftar.
-- **Kondisi Awal (Before):** Berkas konfigurasi baseline Minggu 6 (`sshd_config.bak-kel12`) masih berupa konfigurasi bawaan tanpa direktif eksplisit; nilai efektifnya `permitrootlogin without-password` (setara `prohibit-password`) dan `maxstartups 10:30:100`. Bukti: `sshd -T -f` terhadap berkas cadangan baseline pada 12 November 2026.
-- **Implementasi:** Parameter `PermitRootLogin no` dan `AllowUsers sec_admin` diterapkan pada konfigurasi sshd, divalidasi sintaksnya menggunakan perintah `sshd -t`, dan diverifikasi efektivitasnya melalui simulasi login dari Attacker Node.
-- **Hasil Verifikasi (After):** Keluaran konfigurasi efektif `sshd -T` mengonfirmasi nilai `permitrootlogin no` dan `allowusers sec_admin`. Empat variasi percobaan login langsung dengan akun root dari penyerang seluruhnya ditolak oleh sistem.
-- **Cakupan dan Batasan:** Kontrol ini berfokus pada proteksi akses SSH remote. Hak administratif di dalam server tetap dapat diakses oleh user `sec_admin` melalui perintah `sudo`.
-- **Tautan Bukti:** [Konfigurasi sebelum](<evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-sebelum.png>), [Konfigurasi setelah](<evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-setelah.png>), [Login root dari Attacker Node ditolak](<evidence/kontrol A1 - Menolak login root langsung/login-root-ditolak.png>).
+- **Tujuan Pengamanan:** Mencegah pengambilalihan hak akses tertinggi melalui SSH dan memastikan aktivitas administratif memakai akun pengguna terdaftar.
+- **Kondisi Awal (Before):** Berkas `sshd_config.bak-kel12` dari baseline Minggu 6 masih memakai konfigurasi bawaan tanpa direktif eksplisit. Nilai efektifnya `permitrootlogin without-password` (setara `prohibit-password`) dan `maxstartups 10:30:100`, diukur dengan `sshd -T -f` pada 12 November 2026.
+- **Implementasi:** `PermitRootLogin no` dan `AllowUsers sec_admin` diterapkan pada konfigurasi sshd, divalidasi dengan `sshd -t`, lalu diuji melalui simulasi login dari Attacker Node.
+- **Hasil Verifikasi (After):** `sshd -T` mengonfirmasi `permitrootlogin no` dan `allowusers sec_admin`. Empat variasi percobaan login root dari penyerang seluruhnya ditolak.
+- **Cakupan dan Batasan:** Kontrol ini melindungi akses SSH jarak jauh. Hak administratif di dalam server tetap dapat dipakai `sec_admin` melalui `sudo`.
+- **Tautan Bukti:** [Konfigurasi sebelum](<evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-sebelum.png>), [Konfigurasi setelah](<evidence/kontrol A1 - Menolak login root langsung/sshd-efektif-setelah.png>), [Login root ditolak](<evidence/kontrol A1 - Menolak login root langsung/login-root-ditolak.png>).
 
 ### A2. Autentikasi SSH Berbasis Kunci dan Penonaktifan Kata Sandi - Done
 
-- **Tujuan Pengamanan:** Memastikan akses terminal ke Target Node hanya dapat dilakukan menggunakan kunci kriptografis yang valid, sehingga kebocoran kata sandi tidak dapat dimanfaatkan penyerang untuk memperoleh shell interaktif.
-- **Kondisi Awal (Before):** Pengujian `sshd -T` awal menampilkan `passwordauthentication yes` dan direktori `.ssh` pada akun pengguna belum memiliki berkas `authorized_keys`. Pada tahap ini, user `sec_admin` berhasil login menggunakan kata sandi sederhana.
-- **Implementasi:** Pasangan kunci Ed25519 dibangkitkan pada host administrasi, kunci publik dipasang pada `/home/sec_admin/.ssh/authorized_keys` dengan mode izin 600 dan kepemilikan `sec_admin`, kemudian direktif `PasswordAuthentication no` diaktifkan pada berkas konfigurasi SSH.
-- **Hasil Verifikasi (After):** Autentikasi SSH menggunakan kunci privat berhasil menghubungkan sesi ke hostname `SRV-IOT-KEL12-B`. Sementara itu, seluruh upaya login berbasis kata sandi langsung digagalkan dengan pesan error `Permission denied (publickey)`.
-- **Cakupan dan Batasan:** Implementasi menggunakan satu pasangan kunci untuk akun administratif lab. Akses langsung melalui konsol virtual tetap dapat digunakan sebagai jalur pemulihan darurat jika diperlukan.
-- **Tautan Bukti:** [Konfigurasi sebelum](<evidence/kontrol A2 - Login SSH berbasis kunci/sshd-config-sebelum.png>), [Konfigurasi setelah](<evidence/kontrol A2 - Login SSH berbasis kunci/sshd-config-setelah.png>), [Login kunci berhasil](<evidence/kontrol A2 - Login SSH berbasis kunci/login-kunci-berhasil.png>), [Pemasangan kunci publik](<evidence/kontrol A2 - Login SSH berbasis kunci/kunci-publik-terpasang.png>), Penolakan login kata sandi ([log 12 November 2026](evidence/verifikasi-2026-11-12/08-password-login-rejected.log) dan tangkapan layar `redteam/evidence/04-percobaan-login-setelah.png`).
+- **Tujuan Pengamanan:** Memastikan akses terminal hanya memakai kunci kriptografis yang valid, sehingga kebocoran kata sandi tidak dapat menghasilkan shell interaktif.
+- **Kondisi Awal (Before):** `sshd -T` awal menampilkan `passwordauthentication yes`, dan direktori `.ssh` pengguna belum memiliki `authorized_keys`. Akun `sec_admin` saat itu dapat login dengan kata sandi sederhana.
+- **Implementasi:** Pasangan kunci Ed25519 dibangkitkan pada host administrasi; kunci publik dipasang di `/home/sec_admin/.ssh/authorized_keys` dengan mode 600 dan kepemilikan `sec_admin`; direktif `PasswordAuthentication no` diaktifkan.
+- **Hasil Verifikasi (After):** Sesi dengan kunci privat berhasil masuk ke `SRV-IOT-KEL12-B`, sedangkan seluruh login kata sandi gagal dengan `Permission denied (publickey)`.
+- **Cakupan dan Batasan:** Satu pasangan kunci dipakai untuk akun administratif lab. Konsol virtual tetap tersedia sebagai jalur pemulihan darurat.
+- **Tautan Bukti:** [Konfigurasi sebelum](<evidence/kontrol A2 - Login SSH berbasis kunci/sshd-config-sebelum.png>), [Konfigurasi setelah](<evidence/kontrol A2 - Login SSH berbasis kunci/sshd-config-setelah.png>), [Login kunci berhasil](<evidence/kontrol A2 - Login SSH berbasis kunci/login-kunci-berhasil.png>), [Pemasangan kunci publik](<evidence/kontrol A2 - Login SSH berbasis kunci/kunci-publik-terpasang.png>), penolakan kata sandi pada [log 12 November 2026](evidence/verifikasi-2026-11-12/08-password-login-rejected.log) dan `redteam/evidence/04-percobaan-login-setelah.png`.
 
 ### A3. Pembatasan Percobaan Login dan Laju Koneksi SSH - Done
 
-- **Tujuan Pengamanan:** Membatasi frekuensi percobaan otentikasi bertubi-tubi dan meredam laju koneksi jaringan baru yang berasal dari alamat IP penyerang.
-- **Kondisi Awal (Before):** Parameter koneksi awal menggunakan nilai bawaan `MaxStartups 10:30:100` dan firewall belum dilengkapi aturan pembatasan laju paket pada port 22.
-- **Implementasi:** Parameter `MaxStartups` diperketat menjadi `3:50:10`, lalu ditambahkan aturan modul `hashlimit` pada iptables: membatasi maksimal 3 koneksi baru per detik dari host `192.168.12.100` dengan toleransi *burst* 6 paket, serta mengembalikan respon TCP RST untuk paket selebihnya. Aturan disimpan permanen ke berkas `/etc/iptables/iptables.rules`.
-- **Hasil Verifikasi (After):** Saat penyerang meluncurkan 8 sesi koneksi SSH paralel secara serentak, sebagian besar koneksi langsung digagalkan oleh firewall. Seluruh percobaan tercatat secara terperinci pada log sistem berkat opsi `LogLevel VERBOSE`.
-- **Cakupan dan Batasan:** Pembatasan laju koneksi iptables difokuskan pada alamat IP penyerang lab, sedangkan parameter `MaxStartups` berlaku untuk seluruh sesi yang belum terotentikasi.
-- **Tautan Bukti:** [Konfigurasi sshd dan iptables](<evidence/kontrol A3 - Pembatasan percobaan login/sshd-maxstartups-dan-rate-limit.png>), [Hasil uji koneksi paralel](<evidence/kontrol A3 - Pembatasan percobaan login/uji-koneksi-paralel-dari-penyerang.png>).
+- **Tujuan Pengamanan:** Membatasi frekuensi percobaan autentikasi berulang dan meredam laju koneksi baru dari alamat penyerang.
+- **Kondisi Awal (Before):** Nilai bawaan `MaxStartups 10:30:100`, dan firewall belum memiliki aturan pembatas laju pada port 22.
+- **Implementasi:** `MaxStartups` diperketat menjadi `3:50:10`. Modul `hashlimit` iptables membatasi maksimal 3 koneksi baru per detik dari `192.168.12.100` dengan toleransi burst 6 paket, dan paket selebihnya dijawab TCP RST. Aturan disimpan ke `/etc/iptables/iptables.rules`.
+- **Hasil Verifikasi (After):** Saat penyerang membuka 8 sesi SSH paralel, sebagian besar koneksi langsung digagalkan firewall. Seluruh percobaan tercatat pada log sistem melalui `LogLevel VERBOSE`.
+- **Cakupan dan Batasan:** Pembatasan laju iptables difokuskan pada IP penyerang lab, sedangkan `MaxStartups` berlaku untuk semua sesi yang belum terotentikasi.
+- **Tautan Bukti:** [Konfigurasi sshd dan iptables](<evidence/kontrol A3 - Pembatasan percobaan login/sshd-maxstartups-dan-rate-limit.png>), [Uji koneksi paralel](<evidence/kontrol A3 - Pembatasan percobaan login/uji-koneksi-paralel-dari-penyerang.png>).
 
 ---
 
@@ -76,39 +87,39 @@ Seluruh pengujian dijalankan di dalam jaringan virtual lokal bertipe Host-Only. 
 
 ### B1. Konfigurasi Firewall Whitelist yang Persisten - Done
 
-- **Tujuan Pengamanan:** Membatasi seluruh lalu lintas paket masuk hanya untuk layanan yang benar-benar dibutuhkan serta membatasi sumber akses pada subnet laboratorium.
-- **Kondisi Awal (Before):** Pada tahap awal pengujian, tabel iptables sempat ditemukan dalam kondisi kosong dengan kebijakan default ACCEPT akibat konfigurasi yang belum tersimpan ke media penyimpanan permanen setelah mesin virtual direstart.
-- **Implementasi:** Kebijakan default INPUT disetel ke DROP. Diberikan izin untuk antarmuka loopback, paket berstatus RELATED/ESTABLISHED, protokol ICMP dari subnet lab, serta port layanan 22 (SSH), 80 (HTTP), dan 1883 (MQTT). Konfigurasi diekspor menggunakan `iptables-save` ke `/etc/iptables/iptables.rules` dan layanan `iptables.service` diaktifkan saat boot.
-- **Hasil Verifikasi (After):** Perintah `iptables -S` menampilkan seluruh rantai aturan aktif dan status `iptables.service` terkonfirmasi `enabled`. Pada tahap ini whitelist masih mengizinkan port 22, 80, dan 1883 sehingga pemindaian Nmap mencatat tiga port terbuka; jumlah port terbuka baru berkurang setelah kontrol B4 diterapkan pada 12 November 2026 (bukti: `pemindaian-port-mqtt-sebelum.png` dan `pemindaian-port-mqtt-setelah.png`).
-- **Cakupan dan Batasan:** Konfigurasi firewall memprioritaskan penyaringan pada paket masuk (INPUT). Penyimpanan permanen ke dalam berkas konfigurasi menjamin aturan keamanan tetap aktif setelah sistem dinyalakan ulang.
-- **Tautan Bukti:** [Aturan firewall sebelum](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-sebelum.png>), [Aturan firewall setelah](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-setelah.png>), [Pemindaian port sebelum](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-sebelum.png>), [Pemindaian port setelah](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-setelah.png>), [Aturan 12 November 2026](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-2026-11-12.png>), [Pemindaian sebelum penutupan 1883](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-sebelum.png>), [Pemindaian sesudah penutupan 1883](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-setelah.png>).
-
-### B4. Penutupan Akses Jaringan ke Broker MQTT - Done
-
-- **Tujuan Pengamanan:** Menghapus permukaan serangan broker MQTT dari segmen jaringan lab. Broker hanya melayani konsumen lokal (simulator dan pemeriksaan di Target Node), sehingga akses dari host lain tidak dibutuhkan.
-- **Kondisi Awal (Before):** Aturan firewall whitelist mengizinkan `tcp/1883` dari `192.168.12.0/24`. Pemindaian Nmap dari Attacker Node mencatat tiga port terbuka: 22, 80, dan 1883 (`redteam/evidence/13-pemindaian-port-mqtt-sebelum.png`).
-- **Implementasi:** Aturan `-A INPUT -s 192.168.12.0/24 -p tcp --dport 1883 -j ACCEPT` dihapus, lalu tabel disimpan ulang ke `/etc/iptables/iptables.rules`. Kebijakan `INPUT DROP` dan aturan `-A INPUT -i lo -j ACCEPT` dipertahankan sehingga broker tetap menerima koneksi dari loopback.
-- **Hasil Verifikasi (After):** Pemindaian Nmap yang sama mencatat dua port terbuka (22 dan 80); port 1883 dan 9000 berstatus *filtered* (`redteam/evidence/14-pemindaian-port-mqtt-setelah.png`). Pemindaian penuh `-p-` juga hanya menemukan 22 dan 80 terbuka (`redteam/evidence/11-pemindaian-port-lengkap.png`). Koneksi `127.0.0.1:1883` tetap berhasil, `/health` melalui Nginx membalas 200, dan unit `smartcow-broker`, `smartcow-api`, `smartcow-sim`, serta `nginx` tetap `active`.
-- **Cakupan dan Batasan:** Penutupan ini bersifat jaringan (bukan penghapusan layanan). Untuk demonstrasi terkontrol, aturan dapat dikembalikan sementara dengan menambahkan ulang aturan ACCEPT 1883; prosedur rollback dicatat pada LOGBOOK. Setelah perubahan ini, pengujian publish MQTT dari Attacker Node tidak dapat dilakukan lagi pada lapisan TCP.
-- **Tautan Bukti:** [Pemindaian sebelum](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-sebelum.png>), [Pemindaian sesudah](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-setelah.png>), [Aturan iptables 12 November 2026](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-2026-11-12.png>).
+- **Tujuan Pengamanan:** Membatasi lalu lintas masuk hanya untuk layanan yang dibutuhkan dan membatasi sumber akses pada subnet laboratorium.
+- **Kondisi Awal (Before):** Tabel iptables sempat kosong dengan kebijakan default ACCEPT karena konfigurasi belum tersimpan permanen dan hilang setelah VM restart.
+- **Implementasi:** Kebijakan INPUT DROP. Izin diberikan untuk loopback, paket RELATED/ESTABLISHED, ICMP dari subnet lab, serta TCP 22, 80, dan 1883. Konfigurasi diekspor dengan `iptables-save` ke `/etc/iptables/iptables.rules`, dan `iptables.service` diaktifkan saat boot.
+- **Hasil Verifikasi (After):** `iptables -S` menampilkan seluruh rantai aturan dan `iptables.service` berstatus `enabled`. Pada tahap ini whitelist masih meloloskan 22, 80, dan 1883 sehingga Nmap mencatat tiga port terbuka. Jumlahnya turun setelah B4 diterapkan pada 12 November 2026 (`pemindaian-port-mqtt-sebelum.png` dan `pemindaian-port-mqtt-setelah.png`).
+- **Cakupan dan Batasan:** Penyaringan difokuskan pada paket masuk (INPUT). Penyimpanan permanen memastikan aturan tetap aktif setelah sistem dinyalakan ulang.
+- **Tautan Bukti:** [Aturan sebelum](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-sebelum.png>), [Aturan setelah](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-setelah.png>), [Pemindaian port sebelum](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-sebelum.png>), [Pemindaian port setelah](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-setelah.png>), [Aturan 12 November 2026](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-2026-11-12.png>), [Pemindaian sebelum penutupan 1883](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-sebelum.png>), [Pemindaian sesudah penutupan 1883](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-setelah.png>).
 
 ### B2. Isolasi REST API Internal pada Antarmuka Loopback - Done
 
-- **Tujuan Pengamanan:** Menghilangkan eksposur langsung antarmuka penyimpanan data backend dari segmen jaringan eksternal.
-- **Kondisi Awal (Before):** Pemeriksaan `ss -lntp` awal menunjukkan REST API mendengarkan pada alamat wildcard `0.0.0.0:9000`, sehingga dapat diakses langsung oleh perangkat lain di jaringan apabila aturan firewall tidak aktif.
-- **Implementasi:** Parameter konfigurasi `SMARTCOW_BIND` pada berkas `.env` diubah menjadi `127.0.0.1`, kemudian layanan systemd `smartcow-api` dimuat ulang. Akses eksternal diarahkan secara terpusat melalui Nginx reverse proxy.
-- **Hasil Verifikasi (After):** Status listener pada `ss -lntp` terbukti terikat secara eksklusif pada `127.0.0.1:9000`. Hasil pemindaian dari mesin penyerang memastikan port 9000 tidak dapat dihubungi dari jaringan luar, sementara dashboard web tetap dapat berkomunikasi dengan API melalui proxy lokal.
-- **Cakupan dan Batasan:** Penerapan kontrol ini memperkuat arsitektur pertahanan berlapis pada tingkat soket aplikasi, melengkapi aturan penyaringan port pada tingkat paket firewall.
-- **Tautan Bukti:** [Status listener sebelum](<evidence/kontrol B2 - API hanya mendengarkan di loopback/listener-sebelum.png>), [Status listener setelah](<evidence/kontrol B2 - API hanya mendengarkan di loopback/listener-setelah.png>), [Hasil pemindaian Nmap](<evidence/kontrol B2 - API hanya mendengarkan di loopback/pemindaian-port-setelah.png>).
+- **Tujuan Pengamanan:** Menghilangkan eksposur langsung antarmuka backend dari segmen jaringan eksternal.
+- **Kondisi Awal (Before):** `ss -lntp` menunjukkan REST API mendengarkan pada `0.0.0.0:9000`, yaitu seluruh antarmuka. Port 9000 tidak diloloskan firewall, sehingga layanan hanya bergantung pada satu lapis penyaringan.
+- **Implementasi:** `SMARTCOW_BIND` pada `.env` diubah menjadi `127.0.0.1`, lalu `smartcow-api` dimuat ulang. Akses eksternal diarahkan melalui reverse proxy Nginx.
+- **Hasil Verifikasi (After):** `ss -lntp` menunjukkan listener terikat eksklusif pada `127.0.0.1:9000`. Pemindaian dari mesin penyerang memastikan port 9000 tidak dapat dihubungi dari jaringan, sementara dashboard tetap berkomunikasi melalui proxy lokal.
+- **Cakupan dan Batasan:** Kontrol ini menguatkan pertahanan berlapis pada tingkat soket aplikasi, melengkapi penyaringan paket firewall.
+- **Tautan Bukti:** [Listener sebelum](<evidence/kontrol B2 - API hanya mendengarkan di loopback/listener-sebelum.png>), [Listener setelah](<evidence/kontrol B2 - API hanya mendengarkan di loopback/listener-setelah.png>), [Hasil pemindaian Nmap](<evidence/kontrol B2 - API hanya mendengarkan di loopback/pemindaian-port-setelah.png>).
 
 ### B3. Penyembunyian Identitas dan Versi Web Server Nginx - Done
 
-- **Tujuan Pengamanan:** Mengurangi visibilitas informasi teknis perangkat lunak web server guna mempersempit peluang pencarian celah kerentanan spesifik versi (*fingerprinting*).
-- **Kondisi Awal (Before):** Permintaan HTTP `curl -I http://127.0.0.1/` menghasilkan header respon `Server: nginx/1.18.0`. Direktif `server_tokens` belum didefinisikan pada konfigurasi Nginx.
-- **Implementasi:** Parameter `server_tokens off;` ditambahkan ke dalam blok `http` pada berkas `/etc/nginx/nginx.conf`, diverifikasi dengan `nginx -t`, dan konfigurasi web server dimuat ulang.
-- **Hasil Verifikasi (After):** Header HTTP respon Nginx berhasil disederhanakan menjadi `Server: nginx` tanpa menyertakan nomor versi. Pemindaian Nmap dengan opsi deteksi versi juga tidak lagi menampilkan rilis perangkat lunak, sementara antarmuka dashboard tetap beroperasi normal (HTTP 200).
-- **Cakupan dan Batasan:** Kontrol ini bertujuan untuk menyembunyikan informasi versi publik dan tidak menggantikan kewajiban pembaruan keamanan perangkat lunak secara berkala.
-- **Tautan Bukti:** [Header HTTP sebelum](<evidence/kontrol B3 - Menyembunyikan versi Nginx/header-http-sebelum.png>), [Header HTTP setelah](<evidence/kontrol B3 - Menyembunyikan versi Nginx/header-http-setelah.png>).
+- **Tujuan Pengamanan:** Mengurangi informasi teknis web server agar pencarian kerentanan spesifik versi (*fingerprinting*) lebih sulit.
+- **Kondisi Awal (Before):** `curl -I http://127.0.0.1/` menghasilkan `Server: nginx/1.18.0`, dan direktif `server_tokens` belum didefinisikan.
+- **Implementasi:** `server_tokens off;` ditambahkan pada blok `http` di `/etc/nginx/nginx.conf`, diverifikasi dengan `nginx -t`, lalu konfigurasi dimuat ulang.
+- **Hasil Verifikasi (After):** Header respons menjadi `Server: nginx` tanpa nomor versi. Nmap dengan deteksi versi tidak lagi menampilkan rilis perangkat lunak, dan dashboard tetap berjalan (HTTP 200).
+- **Cakupan dan Batasan:** Kontrol ini hanya menyembunyikan informasi versi dan tidak menggantikan kewajiban pembaruan keamanan berkala.
+- **Tautan Bukti:** [Header sebelum](<evidence/kontrol B3 - Menyembunyikan versi Nginx/header-http-sebelum.png>), [Header setelah](<evidence/kontrol B3 - Menyembunyikan versi Nginx/header-http-setelah.png>).
+
+### B4. Penutupan Akses Jaringan ke Broker MQTT - Done
+
+- **Tujuan Pengamanan:** Menghapus permukaan serangan broker MQTT dari segmen lab. Broker hanya melayani konsumen lokal, yaitu simulator dan pemeriksaan di Target Node.
+- **Kondisi Awal (Before):** Whitelist firewall masih meloloskan `tcp/1883` dari `192.168.12.0/24`. Nmap dari Attacker Node mencatat tiga port terbuka: 22, 80, dan 1883 (`redteam/evidence/13-pemindaian-port-mqtt-sebelum.png`).
+- **Implementasi:** Aturan `-A INPUT -s 192.168.12.0/24 -p tcp --dport 1883 -j ACCEPT` dihapus, lalu tabel disimpan ulang ke `/etc/iptables/iptables.rules`. Kebijakan INPUT DROP dan `-A INPUT -i lo -j ACCEPT` dipertahankan sehingga broker tetap menerima koneksi loopback.
+- **Hasil Verifikasi (After):** Nmap mencatat dua port terbuka, yaitu 22 dan 80; port 1883 dan 9000 berstatus filtered (`redteam/evidence/14-pemindaian-port-mqtt-setelah.png`). Pemindaian penuh `-p-` juga hanya menemukan 22 dan 80 (`redteam/evidence/11-pemindaian-port-lengkap.png`). Koneksi `127.0.0.1:1883` tetap berhasil, `/health` melalui Nginx membalas 200, dan unit `smartcow-broker`, `smartcow-api`, `smartcow-sim`, serta `nginx` tetap `active`.
+- **Cakupan dan Batasan:** Penutupan bersifat jaringan, bukan penghapusan layanan. Untuk demonstrasi terkontrol, aturan ACCEPT 1883 dapat ditambahkan kembali sementara; prosedur rollback dicatat pada LOGBOOK. Setelah perubahan ini, pengujian publish MQTT dari Attacker Node tidak dapat dilakukan lagi pada lapisan TCP.
+- **Tautan Bukti:** [Pemindaian sebelum](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-sebelum.png>), [Pemindaian sesudah](<evidence/kontrol B1 - Firewall whitelist dan persisten/pemindaian-port-mqtt-setelah.png>), [Aturan iptables 12 November 2026](<evidence/kontrol B1 - Firewall whitelist dan persisten/iptables-2026-11-12.png>).
 
 ---
 
@@ -116,39 +127,45 @@ Seluruh pengujian dijalankan di dalam jaringan virtual lokal bertipe Host-Only. 
 
 ### C1. Validasi Batasan Input REST API dan Pembatasan Hak Topik MQTT (ACL) - Done
 
-- **Tujuan Pengamanan:** Mencegah manipulasi data telemetri yang tidak logis serta membatasi izin publikasi pesan hanya pada kanal topik yang sah bagi masing-masing perangkat.
-- **Kondisi Awal (Before):** Fitur validasi backend belum aktif sehingga request `PUT` dengan kelembapan 150% tetap diterima (HTTP 200). Broker MQTT juga menerima koneksi dari klien anonim serta meneruskan pesan ke topik kendali pompa (`cow-sprinkler-01/control`).
-- **Implementasi:** Opsi `SMARTCOW_VALIDATE` diaktifkan pada backend: parameter suhu dibatasi pada rentang -20 hingga 70 derajat Celcius, kelembapan 0 hingga 100%, THI 0 hingga 130, serta mewajibkan seluruh field telemetri dasar. Pada broker MQTT, otentikasi wajib diaktifkan (`SMARTCOW_MQTT_AUTH`) dan pembatasan hak topik (`SMARTCOW_MQTT_ACL`) diterapkan sehingga kredensial sensor hanya memiliki hak tulis pada topik telemetri (`cow-sprinkler-01/telemetry/latest`).
-- **Hasil Verifikasi (After):** Diuji ulang pada 12 November 2026 di Target Node yang hidup, 6 dari 6 pemeriksaan lulus: publish anonim ditolak (`CONNACK return code 5`), akun sensor `esp32` berhasil menulis ke `cow-sprinkler-01/telemetry/latest`, publish ke `cow-sprinkler-01/control` diputus broker karena ACL, `PUT` telemetri valid dibalas `HTTP 200`, nilai kelembapan 150% dibalas `HTTP 400`, dan `PUT` tanpa token dibalas `HTTP 401`.
-- **Cakupan dan Batasan:** Pengujian difokuskan pada aturan verifikasi logika data dan otorisasi kanal komunikasi IoT pada lingkungan simulasi laboratorium. Tangkapan layar `mqtt-acl-terverifikasi.png` dari 20 Oktober 2026 tidak dipakai sebagai bukti utama karena isinya menampilkan kegagalan `Permission denied` saat menjalankan skrip pengujian, sehingga pengujiannya tidak pernah tereksekusi.
-- **Tautan Bukti:** [Verifikasi langsung 12 November 2026](evidence/verifikasi-2026-11-12/01-c1-live-verification.log), [Pemeriksaan dari Attacker Node](evidence/verifikasi-2026-11-12/11-external-port-check.log), [Validasi sebelum](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/validasi-input-sebelum.png>), [Validasi setelah](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/validasi-input-setelah.png>), [Publish MQTT sebelum](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-publish-sebelum.png>), [Penolakan koneksi tanpa kredensial](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-tanpa-kredensial-ditolak.png>), [Penolakan akses topik kendali](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-topik-terlarang-ditolak.png>), [Penolakan injeksi REST](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/suntik-data-rest-ditolak.png>).
+- **Tujuan Pengamanan:** Mencegah manipulasi telemetri yang tidak logis dan membatasi hak publish pada kanal topik yang sah bagi tiap perangkat.
+- **Kondisi Awal (Before):** Validasi backend belum aktif, sehingga `PUT` dengan kelembapan 150% tetap diterima (HTTP 200). Broker menerima koneksi anonim dan meneruskan pesan ke topik kontrol `cow-sprinkler-01/control`.
+- **Implementasi:** `SMARTCOW_VALIDATE` diaktifkan dengan rentang suhu -20 sampai 70 °C, kelembapan 0 sampai 100%, THI 0 sampai 130, dan kewajiban seluruh field telemetri dasar. Pada broker, `SMARTCOW_MQTT_AUTH` dan `SMARTCOW_MQTT_ACL` diaktifkan sehingga kredensial sensor hanya boleh menulis ke `cow-sprinkler-01/telemetry/latest`.
+- **Hasil Verifikasi (After):** Diuji ulang 12 November 2026 di Target Node yang hidup dengan hasil 6 dari 6 lulus: publish anonim ditolak (`CONNACK return code 5`), akun `esp32` berhasil menulis ke topik telemetri, publish ke topik kontrol diputus broker, `PUT` valid dibalas `HTTP 200`, kelembapan 150% dibalas `HTTP 400`, dan `PUT` tanpa token dibalas `HTTP 401`.
+- **Cakupan dan Batasan:** Pengujian berfokus pada logika validasi data dan otorisasi kanal IoT dalam simulasi laboratorium. Tangkapan layar `mqtt-acl-terverifikasi.png` dari 20 Oktober 2026 tidak dipakai sebagai bukti utama karena isinya menampilkan kegagalan `Permission denied` saat skrip dijalankan, sehingga pengujiannya tidak pernah tereksekusi.
+- **Tautan Bukti:** [Verifikasi langsung 12 November 2026](evidence/verifikasi-2026-11-12/01-c1-live-verification.log), [Pemeriksaan dari Attacker Node](evidence/verifikasi-2026-11-12/11-external-port-check.log), [Validasi sebelum](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/validasi-input-sebelum.png>), [Validasi setelah](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/validasi-input-setelah.png>), [Publish MQTT sebelum](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-publish-sebelum.png>), [Koneksi tanpa kredensial ditolak](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-tanpa-kredensial-ditolak.png>), [Akses topik kendali ditolak](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/mqtt-topik-terlarang-ditolak.png>), [Injeksi REST ditolak](<evidence/kontrol C1 - Validasi input API dan ACL topik MQTT/suntik-data-rest-ditolak.png>).
 
 ### C2. Pengelolaan Kredensial Aman, Hak Akses Berkas Ketat, dan Rotasi Token - Done
 
-- **Tujuan Pengamanan:** Mencegah kebocoran rahasia sistem (*secrets*) dan memastikan berkas konfigurasi sensitif tidak dapat dibaca oleh pengguna non-privilese.
-- **Kondisi Awal (Before):** Berkas `.env`, `mqtt.env`, dan `secrets/mqtt_users.json` memiliki hak akses mode 644 sehingga dapat dibaca oleh user lain di dalam sistem operasi. Token otentikasi default juga sempat tertanam secara literal di dalam kode program `app.py`.
-- **Implementasi:** Seluruh konstanta token dihapus dari kode sumber `app.py` dan dialihkan ke pembacaan variabel lingkungan (*environment variables*). Hak akses berkas konfigurasi diubah menjadi mode 600 di bawah kepemilikan user sistem `smartcow`. Token otentikasi API dan kredensial akun MQTT dirotasi menggunakan pembangkit nilai acak kriptografis `openssl rand -hex 16`.
-- **Hasil Verifikasi (After):** Perintah `ls -l` mengonfirmasi izin berkas 600 untuk seluruh berkas kredensial. Pencarian teks token di dalam kode program menghasilkan nilai nihil. Percobaan pembacaan berkas kredensial oleh pengguna non-privilese (`nobody`) digagalkan sistem. Permintaan API yang menyertakan token lama ditolak dengan pesan `HTTP 401 Unauthorized`, sementara token baru digunakan secara sah oleh simulator telemetri.
-- **Cakupan dan Batasan:** Kredensial operasional tersimpan secara aman pada memori proses dan berkas konfigurasi lokal berizin ketat milik akun layanan `smartcow`.
-- **Tautan Bukti:** [Izin berkas sebelum dan sesudah, 12 November 2026](<evidence/kontrol C2 - Kredensial tidak hardcoded/izin-berkas-2026-11-12.png>), [Status berkas dan izin setelah](<evidence/kontrol C2 - Kredensial tidak hardcoded/kredensial-setelah.png>). Tangkapan layar lama yang memuat nilai kredensial tetap tidak dipakai.
+- **Tujuan Pengamanan:** Mencegah kebocoran rahasia sistem dan memastikan berkas konfigurasi sensitif tidak terbaca pengguna non-privilese.
+- **Kondisi Awal (Before):** `.env`, `mqtt.env`, dan `secrets/mqtt_users.json` bermode 644 sehingga terbaca pengguna lain. Token otentikasi default juga tertanam literal pada `app.py`.
+- **Implementasi:** Konstanta token dihapus dari kode sumber dan dialihkan ke variabel lingkungan. Izin berkas konfigurasi diubah menjadi mode 600 dengan pemilik `smartcow`. Token API dan kredensial MQTT dirotasi memakai `openssl rand -hex 16`.
+- **Hasil Verifikasi (After):** `ls -l` mengonfirmasi mode 600 pada seluruh berkas kredensial. Pencarian teks token pada kode program tidak menemukan nilai. Pembacaan berkas oleh pengguna `nobody` gagal. Permintaan dengan token lama ditolak `HTTP 401 Unauthorized`, sedangkan token baru dipakai sah oleh simulator.
+- **Cakupan dan Batasan:** Kredensial operasional hanya berada di memori proses dan berkas konfigurasi lokal berizin ketat milik akun `smartcow`.
+- **Tautan Bukti:** [Izin berkas sebelum dan sesudah, 12 November 2026](<evidence/kontrol C2 - Kredensial tidak hardcoded/izin-berkas-2026-11-12.png>), [Status berkas dan izin setelah](<evidence/kontrol C2 - Kredensial tidak hardcoded/kredensial-setelah.png>). Tangkapan layar lama yang memuat nilai kredensial tidak dipakai.
 
 ### C3. Pencatatan Log Aktivitas, Prosedur Backup, dan Verifikasi Pemulihan Data - Done
 
-- **Tujuan Pengamanan:** Menyimpan riwayat permintaan yang mencurigakan untuk keperluan audit forensik serta memastikan integritas data telemetri dapat dipulihkan jika terjadi manipulasi data.
-- **Kondisi Awal (Before):** Layanan aplikasi backend dan broker MQTT belum mengonfigurasi berkas log akses khusus, serta belum tersedia skrip pencadangan dan pemulihan data lokal.
-- **Implementasi:** Parameter `SMARTCOW_LOG` diarahkan ke berkas `logs/access.log` dan `SMARTCOW_MQTT_LOG` ke `logs/broker.log`. Nilai parameter otentikasi `auth` pada query string disanitasi menjadi `auth=REDACTED` sebelum ditulis ke log. Skrip `/usr/local/bin/smartcow-backup` dimiliki `root:root` mode 750 (bukan lagi milik pengguna layanan, sehingga tidak bisa ditimpa oleh proses tanpa privilese) dan dijalankan unit systemd sebagai root. Skrip membekukan isi `data/` lebih dulu lewat `cp -a`, lalu membuat arsip dan manifest sha256 dari salinan beku itu; semua keluaran ditulis dengan akhiran `.part` dan baru di-rename setelah lengkap, sehingga arsip rusak tidak pernah tampil sebagai arsip terbaru. Retensi tujuh arsip. Arsip disimpan di `/var/lib/smartcow/backup` milik `root:root` mode 700, di luar `/home/smartcow-lab`, karena direktori arsip di dalam home layanan tetap dapat dihapus pengguna layanan; hanya nama berpola `state-*.tar.gz` yang boleh dihapus, sehingga pengguna layanan tidak dapat memalsukan arsip maupun menyisipkan nama berkas. Penjadwalan lewat `smartcow-backup.timer` (`OnCalendar=daily`, `Persistent=true`). Pemulihan ditangani `/usr/local/bin/smartcow-restore` dengan urutan: verifikasi checksum arsip, penolakan arsip yang memuat symlink, verifikasi manifest isi, hentikan `smartcow-api`/`smartcow-sim`, simpan `data.prev-<stamp>`, pasang hasil ekstraksi, perbaiki kepemilikan dan mode (berkas 600 karena `users.json`/`state.json` memuat hash sandi dan token sesi), nyalakan layanan; kegagalan pada salah satu langkah memicu rollback otomatis.
-- **Hasil Verifikasi (After):** Dijalankan ulang pada 12 November 2026. `smartcow-backup.service` selesai `Succeeded` dan menghasilkan `state-20261112-111542-<pid>.tar.gz`; pemeriksaan pemulihan mencocokkan checksum arsip dan 4 dari 4 berkas pada manifest. Uji keamanan pemulihan: arsip dengan manifest yang sengaja dirusak ditolak (exit 1, `isi arsip tidak cocok dengan manifest`) tanpa menyentuh `data/` dan tanpa menghentikan layanan. Pemulihan normal berhasil, menyisakan salinan `data.prev-20261112-111559`, dan `/health` pada API membalas 200. Setelah itu skrip versi repositori dipasang ke node, arsip lama dipindahkan ke `/var/lib/smartcow/backup`, pencadangan berikutnya selesai `Succeeded`, dan `smartcow-restore-check` melaporkan `PASS archive-checksum` serta 4 dari 4 berkas cocok dengan manifest. Pengguna layanan `smartcow` gagal menulis, membaca, maupun menghapus direktori arsip (`13-backup-relocation-and-deploy.log`).
-- **Cakupan dan Batasan:** Berkas log dikelola secara lokal pada Target Node. Pengiriman log terpusat ke SIEM dijadwalkan pada evaluasi arsitektur tahap berikutnya. Skrip versi repositori ini memuat penguatan tambahan (arsip di luar home layanan, penolakan arsip yang memuat symlink, berkas hasil pemulihan mode 600); penguatan tersebut sudah dipasang dan diuji langsung pada 12 November 2026, sedangkan bukti `02`/`07` berasal dari skrip yang berjalan lebih awal pada hari yang sama. Berkas `backup-dan-pemulihan-data.png` telah diganti dengan tangkapan layar eksekusi nyata 12 November 2026 (unit backup `Succeeded`, `PASS archive-checksum`, `PASS manifest 4/4`); salinan lama yang menampilkan kegagalan `tar` tidak lagi dipakai.
+- **Tujuan Pengamanan:** Menyimpan riwayat permintaan mencurigakan untuk audit dan memastikan integritas telemetri dapat dipulihkan setelah manipulasi data.
+- **Kondisi Awal (Before):** Aplikasi dan broker belum mengonfigurasi berkas log akses khusus, dan belum tersedia skrip pencadangan maupun pemulihan lokal.
+- **Implementasi:**
+  - `SMARTCOW_LOG` diarahkan ke `logs/access.log` dan `SMARTCOW_MQTT_LOG` ke `logs/broker.log`. Parameter `auth` pada query string disanitasi menjadi `auth=REDACTED` sebelum ditulis.
+  - `/usr/local/bin/smartcow-backup` dimiliki `root:root` mode 750 dan dijalankan unit systemd sebagai root, sehingga tidak dapat ditimpa proses tanpa privilese.
+  - Skrip membekukan `data/` dengan `cp -a`, membuat arsip dan manifest sha256 dari salinan beku, menulis keluaran dengan akhiran `.part`, lalu mengganti nama setelah lengkap. Retensi tujuh arsip.
+  - Arsip disimpan di `/var/lib/smartcow/backup` milik `root:root` mode 700, di luar `/home/smartcow-lab`, karena direktori di dalam home layanan dapat dihapus pengguna layanan. Hanya nama berpola `state-*.tar.gz` yang boleh dihapus, sehingga pengguna layanan tidak dapat memalsukan arsip atau menyisipkan nama berkas.
+  - Penjadwalan memakai `smartcow-backup.timer` dengan `OnCalendar=daily` dan `Persistent=true`.
+  - `/usr/local/bin/smartcow-restore` menjalankan urutan: verifikasi checksum arsip, penolakan arsip bersymlink, verifikasi manifest, hentikan `smartcow-api`/`smartcow-sim`, simpan `data.prev-<stempel>`, ekstrak data, perbaiki kepemilikan dan mode (berkas 600 karena `users.json` dan `state.json` memuat hash sandi serta token sesi), lalu nyalakan layanan. Kegagalan pada salah satu langkah memicu rollback otomatis.
+- **Hasil Verifikasi (After):** Dijalankan ulang 12 November 2026. `smartcow-backup.service` selesai `Succeeded` dan menghasilkan `state-20261112-111542-<pid>.tar.gz`; pemeriksaan pemulihan mencocokkan checksum arsip dan 4 dari 4 berkas pada manifest. Uji gerbang keamanan dengan manifest yang sengaja dirusak ditolak (exit 1, `isi arsip tidak cocok dengan manifest`) tanpa menyentuh `data/` dan tanpa menghentikan layanan. Pemulihan normal berhasil, menyisakan `data.prev-20261112-111559`, dan `/health` membalas 200. Setelah skrip versi repositori dipasang, arsip lama dipindahkan ke `/var/lib/smartcow/backup`, pencadangan berikutnya `Succeeded`, dan `smartcow-restore-check` melaporkan `PASS archive-checksum` serta 4 dari 4 berkas cocok dengan manifest. Pengguna `smartcow` gagal menulis, membaca, maupun menghapus direktori arsip (`13-backup-relocation-and-deploy.log`).
+- **Cakupan dan Batasan:** Log dikelola lokal pada Target Node; pengiriman terpusat ke SIEM dijadwalkan pada evaluasi tahap berikutnya. Skrip versi repositori memuat penguatan tambahan (arsip di luar home layanan, penolakan arsip bersymlink, berkas hasil pemulihan mode 600) yang sudah dipasang dan diuji pada 12 November 2026, sedangkan bukti `02` dan `07` berasal dari skrip yang berjalan lebih awal pada hari yang sama. Berkas `backup-dan-pemulihan-data.png` sudah diganti tangkapan layar eksekusi nyata 12 November 2026 (unit backup `Succeeded`, `PASS archive-checksum`, `PASS manifest 4/4`); salinan lama yang menampilkan kegagalan `tar` tidak dipakai lagi.
 - **Tautan Bukti:** [Backup dan restore 12 November 2026](evidence/verifikasi-2026-11-12/02-c3-backup-restore.log), [Status unit backup](evidence/verifikasi-2026-11-12/07-backup-units-after.log), [Pemasangan dan pemindahan arsip](evidence/verifikasi-2026-11-12/13-backup-relocation-and-deploy.log), [Redaksi log akses](evidence/verifikasi-2026-11-12/12-target-redaction-and-env.log), [Backup dan pemulihan 12 November 2026](<evidence/kontrol C3 - Logging aktivitas dan backup data/backup-dan-pemulihan-data.png>), [Baseline telemetri awal](<evidence/kontrol C3 - Logging aktivitas dan backup data/baseline-telemetry-simulator.png>).
 
 ---
 
 ## 6. Rencana Peningkatan dan Batasan Kontrol
 
-- **Pembaruan Paket Sistem Operasi:** Perintah `pacman -Syu` tidak dapat dieksekusi pada lingkungan lab karena isolasi jaringan tanpa akses internet publik. Sistem beroperasi stabil menggunakan kernel Linux 5.10.14 bawaan citra laboratorium.
-- **Implementasi Layanan Fail2ban:** Pemasangan paket fail2ban memerlukan repositori daring; peran perlindungan terhadap serangan brute force digantikan secara efektif oleh aturan *hashlimit* iptables dan direktif `MaxStartups` pada OpenSSH.
-- **Enkripsi Transmisi Transport Layer Security (TLS):** Komunikasi REST API dan MQTT pada segmen lab terisolasi beroperasi menggunakan protokol standar (HTTP dan MQTT plaintext), merefleksikan arsitektur firmware asli yang mematikan verifikasi sertifikat.
-- **Integrasi Alert Otomatis SIEM:** Pengambilan bukti peringatan IDS dilakukan melalui antarmuka visual Sguil pada Security Onion karena isolasi segmen antarmuka manajemen.
+- **Pembaruan paket sistem operasi:** `pacman -Syu` tidak dapat dijalankan karena isolasi jaringan tanpa internet. Sistem berjalan stabil dengan kernel Linux `5.10.14` bawaan citra laboratorium.
+- **Fail2ban:** pemasangan paket memerlukan repositori daring; perannya digantikan aturan hashlimit iptables dan `MaxStartups` pada OpenSSH.
+- **TLS:** komunikasi REST API dan MQTT pada segmen terisolasi memakai HTTP dan MQTT plaintext, merefleksikan arsitektur firmware asli yang mematikan verifikasi sertifikat.
+- **Alert otomatis SIEM:** pengambilan bukti peringatan IDS dilakukan melalui antarmuka Sguil karena segmen antarmuka manajemen terisolasi.
 
 ## 7. Referensi Dokumen Terkait
 
@@ -156,4 +173,5 @@ Seluruh pengujian dijalankan di dalam jaringan virtual lokal bertipe Host-Only. 
 - [Rencana Pengujian Serangan Red Team](../redteam/attack_plan.md)
 - [Logbook Purple Team Loop](../purple-team-log.md)
 - [Skema Alokasi Pengalamatan IP](../design/ip_plan.md)
+- [Vulnerability Assessment Report](../vulnerability-assessment-report.md)
 - [Kronologi Logbook Proyek](../../LOGBOOK.md)

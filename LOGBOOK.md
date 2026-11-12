@@ -1,139 +1,153 @@
 # LOGBOOK - Kelompok 12 Kelas B
 
-**Anggota Kelompok:**
-1. Thevan Erlangga (J0404241073) - Lead, Purple Team
-2. Muhamad Akhdan Ramadhan (J0404241102) - Red Team
-3. Fachri Abyasa Tarid (J0404241136) - Blue Team
+**Praktik Keamanan Siber Terapan (TEK1314) | Skenario 10 - IoT Protocol Guardian**
 
----
+| Nama | NIM | Peran |
+| :--- | :--- | :--- |
+| Thevan Erlangga | J0404241073 | Lead, Purple Team |
+| Muhamad Akhdan Ramadhan | J0404241102 | Red Team |
+| Fachri Abyasa Tarid | J0404241136 | Blue Team |
+
+## Daftar Isi
+
+- [Minggu 2](#minggu-2)
+- [Minggu 3](#minggu-3)
+- [Minggu 4](#minggu-4)
+- [Minggu 5 (26 September 2026)](#minggu-5-26-september-2026)
+- [Minggu 6 (3 Oktober 2026)](#minggu-6-3-oktober-2026)
+- [Minggu 7](#minggu-7)
+- [Minggu 8 dan 9 - Checkpoint Evaluasi Fase 2](#minggu-8-dan-9---checkpoint-evaluasi-fase-2)
+- [Minggu 10](#minggu-10)
+- [Minggu 11 - Finalisasi Fase 2](#minggu-11---finalisasi-fase-2)
+- [Minggu 12 (12 November 2026) - Verifikasi Ulang Fase 2](#minggu-12-12-november-2026---verifikasi-ulang-fase-2)
 
 ## Minggu 2
 
-- Pembentukan tim kerja kelompok dan pembagian peran fungsional (Lead/Purple Team, Red Team, dan Blue Team).
-- Pemasangan perangkat lunak virtualisasi VirtualBox pada host serta pengunduhan berkas citra mesin virtual Ubuntu, Kali Linux, dan Security Onion.
-- Inisialisasi repositori Git dan GitHub sebagai media sentral dokumentasi progres, pengelolaan berkas konfigurasi, serta penyimpanan artefak pengujian hingga tahap presentasi.
+- Pembentukan tim dan pembagian peran fungsional: Lead/Purple Team, Red Team, dan Blue Team.
+- Pemasangan perangkat lunak virtualisasi VirtualBox pada host, dilanjutkan pengunduhan citra Ubuntu, Kali Linux, dan Security Onion.
+- Inisialisasi repositori Git dan GitHub sebagai media dokumentasi progres, pengelolaan berkas konfigurasi, dan penyimpanan artefak pengujian.
 
 ## Minggu 3
 
-- Pendalaman perintah dasar administrasi sistem Linux: manajemen berkas, pengelolaan hak akses pengguna, serta konfigurasi antarmuka jaringan.
-- Red Team melakukan peninjauan awal terhadap port-port standar yang relevan dengan arsitektur sistem IoT: Port 80 (HTTP), Port 21 (FTP), Port 22 (SSH), dan Port 1883 (MQTT).
-- Evaluasi teknis: Pemahaman mendalam mengenai administrasi Linux dan analisis jaringan menjadi pondasi penting. Tanpa penguasaan dasar yang memadai, proses pelacakan kendala (troubleshooting) pada sensor IDS berlapis membutuhkan waktu yang signifikan.
+- Pendalaman administrasi Linux: manajemen berkas, hak akses pengguna, dan konfigurasi antarmuka jaringan.
+- Red Team meninjau port standar yang relevan dengan arsitektur IoT: 80 (HTTP), 21 (FTP), 22 (SSH), dan 1883 (MQTT).
+- Evaluasi teknis: administrasi Linux dan analisis jaringan menjadi dasar troubleshooting. Tanpa penguasaan dasar tersebut, pelacakan kendala pada sensor IDS berlapis membutuhkan waktu jauh lebih lama.
 
 ## Minggu 4
 
-- Blue Team merancang arsitektur topologi jaringan laboratorium tiga node: Attacker Node, Target Node, dan Monitoring Node.
-- Penentuan skema pengalamatan IP pada subnet `192.168.12.0/24`: Target Node pada `.5`, Attacker Node pada `.100`, dan Security Onion pada `.200`.
-- Lead menyusun dan mengunggah dokumen rancangan skema IP (`docs/design/ip_plan.md`) beserta diagram topologi jaringan ke repositori.
-- Identifikasi sistem operasi Target Node: citra laboratorium yang tersedia menggunakan Arch Linux Security Workstation (berbeda dari rancangan awal Ubuntu Server). Peran operasional tetap dipertahankan sebagai server replika backend IoT.
+- Blue Team merancang topologi tiga node: Attacker Node, Target Node, dan Monitoring Node.
+- Penetapan alamat pada subnet `192.168.12.0/24`: Target Node `.5`, Attacker Node `.100`, dan Security Onion `.200`.
+- Lead menyusun dan mengunggah rancangan skema IP (`docs/design/ip_plan.md`) beserta diagram topologi.
+- Identifikasi sistem operasi Target Node: citra lab yang tersedia adalah Arch Linux Security Workstation, bukan Ubuntu Server seperti rencana awal. Peran operasionalnya tetap server replika backend IoT.
 
 ## Minggu 5 (26 September 2026)
 
-- Konfigurasi antarmuka Host-Only adapter pada laptop host disetel ke alamat `192.168.12.1` dan seluruh mesin virtual dipindahkan ke mode jaringan Host-Only guna menjamin isolasi lingkungan pengujian.
-- Attacker Node (LabVM): dikonfigurasi pada IP `192.168.12.100`, hostname `ATTACKER-KEL12-B`, akun pengguna `analyst`.
-- Target Node (Arch Linux Workstation): kata sandi akun `sec_admin` dipulihkan melalui menu GRUB (`init=/bin/bash`), driver grafis VirtualBox disesuaikan (VBoxVGA, VRAM 64MB), IP statis disetel ke `192.168.12.5`, dan hostname disetel ke `SRV-IOT-KEL12-B`.
-- Security Onion dikonfigurasi pada IP `192.168.12.200` pada antarmuka eth0, hostname `SOC-KEL12-B`, akun pengguna `analyst`.
-- Pengujian konektivitas dasar: uji ping dari Attacker Node menuju Target Node dan Security Onion menghasilkan 0% packet loss.
-- Rekaman tcpdump pada antarmuka sensor Security Onion berhasil menangkap 12 paket ICMP tanpa kehilangan data (`docs/blueteam/evidence/baseline/tcpdump-icmp.png`).
-- Pengujian visualisasi Sguil: jendela Sguil berhasil dibuka, namun tabel RealTime Events awalnya belum menampilkan rekaman alert. Investigasi menemukan dua penyebab: parameter `IDS_ENGINE_ENABLED=no` dan izin mode promiscuous pada adapter virtual belum disetel ke allow. Setelah kedua parameter diperbaiki dan sensor dijalankan ulang melalui perintah `nsm_sensor_ps-start`, basis data sguild berhasil mencatat alert ICMP ping (`GPL ICMP_INFO PING`) dan pemindaian SSH (`ET SCAN Potential SSH Scan`) dari `.100` ke `.5` (`docs/blueteam/evidence/baseline/sguil-db-events.log`).
-- Analisis lalu lintas jaringan menggunakan Wireshark pada Attacker Node merekam 45 paket pengujian (`docs/blueteam/evidence/baseline/wireshark-icmp.png` dan `docs/blueteam/evidence/baseline/kel12-demo.pcap`).
-- Tangkapan layar antarmuka Sguil pada sensor seconion-import didokumentasikan pada `docs/blueteam/evidence/baseline/sguil-alert.png`.
-- Evaluasi teknis: penangkapan lalu lintas paket mentah dan pemrosesan alert pada sensor IDS merupakan dua lapisan yang berbeda. Perekaman melalui tcpdump dapat menangkap paket secara utuh meskipun basis data Sguil belum menampilkan rekaman alert. Setelah mesin deteksi Snort diaktifkan dan antarmuka sensor disetel ke mode promiscuous, alur korelasi dari sensor Snort melalui barnyard2 menuju basis data sguild dapat berjalan normal.
+- Antarmuka Host-Only pada host disetel ke `192.168.12.1`; seluruh VM dipindahkan ke mode Host-Only agar lingkungan uji terisolasi.
+- Attacker Node (LabVM): IP `192.168.12.100`, hostname `ATTACKER-KEL12-B`, pengguna `analyst`.
+- Target Node (Arch Linux Workstation): kata sandi `sec_admin` dipulihkan lewat menu GRUB (`init=/bin/bash`), driver grafis disesuaikan (VBoxVGA, VRAM 64MB), IP statis `192.168.12.5`, hostname `SRV-IOT-KEL12-B`.
+- Security Onion: IP `192.168.12.200` pada eth0, hostname `SOC-KEL12-B`, pengguna `analyst`.
+- Uji konektivitas: ping dari Attacker Node ke Target Node dan Security Onion menghasilkan 0% packet loss.
+- Rekaman tcpdump pada antarmuka sensor menangkap 12 paket ICMP tanpa kehilangan data (`docs/blueteam/evidence/baseline/tcpdump-icmp.png`).
+- Visualisasi Sguil: jendela Sguil terbuka, tetapi tabel RealTime Events belum menampilkan alert. Investigasi menemukan dua penyebab, yaitu `IDS_ENGINE_ENABLED=no` dan izin mode promiscuous pada adapter virtual yang belum disetel allow. Setelah keduanya diperbaiki dan sensor dijalankan ulang dengan `nsm_sensor_ps-start`, basis data sguild mencatat alert ICMP ping (`GPL ICMP_INFO PING`) dan pemindaian SSH (`ET SCAN Potential SSH Scan`) dari `.100` ke `.5` (`docs/blueteam/evidence/baseline/sguil-db-events.log`).
+- Wireshark pada Attacker Node merekam 45 paket pengujian (`docs/blueteam/evidence/baseline/wireshark-icmp.png` dan `kel12-demo.pcap`).
+- Tangkapan layar Sguil pada sensor seconion-import didokumentasikan di `docs/blueteam/evidence/baseline/sguil-alert.png`.
+- Evaluasi teknis: penangkapan paket mentah dan pemrosesan alert IDS adalah dua lapisan berbeda. tcpdump dapat merekam paket secara utuh meskipun basis data Sguil belum menampilkan alert. Setelah mesin Snort aktif dan antarmuka sensor disetel promiscuous, alur korelasi dari Snort melalui barnyard2 ke basis data sguild berjalan normal.
 
-## Minggu 6 (26 September 2026)
+## Minggu 6 (3 Oktober 2026)
 
-- Target Node (`SRV-IOT-KEL12-B`): penonaktifan layanan yang tidak dibutuhkan dan berisiko tinggi (`vsftpd`, `telnet.socket`, `pox`, `ovs-vswitchd`). Layanan yang dipertahankan hanya `sshd`, `systemd-networkd`, dan `lightdm`. Verifikasi dilakukan melalui perintah `systemctl list-unit-files --state=enabled`.
-- Konfigurasi firewall iptables: kebijakan default disetel ke INPUT DROP, memberikan izin paket ICMP serta koneksi TCP pada port 22, 80, dan 1883 khusus dari subnet `192.168.12.0/24`. Uji ping dari Attacker Node ke Target Node tetap menghasilkan 0% loss, membuktikan aturan firewall tidak mengganggu konektivitas sah.
-- Pengelolaan hak akses: akun non-root `sec_admin` (UID 1001) ditetapkan sebagai akun operasional. Alamat IP disetel secara permanen pada `192.168.12.5/24`.
-- Keterbatasan lingkungan: pembaruan paket sistem operasi (`pacman -Syu`) tidak dapat dilakukan karena isolasi total jaringan lab tanpa koneksi internet. Kondisi ini dicatat sebagai batasan lingkungan uji.
-- Bukti pengujian tersimpan pada `docs/blueteam/evidence/baseline/hardening-services.png` dan `docs/blueteam/evidence/baseline/hardening-firewall.png`. Tangkapan layar `target-ip-statis.png` ditarik dari repositori karena memuat kata sandi; bukti IP dan hostname terkini ada pada `docs/blueteam/evidence/verifikasi-2026-11-12/06-target-state-recon.log`.
+- Target Node (`SRV-IOT-KEL12-B`): penonaktifan layanan yang tidak dibutuhkan (`vsftpd`, `telnet.socket`, `pox`, `ovs-vswitchd`). Layanan yang dipertahankan hanya `sshd`, `systemd-networkd`, dan `lightdm`, diverifikasi dengan `systemctl list-unit-files --state=enabled`.
+- Firewall iptables: kebijakan default INPUT DROP, dengan izin ICMP dan TCP 22, 80, serta 1883 khusus dari `192.168.12.0/24`. Ping dari Attacker Node tetap 0% loss, sehingga aturan tidak mengganggu konektivitas sah.
+- Hak akses: akun non-root `sec_admin` (UID 1001) ditetapkan sebagai akun operasional. IP disetel permanen pada `192.168.12.5/24`.
+- Keterbatasan lingkungan: `pacman -Syu` tidak dapat dijalankan karena isolasi jaringan lab tanpa internet. Kondisi ini dicatat sebagai batasan uji.
+- Bukti: `docs/blueteam/evidence/baseline/hardening-services.png` dan `hardening-firewall.png`. Tangkapan layar `target-ip-statis.png` ditarik dari repositori karena memuat kata sandi; bukti IP dan hostname terkini ada pada `docs/blueteam/evidence/verifikasi-2026-11-12/06-target-state-recon.log`.
 
 ## Minggu 7
 
-- Penyusunan dan finalisasi dokumen Baseline Security Report Fase 1 pada direktori kerja internal kelompok.
-- Perancangan skenario demonstrasi bertahap: diawali dari pembuktian topologi dan konektivitas, verifikasi kontrol pengamanan, hingga pembuktian pencatatan log secara langsung.
+- Penyusunan dan finalisasi Baseline Security Report Fase 1.
+- Perancangan skenario demonstrasi bertahap: pembuktian topologi dan konektivitas, verifikasi kontrol pengamanan, lalu pembuktian pencatatan log secara langsung.
 
-## Minggu 8 dan 9 (Checkpoint Evaluasi Fase 2)
+## Minggu 8 dan 9 - Checkpoint Evaluasi Fase 2
 
-Penetapan skenario tugas resmi kelompok: **Skenario No. 10 (*IoT Protocol Guardian*)**. Proyek IoT yang dipelajari adalah **SmartCow**, sistem pengendali sprinkler otomatis kandang sapi perah. Rincian arsitektur didokumentasikan pada `docs/presentation-minggu9/tech_stack_declaration.md`. Seluruh pengujian menggunakan data sintetis (dummy) demi menjamin keselamatan sistem mitra.
+Penetapan skenario tugas kelompok: **Skenario No. 10 (*IoT Protocol Guardian*)**. Proyek yang dipelajari adalah **SmartCow**, sistem pengendali sprinkler otomatis kandang sapi perah. Rincian arsitektur ada pada `docs/presentation-minggu9/tech_stack_declaration.md`. Seluruh pengujian memakai data sintetis (dummy) demi keselamatan sistem mitra.
 
 ### Perbaikan Lingkungan Jaringan Laboratorium
 
-- Penanganan kendala DHCP: mesin virtual Attacker sempat memperoleh alamat `192.168.18.6` akibat konfigurasi server DHCP default pada VirtualBox. Alamat dikonfigurasi ulang secara statis ke `192.168.12.100` menggunakan Netplan. Uji konektivitas ke `.5` menghasilkan 0% packet loss.
-- Penanganan persistensi firewall: aturan iptables yang sempat tereset setelah restart dimuat ulang, diekspor ke `/etc/iptables/iptables.rules`, dan layanan `iptables.service` diaktifkan agar termuat otomatis saat boot.
-- Konfigurasi logging: penyimpanan systemd-journald disetel ke mode persisten dan akun nonaktif `analyst` pada Target Node dikunci.
+- Kendala DHCP: VM Attacker sempat menerima alamat `192.168.18.6` dari server DHCP default VirtualBox. Alamat dikonfigurasi ulang secara statis ke `192.168.12.100` memakai Netplan, dan uji konektivitas ke `.5` menghasilkan 0% packet loss.
+- Persistensi firewall: aturan iptables yang tereset setelah restart dimuat ulang, diekspor ke `/etc/iptables/iptables.rules`, dan `iptables.service` diaktifkan agar termuat saat boot.
+- Logging: penyimpanan systemd-journald disetel persisten, dan akun nonaktif `analyst` pada Target Node dikunci.
 
 ### Implementasi Replika Backend IoT pada Target Node
 
-Target Node dikonfigurasi untuk mereplikasi arsitektur backend sistem SmartCow. Mengingat ketiadaan akses internet di laboratorium mencegah instalasi Firebase Emulator, kelompok membangun modul replika backend mandiri menggunakan pustaka standar Python 3.9 bawaan sistem operasi tanpa menambah dependensi pihak ketiga:
+Ketiadaan akses internet mencegah instalasi Firebase Emulator, sehingga kelompok membangun replika backend mandiri dengan pustaka standar Python 3.9 tanpa dependensi pihak ketiga:
 
-- `app.py`: modul REST API bergaya Realtime Database pada path `devices/cow-sprinkler-01/{telemetry/latest,telemetry/log,control,status,events}`, dilengkapi otentikasi token bearer, validasi rentang nilai sensor, dan pencatatan log akses.
-- `broker.py`: broker MQTT mandiri minimal yang menerapkan otentikasi akun pengguna dan pembatasan hak akses topik (ACL), di mana topik `cow-sprinkler-01/control` dibatasi hak tulisnya.
-- `simulator.py`: simulator data telemetri yang meniru mikrokontroler ESP32 dengan mengirimkan nilai acak suhu dan kelembapan dummy setiap dua detik untuk membentuk lalu lintas baseline sensor IDS.
-- Web Server Nginx 1.18.0: menyajikan antarmuka web dashboard pada port 80 dan meneruskan rute `/api` ke backend lokal via proxy terbalik.
-- Manajemen layanan: seluruh komponen dijalankan sebagai layanan systemd di bawah akun sistem non-privilese `smartcow`.
+- `app.py`: REST API bergaya Realtime Database pada path `devices/cow-sprinkler-01/{telemetry/latest,telemetry/log,control,status,events}`, dengan otentikasi token bearer, validasi rentang sensor, dan log akses.
+- `broker.py`: broker MQTT minimal dengan otentikasi akun dan pembatasan hak topik (ACL); topik `cow-sprinkler-01/control` dibatasi hak tulisnya.
+- `simulator.py`: simulator telemetri yang meniru ESP32 dengan mengirim nilai suhu dan kelembapan dummy setiap dua detik untuk membentuk lalu lintas baseline IDS.
+- Nginx 1.18.0: menyajikan dashboard pada port 80 dan meneruskan rute `/api` ke backend lokal melalui proxy terbalik.
+- Manajemen layanan: seluruh komponen berjalan sebagai unit systemd di bawah akun sistem non-privilese `smartcow`.
 
 ### Penerapan Sepuluh Kontrol Pengamanan (Hardening)
 
-Penerapan sepuluh kontrol pengamanan terbagi ke dalam tiga kategori: 3 Access & Authentication, 4 Service & Attack Surface, dan 3 Data & Application (rincian lengkap pada `docs/blueteam/hardening_checklist.md`):
+Sepuluh kontrol terbagi ke tiga kategori: 3 Access & Authentication, 4 Service & Attack Surface, dan 3 Data & Application (rincian pada `docs/blueteam/hardening_checklist.md`).
 
-- **Kategori A (Access & Authentication):** A1 (penolakan login root via SSH), A2 (autentikasi SSH berbasis kunci Ed25519 dan penonaktifan kata sandi), A3 (pembatasan koneksi sshd `MaxStartups 3:50:10` dan pembatasan laju koneksi iptables hashlimit).
-- **Kategori B (Service & Attack Surface):** B1 (firewall iptables whitelist persisten), B2 (isolasi REST API pada loopback 127.0.0.1:9000), B3 (penyembunyian banner versi Nginx via `server_tokens off`), B4 (penutupan akses jaringan ke broker MQTT sehingga hanya loopback yang dilayani).
-- **Kategori C (Data & Application):** C1 (validasi batas nilai telemetri dan ACL topik MQTT), C2 (penghapusan literal token, izin berkas kredensial mode 600, dan rotasi token), C3 (pencatatan log akses tersanitasi dan verifikasi prosedur backup/restore data).
+- **Kategori A (Access & Authentication):** A1 penolakan login root via SSH; A2 autentikasi SSH berbasis kunci Ed25519 dan penonaktifan kata sandi; A3 pembatasan `MaxStartups 3:50:10` dan pembatasan laju koneksi iptables hashlimit.
+- **Kategori B (Service & Attack Surface):** B1 firewall iptables whitelist persisten; B2 isolasi REST API pada loopback `127.0.0.1:9000`; B3 penyembunyian banner versi Nginx (`server_tokens off`); B4 penutupan akses jaringan ke broker MQTT.
+- **Kategori C (Data & Application):** C1 validasi batas nilai telemetri dan ACL topik MQTT; C2 penghapusan literal token, izin berkas kredensial mode 600, dan rotasi token; C3 pencatatan log akses tersanitasi serta verifikasi prosedur backup/restore.
 
 ### Hasil Pengujian Serangan Red Team
 
-Seluruh skenario penyerangan diuji secara nyata menggunakan data dummy untuk memverifikasi efektivitas kontrol pengamanan:
+Seluruh skenario diuji nyata memakai data dummy untuk memverifikasi efektivitas kontrol:
 
-- **Kondisi Sebelum Hardening:** Pemindaian Nmap menemukan port 22, 80, 1883, dan 9000 terbuka. Percobaan login SSH akun `sec_admin` berhasil menggunakan kata sandi sederhana. Publikasi pesan MQTT ke topik kontrol diterima broker tanpa kredensial. Injeksi telemetri palsu (kelembapan 150%) dan perintah aktivasi pompa manual diterima oleh REST API.
-- **Kondisi Sesudah Hardening:** Seluruh upaya login SSH berbasis kata sandi ditolak sistem (`Permission denied (publickey)`). Publikasi pesan MQTT tanpa otorisasi ditolak broker dengan kode `CONNACK 5`. Injeksi data di luar batas wajar ditolak REST API dengan kode `HTTP 400 Bad Request`. Request tanpa token ditolak dengan `HTTP 401 Unauthorized`. Port 9000 berstatus filtered dari jaringan luar karena API terikat pada loopback.
-- Bukti pengujian tersimpan pada `docs/blueteam/evidence/` (67 berkas) dan `docs/redteam/evidence/` (19 berkas), termasuk tangkapan layar terminal dan log eksekusi.
+- **Kondisi Sebelum Hardening Fase 2:** Pemindaian Nmap mencatat port 22, 80, dan 1883 terbuka. Port 9000 sudah berstatus filtered karena API mendengarkan di `0.0.0.0:9000` tetapi tidak pernah diloloskan firewall. Login SSH `sec_admin` berhasil dengan kata sandi sederhana. Publikasi MQTT ke topik kontrol diterima broker tanpa kredensial. Injeksi telemetri palsu (kelembapan 150%) dan perintah aktivasi pompa manual diterima REST API.
+- **Kondisi Sesudah Hardening:** Upaya login SSH berbasis kata sandi ditolak (`Permission denied (publickey)`). Publikasi MQTT tanpa otorisasi ditolak broker dengan `CONNACK 5`. Injeksi di luar batas ditolak REST API dengan `HTTP 400 Bad Request`, dan request tanpa token ditolak `HTTP 401 Unauthorized`. Port 1883 ditutup lewat kontrol B4, sedangkan port 9000 tetap filtered dan hanya melayani loopback; pemindaian akhir hanya menemukan 22 dan 80 terbuka.
+- Bukti: `docs/blueteam/evidence/` (67 berkas) dan `docs/redteam/evidence/` (19 berkas), termasuk tangkapan layar terminal dan log eksekusi.
 
 ### Hasil Analisis dan Kendala Monitoring Node
 
-- **Konfigurasi Antarmuka Monitoring:** Antarmuka manajemen Security Onion pada citra lab awalnya memiliki alamat default `192.168.0.1/24` (eth1) dan NAT (eth2). Antarmuka manajemen kemudian dikonfigurasi ulang secara statis ke `192.168.12.200/24` menggunakan NetworkManager (`ipv4.method manual`, `ipv4.never-default yes`).
-- **Karakteristik Sensor:** Sensor Security Onion menggunakan mesin Snort dengan korelasi basis data via barnyard2 ke `sguildb`.
-- **Verifikasi Alert Sguil:** Antarmuka Sguil berhasil memvalidasi rekaman alert lalu lintas penyerangan (`ET SCAN Nmap Scripting Engine`, `ET POLICY curl User-Agent`, dan `ET SCAN Potential SSH Scan`) yang terjadi antara pukul 06:30 hingga 06:47 GMT (13:30 hingga 13:47 WIB). Bukti tangkapan layar didokumentasikan pada repositori (`docs/blueteam/evidence/sguil-alert-minggu9.png`).
-- **Identifikasi Kendala Isolasi Lab:** Mengingat lingkungan lab terisolasi dari internet dan memori fisik host terbatas, pengujian dijalankan secara terukur menggunakan skrip pengujian berbasis Python mandiri dengan pemanfaatan sumber daya komputasi yang efisien.
+- **Konfigurasi antarmuka:** antarmuka manajemen Security Onion pada citra lab awalnya memakai `192.168.0.1/24` (eth1) dan NAT (eth2), lalu dikonfigurasi ulang statis ke `192.168.12.200/24` melalui NetworkManager (`ipv4.method manual`, `ipv4.never-default yes`).
+- **Karakteristik sensor:** Security Onion memakai mesin Snort dengan korelasi basis data melalui barnyard2 ke `sguildb`.
+- **Verifikasi alert Sguil:** antarmuka Sguil memvalidasi alert lalu lintas penyerangan (`ET SCAN Nmap Scripting Engine`, `ET POLICY curl User-Agent`, dan `ET SCAN Potential SSH Scan`) pada 06:30 sampai 06:47 GMT (13:30 sampai 13:47 WIB). Bukti: `docs/blueteam/evidence/sguil-alert-minggu9.png`.
+- **Kendala isolasi:** lingkungan lab tanpa internet dan memori host terbatas, sehingga pengujian dijalankan terukur memakai skrip Python mandiri dengan pemakaian sumber daya efisien.
 
 ## Minggu 10
 
-- Red Team merancang dan menguji skenario serangan ofensif Fase 2 (RT-01 pemetaan port, RT-02 exploitasi SSH, RT-03 manipulasi MQTT dan injeksi REST, RT-04 replay attack kontrol pompa).
-- Blue Team menambahkan aturan signature Snort kustom pada Security Onion (`/etc/nsm/rules/local.rules`) untuk mendeteksi pola lalu lintas serangan spesifik SmartCow:
-  - SID 1000001: `LOCAL-TEST-ICMP` untuk verifikasi keterhubungan jaringan.
-  - SID 1000002: `SMARTCOW-MQTT Unauthorized Control Topic Access` untuk mendeteksi penulisan tanpa izin ke topik kontrol pompa.
-  - SID 1000003: `SMARTCOW-HTTP Telemetry Attack Injection` untuk mendeteksi upaya injeksi telemetri tidak sah.
-- Verifikasi rule update pada Security Onion: proses Snort dan Barnyard2 berhasil memuat aturan baru tanpa galat.
-- Penyesuaian antarmuka jaringan Attacker Node: alamat IP disetel permanen ke `192.168.12.100/24` melalui konfigurasi Netplan agar komunikasi antar-node berjalan stabil pada segmen Host-Only.
+- Red Team merancang dan menguji skenario ofensif Fase 2: RT-01 pemetaan port, RT-02 eksploitasi SSH, RT-03 manipulasi MQTT dan injeksi REST, RT-04 replay pesan kendali.
+- Blue Team menambahkan signature Snort kustom pada `/etc/nsm/rules/local.rules`:
+  - SID 1000001: `LOCAL-TEST-ICMP` untuk verifikasi keterhubungan.
+  - SID 1000002: `SMARTCOW-MQTT Unauthorized Control Topic Access` untuk penulisan tanpa izin ke topik kontrol.
+  - SID 1000003: `SMARTCOW-HTTP Telemetry Attack Injection` untuk upaya injeksi telemetri.
+- Verifikasi rule update: proses Snort dan Barnyard2 memuat aturan baru tanpa galat.
+- Penyesuaian jaringan Attacker Node: IP disetel permanen `192.168.12.100/24` melalui Netplan agar komunikasi antar-node stabil pada segmen Host-Only.
 
-## Minggu 11 (Finalisasi Evaluasi Fase 2)
+## Minggu 11 - Finalisasi Fase 2
 
-- Replikasi antarmuka web SmartCow pada Target Node: memindahkan seluruh aset web asli (dashboard Overview, kartu suhu dan kelembapan, status SSR sprinkler, tabel riwayat telemetri, log aktivitas pompa air, dan manajemen akses admin) ke `/usr/share/nginx/html/` dengan adapter JavaScript offline mandiri tanpa dependensi CDN Google Firebase eksternal.
-- Penyesuaian performa web: mematikan efek visual berat (animasi CSS, blur, dan bayangan kompleks) serta mengatur interval polling data ke 4 detik untuk menjaga pemakaian CPU Target Node tetap rendah (sekitar 4%).
-- Penyelesaian siklus Purple Team 5 tahap untuk skenario RT-01 hingga RT-04 secara menyeluruh:
-  - RT-01: pemindaian Nmap dari Attacker Node memastikan port 9000 berstatus filtered dan header web server menyembunyikan nomor versi.
-  - RT-02: pengujian brute force kata sandi ditolak seluruhnya oleh autentikasi berbasis kunci Ed25519, serta laju koneksi konkuren diredam firewall.
-  - RT-03: pengiriman pesan ke broker tanpa otentikasi ditolak dengan kode CONNACK 5, dan injeksi data sensor ke REST API ditolak dengan respons HTTP 400.
-  - RT-04: pengiriman ulang (replay) paket kendali pompa ditolak oleh aturan hak topik broker (ACL drop) dan oleh anti-replay stempel waktu pada kanal tulis (`SMARTCOW_MQTT_ANTIREPLAY=1`, jendela 120 detik), token lama ditolak dengan HTTP 401, serta percobaan serangan terdeteksi oleh Snort pada Security Onion (CID 6127, diverifikasi ulang melalui query basis data pada 12 November 2026). Bukti tangkapan layar: `docs/redteam/evidence/15-replay-sebelum-diterima.png` sampai `17-catatan-broker-replay.png`.
-- Verifikasi prosedur pemulihan data (C3): uji coba pada 20 Oktober 2026 berhenti di langkah pencadangan karena `tar` gagal membaca berkas arsip yang belum ada, sehingga klaim pemulihan berbasis hash SHA256 pada catatan sebelumnya belum punya bukti. Penjadwalan dan pengujian ulang yang valid dilakukan pada 12 November 2026 (lihat Minggu 12).
-- Penyusunan dokumen Vulnerability Assessment Report (VAR) sebagai laporan formal penyelesaian Fase 2 pada `docs/vulnerability-assessment-report.md`.
-- Pemutakhiran repositori GitHub kelompok dengan seluruh artefak hasil pengujian dan dokumentasi lengkap.
+- Replikasi antarmuka web SmartCow: seluruh aset web asli (dashboard Overview, kartu suhu dan kelembapan, status SSR, tabel riwayat telemetri, log pompa, manajemen akses admin) dipindahkan ke `/usr/share/nginx/html/` dengan adapter JavaScript offline tanpa dependensi CDN.
+- Penyesuaian performa: efek visual berat (animasi CSS, blur, bayangan kompleks) dimatikan dan interval polling disetel 4 detik agar pemakaian CPU Target Node tetap rendah (sekitar 4%).
+- Penyelesaian siklus Purple Team lima tahap untuk RT-01 sampai RT-04:
+  - RT-01: Nmap dari Attacker Node memastikan port 9000 filtered dan header web server menyembunyikan nomor versi.
+  - RT-02: brute force kata sandi ditolak autentikasi kunci Ed25519, dan laju koneksi konkuren diredam firewall.
+  - RT-03: publish tanpa otentikasi ditolak dengan `CONNACK 5`, dan injeksi data sensor ditolak dengan `HTTP 400`.
+  - RT-04: replay paket kendali ditolak aturan ACL broker dan oleh anti-replay stempel waktu pada kanal tulis (`SMARTCOW_MQTT_ANTIREPLAY=1`, jendela 120 detik); token lama ditolak `HTTP 401`; percobaan terdeteksi Snort dengan CID 6127, diverifikasi ulang lewat query basis data pada 12 November 2026. Bukti: `docs/redteam/evidence/15-replay-sebelum-diterima.png` sampai `17-catatan-broker-replay.png`.
+- Verifikasi C3: uji coba 20 Oktober 2026 berhenti di langkah pencadangan karena `tar` gagal membaca berkas arsip yang belum ada, sehingga klaim pemulihan berbasis hash SHA256 pada catatan sebelumnya belum punya bukti. Penjadwalan dan pengujian ulang yang valid dilakukan pada 12 November 2026.
+- Penyusunan Vulnerability Assessment Report sebagai laporan formal Fase 2 di `docs/vulnerability-assessment-report.md`.
+- Pemutakhiran repositori dengan seluruh artefak pengujian dan dokumentasi.
 
-## Minggu 12 (12 November 2026): Verifikasi Ulang Fase 2
+## Minggu 12 (12 November 2026) - Verifikasi Ulang Fase 2
 
-- Pemulihan struktur fase 1: artefak baseline yang terhapus pada commit restrukturisasi dikembalikan dari riwayat repositori, termasuk baseline report, aset, dan log bukti, lalu ditempatkan pada struktur Bagian XI Panduan PBL, yaitu `docs/blueteam/baseline-report.md` dan `docs/blueteam/evidence/baseline/`. Rujukan diagram pada `README.md` diarahkan ke `docs/design/topology-minggu9.png` (diagram minggu 9 yang berlaku), bukan `topology.png` milik minggu 4. Folder `scripts/smartcow-lab/` juga dikembalikan agar kode yang dipasang di Target Node dapat ditelusuri.
-- Perbaikan topologi: Attacker Node sebelumnya menerima alamat DHCP dari subnet lain. Server DHCP VirtualBox pada jaringan Host-Only dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254`, lalu antarmuka Attacker disetel statis `192.168.12.100/24` dengan gateway `192.168.12.1`. Ketiga node kini saling terhubung dan merespons ping dari host tanpa kehilangan paket.
-- Uji ulang C1 (validasi input API dan ACL topik MQTT) dijalankan di Target Node yang hidup, 6 dari 6 pemeriksaan lulus. Tangkapan layar `mqtt-acl-terverifikasi.png` dari 20 Oktober 2026 hanya memuat kegagalan `Permission denied` saat skrip dijalankan dan juga memperlihatkan kredensial broker, sehingga berkas itu ditarik dari repositori dan bukti utama diganti dengan log eksekusi.
-- Perbaikan C3: skrip `/usr/local/bin/smartcow-backup` dilengkapi checksum arsip dan manifest sha256 per berkas, ditambah retensi tujuh arsip. Skrip dipasang `root:root` mode 750 agar tidak bisa ditimpa pengguna layanan. Unit `smartcow-backup.service` dan `smartcow-backup.timer` dipasang dan diaktifkan, lalu pencadangan dijalankan. Uji gerbang keamanan dengan manifest yang dirusak ditolak tanpa menyentuh data (`rc=1`), sedangkan pemulihan sah berhasil dan menyisakan salinan `data.prev-<stempel>`, dengan `/health` kembali `200`.
-- Monitoring: rantai deteksi lengkap berjalan (`snort`, `barnyard2`, `sguild`, `mysqld`). Pengujian ulang dari Attacker Node menghasilkan alert kustom yang benar-benar masuk basis data: CID 6352 (SID 1000003, injeksi HTTP) dan CID 6356 (SID 1000002, publish topik kontrol). Alert lama CID 6125 dan 6127 terbukti masih tersimpan. Catatan penting: kolom `event.sid` pada basis data Sguil berisi ID sensor, bukan SID Snort; SID Snort ada pada kolom `signature_id`.
-- Penanganan kredensial: sebelas tangkapan layar bukti yang memuat kata sandi atau token ditarik dari repositori dan tautannya dialihkan ke bukti log tersanitasi. Kredensial broker MQTT akun `esp32` dirotasi karena nilainya terlihat pada tangkapan layar lama; berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600 dan uji C1 dijalankan ulang setelah rotasi (6/6 lulus).
-- Seluruh hasil pemeriksaan tersimpan sebagai berkas teks di `docs/blueteam/evidence/verifikasi-2026-11-12/`.
-- Pemasangan skrip repositori ke Target Node: `app.py` versi repositori (validasi body JSON, token gagal-tertutup saat kosong, direktori data dirapikan) menggantikan versi lama, bersama `smartcow-backup`, `smartcow-restore`, dan `smartcow-restore-check` milik `root:root` mode 750. Salinan versi lama disimpan di `/root/rollback-<stempel>` sebelum penggantian.
-- Batas kepercayaan arsip diperbaiki: arsip dipindahkan dari `/home/smartcow-lab/backup` ke `/var/lib/smartcow/backup` milik `root:root` mode 700. Alasannya, direktori arsip di dalam home layanan tetap dapat dihapus dan dibuat ulang oleh pengguna `smartcow`, sehingga checksum palsu mungkin ditanam. Setelah pemindahan, `smartcow` gagal membuka, menulis, dan menghapus direktori arsip, sedangkan uji pemulihan non-destruktif tetap lulus 4 dari 4 berkas.
-- Verifikasi ulang C1/C2 setelah pemasangan: 6 dari 6 pemeriksaan lulus. Token API lama (nilai yang bocor pada fase before) ditolak HTTP 401, kedua sandi broker lama ditolak `CONNACK 5`, dan kredensial aktif tetap diterima. Telemetri tetap mengalir dan `/health` membalas 200.
-- Jalur kata sandi SSH ditutup pada Attacker Node dan Monitoring Node (`PasswordAuthentication no`, cadangan `sshd_config.bak-hardening-20261112`). Kata sandi akun tidak diubah, jadi login konsol dan Sguil tetap memakai kata sandi yang sama dan tidak ada akun yang terkunci; kini ketiga node hanya menerima `publickey`.
-- Bukti baru pada `docs/blueteam/evidence/verifikasi-2026-11-12/`: `13-backup-relocation-and-deploy.log`, `14-c1-credential-and-liveness-recheck.log`, `15-ssh-password-auth-disabled.log`.
-- Penutupan celah Fase 1-2 (12 November 2026, sesi lanjutan):
+- Pemulihan struktur Fase 1: artefak baseline yang terhapus pada commit restrukturisasi dikembalikan dari riwayat repositori dan ditempatkan sesuai Bagian XI Panduan PBL, yaitu `docs/blueteam/baseline-report.md` dan `docs/blueteam/evidence/baseline/`. Rujukan diagram pada `README.md` diarahkan ke `docs/design/topology-minggu9.png`, bukan `topology.png` milik Minggu 4. Folder `scripts/smartcow-lab/` juga dikembalikan agar kode yang terpasang di Target Node dapat ditelusuri.
+- Perbaikan topologi: server DHCP VirtualBox pada jaringan Host-Only dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254`, lalu antarmuka Attacker disetel statis `192.168.12.100/24` dengan gateway `192.168.12.1`. Ketiga node saling terhubung dan merespons ping dari host tanpa kehilangan paket.
+- Uji ulang C1 di Target Node yang hidup: 6 dari 6 pemeriksaan lulus. Tangkapan layar `mqtt-acl-terverifikasi.png` dari 20 Oktober 2026 hanya memuat kegagalan `Permission denied` saat skrip dijalankan dan memperlihatkan kredensial broker, sehingga berkas itu ditarik dan bukti utama diganti log eksekusi.
+- Perbaikan C3: skrip `/usr/local/bin/smartcow-backup` dilengkapi checksum arsip dan manifest sha256 per berkas, ditambah retensi tujuh arsip. Skrip dipasang `root:root` mode 750 agar tidak dapat ditimpa pengguna layanan. Unit `smartcow-backup.service` dan `smartcow-backup.timer` diaktifkan, lalu pencadangan dijalankan. Uji gerbang keamanan dengan manifest yang dirusak ditolak tanpa menyentuh data (`rc=1`), sedangkan pemulihan sah berhasil, menyisakan salinan `data.prev-<stempel>`, dan `/health` kembali `200`.
+- Monitoring: rantai deteksi lengkap berjalan (`snort`, `barnyard2`, `sguild`, `mysqld`). Pengujian ulang dari Attacker Node menghasilkan alert kustom yang masuk basis data, yaitu CID 6352 (SID 1000003, injeksi HTTP) dan CID 6356 (SID 1000002, publish topik kontrol). Alert lama CID 6125 dan 6127 masih tersimpan. Catatan: kolom `event.sid` pada basis data Sguil berisi ID sensor, bukan SID Snort; SID Snort ada pada kolom `signature_id`.
+- Penanganan kredensial: sebelas tangkapan layar yang memuat kata sandi atau token ditarik dari repositori dan tautannya dialihkan ke bukti log tersanitasi. Kredensial broker MQTT akun `esp32` dirotasi karena nilainya terlihat pada tangkapan layar lama; berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600, dan uji C1 dijalankan ulang setelah rotasi (6/6 lulus).
+- Seluruh hasil pemeriksaan tersimpan sebagai berkas teks di `docs/blueteam/evidence/verifikasi-2026-11-12/` (berkas `01` sampai `15`).
+- Pemasangan skrip repositori di Target Node: `app.py` versi repositori (validasi body JSON, token gagal-tertutup saat kosong, direktori data dirapikan) menggantikan versi lama, bersama `smartcow-backup`, `smartcow-restore`, dan `smartcow-restore-check` milik `root:root` mode 750. Salinan versi lama disimpan di `/root/rollback-<stempel>` sebelum penggantian.
+- Batas kepercayaan arsip diperbaiki: arsip dipindahkan dari `/home/smartcow-lab/backup` ke `/var/lib/smartcow/backup` milik `root:root` mode 700. Direktori arsip di dalam home layanan masih dapat dihapus dan dibuat ulang oleh `smartcow`, sehingga checksum palsu mungkin ditanam. Setelah pemindahan, `smartcow` gagal membuka, menulis, dan menghapus direktori arsip, sedangkan uji pemulihan non-destruktif tetap lulus 4 dari 4 berkas.
+- Verifikasi ulang C1/C2 setelah pemasangan: 6 dari 6 pemeriksaan lulus. Token API lama ditolak `HTTP 401`, kedua sandi broker lama ditolak `CONNACK 5`, dan kredensial aktif tetap diterima. Telemetri tetap mengalir dan `/health` membalas 200.
+- Jalur kata sandi SSH ditutup pada Attacker Node dan Monitoring Node (`PasswordAuthentication no`, cadangan `sshd_config.bak-hardening-20261112`). Kata sandi akun tidak diubah, sehingga login konsol dan Sguil tetap memakai nilai yang sama dan tidak ada akun terkunci; ketiga node kini hanya menerima `publickey`.
+- Bukti baru: `13-backup-relocation-and-deploy.log`, `14-c1-credential-and-liveness-recheck.log`, dan `15-ssh-password-auth-disabled.log`.
+- Penutupan celah Fase 1-2 pada sesi lanjutan hari yang sama:
   - Kontrol B4 diterapkan: aturan ACCEPT `tcp/1883` dihapus dari INPUT dan tabel disimpan ulang ke `/etc/iptables/iptables.rules`. Pemindaian Nmap dari Attacker Node turun dari tiga port terbuka (22, 80, 1883) menjadi dua (22, 80); pemindaian penuh `-p-` hanya menemukan 22 dan 80. Rollback terkontrol: `iptables -I INPUT -s 192.168.12.0/24 -p tcp --dport 1883 -j ACCEPT` lalu `iptables-save > /etc/iptables/iptables.rules`.
   - Anti-replay MQTT (CWE-294) diterapkan pada `broker.py` (`SMARTCOW_MQTT_ANTIREPLAY=1`, `SMARTCOW_MQTT_TS_WINDOW=120`, urutan `ts` wajib naik per topik) dan dipasang di Target Node. Uji unit 8/8 lulus; replay byte-identik dari Attacker Node ditolak dan tercatat `replay ditolak ... stempel waktu mundur atau duplikat` pada `broker.log`.
-  - Jendela demonstrasi RT-02: `PasswordAuthentication` dikembalikan sementara ke `yes` (cadangan dibuat di `/root/backup-phase12-20261112`), `ssh_try.py` dijalankan dari Attacker Node (`sec_admin` BERHASIL, `root` GAGAL, kata sandi disamarkan), lalu konfigurasi dipulihkan ke `no` dan diverifikasi dengan `sshd -T` pada hari yang sama.
+  - Jendela demonstrasi RT-02: `PasswordAuthentication` dikembalikan sementara ke `yes` (cadangan di `/root/backup-phase12-20261112`), `ssh_try.py` dijalankan dari Attacker Node (`sec_admin` BERHASIL, `root` GAGAL, kata sandi disamarkan), lalu konfigurasi dipulihkan ke `no` dan diverifikasi dengan `sshd -T` pada hari yang sama.
   - Tangkapan layar pengganti: `docs/redteam/evidence/03-...`, `04-...`, `11-...`, `12-...`, `13-...` sampai `17-...`, serta `docs/blueteam/evidence/kontrol A1/A2/B1/C2/C3` (lihat `hardening_checklist.md` dan `purple-team-log.md`).
