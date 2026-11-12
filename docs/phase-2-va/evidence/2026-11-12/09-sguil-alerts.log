@@ -1,0 +1,13 @@
+# Tanggal: 2026-11-12
+# Perintah: query MySQL securityonion_db pada SOC-KEL12-B, kredensial dibaca dari sguild.conf (tidak dicetak)
+# Catatan: event.sid adalah ID sensor (5 = seconion-import); signature_id adalah SID Snort.
+# Waktu basis data dalam GMT; WIB = GMT+7.
+--- smartcow-alerts
+6125	1000003	SMARTCOW-HTTP Telemetry Attack Injection	2026-10-26 10:40:29	192.168.12.100	48162	192.168.12.5	80
+6127	1000002	SMARTCOW-MQTT Unauthorized Control Topic Access	2026-10-26 10:40:47	192.168.12.100	38072	192.168.12.5	1883
+6352	1000003	SMARTCOW-HTTP Telemetry Attack Injection	2026-11-12 04:07:43	192.168.12.100	48522	192.168.12.5	80
+6356	1000002	SMARTCOW-MQTT Unauthorized Control Topic Access	2026-11-12 04:09:16	192.168.12.100	52406	192.168.12.5	1883
+--- et-curl
+6353	2013028	ET POLICY curl User-Agent Outbound	2026-11-12 04:07:43	192.168.12.100	192.168.12.5
+6237	2013028	ET POLICY curl User-Agent Outbound	2026-10-26 10:23:20	192.168.12.100	192.168.12.5
+6141	2013028	ET POLICY curl User-Agent Outbound	2026-10-26 07:38:08	192.168.12.1	192.168.12.5

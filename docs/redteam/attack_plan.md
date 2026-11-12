@@ -23,7 +23,7 @@ Seluruh pengujian dijalankan di dalam jaringan virtual lokal bertipe *Host-Only*
 | Komponen | Spesifikasi dan Peran |
 |---|---|
 | **Attacker Node** | `ATTACKER-KEL12-B` (Ubuntu 22.04 LTS / IP `192.168.12.100`), digunakan untuk menjalankan pemindaian port, pengujian kredensial, dan pengiriman paket MQTT/HTTP. |
-| **Target Node** | `SRV-IOT-KEL12-B` (Arch Linux / IP `192.168.12.5`), menjalankan broker MQTT, layanan REST API Flask, dan reverse proxy Nginx. |
+| **Target Node** | `SRV-IOT-KEL12-B` (Arch Linux / IP `192.168.12.5`), menjalankan broker MQTT, REST API Python (modul `http.server`, bukan Flask), dan reverse proxy Nginx. |
 | **Monitoring Node** | `SOC-KEL12-B` (Security Onion / IP `192.168.12.200`), bertugas menangkap lalu lintas jaringan dan memicu peringatan melalui sensor Snort dan antarmuka Sguil. |
 | **Layanan Terbuka** | Port 22/TCP (SSH), Port 80/TCP (Web dashboard dan proxy API), Port 1883/TCP (MQTT broker), Port 9000/TCP (REST API internal). |
 | **Karakteristik Data** | Data dummy berupa suhu (24-30 derajat C) dan kelembapan (70-85%) yang dikirim simulator lokal tiap dua detik. |
@@ -39,7 +39,7 @@ Mengikuti ketentuan Panduan PBL TEK1314 Bagian IX, skenario penyerangan dibagi k
 | **RT-01** | *Reconnaissance* | Pemetaan port terbuka dan identifikasi versi perangkat lunak menggunakan **Nmap** (`-sS -sV -O`) serta pemeriksaan header via **cURL**. | Seluruh port TCP pada `192.168.12.5` | Port internal (9000) tidak dapat diakses langsung dari luar; header HTTP Nginx tidak menampilkan rilis versi perangkat lunak. |
 | **RT-02** | *Exploitation & Access* | Pengujian ketahanan autentikasi SSH terhadap tebakan kata sandi dan banjir koneksi konkuren menggunakan skrip **ssh_try.py** dan klien OpenSSH. | Port 22/TCP (Akun `root` dan `sec_admin`) | Akses login user `root` ditolak; login berbasis kata sandi ditolak (*publickey authentication*); laju koneksi konkuren dibatasi firewall. |
 | **RT-03** | *Web & Protokol IoT* | Pengiriman pesan kontrol relay pompa tanpa hak akses (*unauthorized publish*) via **mqtt_pub.py** dan injeksi data sensor di luar rentang via **cURL**. | Topik `cow-sprinkler-01/control` (MQTT 1883) dan endpoint REST API telemetri | Pesan pada topik kontrol ditolak broker dengan kode CONNACK 5; data sensor di luar batas wajar ditolak API dengan kode HTTP 400. |
-| **RT-04** | *Replay Attack* | Perekaman paket kontrol pompa yang valid, lalu dikirimkan ulang ke broker MQTT (*replay*) saat jadwal penyiraman tidak aktif. | Broker MQTT `192.168.12.5:1883` pada kanal kontrol | Pesan usang ditolak atau diabaikan oleh sistem karena ketidaksesuaian stempel waktu, dan percobaan tercatat pada log. |
+| **RT-04** | *Replay Attack* | Perekaman paket kontrol pompa yang valid, lalu dikirimkan ulang ke broker MQTT (*replay*) saat jadwal penyiraman tidak aktif. | Broker MQTT `192.168.12.5:1883` pada kanal kontrol | Pesan kendali ditolak oleh ACL broker dan token lama ditolak API, lalu percobaan tercatat pada log. Catatan: anti-replay berbasis stempel waktu belum diimplementasikan, sehingga penolakan terjadi karena otorisasi topik, bukan karena validasi waktu. |
 
 ---
 
@@ -67,8 +67,10 @@ Mengikuti ketentuan Panduan PBL TEK1314 Bagian IX, skenario penyerangan dibagi k
 * **Langkah Kerja:**
   1. Menjalankan percobaan autentikasi berulang pada akun `root` dan `sec_admin`:
      ```bash
-     python3 /home/smartcow-lab/ssh_try.py 192.168.12.5 root:<SANDI_LAB> sec_admin:<SANDI_LAB>
+     python3 /home/analyst/ssh_try.py 192.168.12.5 root:<SANDI_LAB> sec_admin:<SANDI_LAB>
      ```
+
+     Nilai sandi lab sengaja tidak ditulis di repositori. Pasangan akun dan sandi diisi manual dari catatan internal kelompok saat pengujian dijalankan.
   2. Menjalankan 8 percobaan koneksi secara serentak untuk menguji batas koneksi:
      ```bash
      for i in {1..8}; do ssh -o BatchMode=yes sec_admin@192.168.12.5 & done
@@ -84,13 +86,13 @@ Mengikuti ketentuan Panduan PBL TEK1314 Bagian IX, skenario penyerangan dibagi k
 * **Langkah Kerja:**
   1. Mengirim perintah menghidupkan sprinkler ke broker MQTT tanpa kredensial yang sah:
      ```bash
-     python3 /home/smartcow-lab/mqtt_pub.py 192.168.12.5 1883 cow-sprinkler-01/control '{"manualSsr":"on"}'
+     python3 /home/analyst/mqtt_pub.py --host 192.168.12.5 --port 1883 --topic cow-sprinkler-01/control --message '{"manualSsr":"on"}'
      ```
   2. Mengirimkan data telemetri palsu dengan nilai kelembapan 150% ke endpoint REST:
      ```bash
      curl -X PUT "http://192.168.12.5/devices/cow-sprinkler-01/telemetry/latest.json?auth=<TOKEN_API>" \
           -H "Content-Type: application/json" \
-          -d '{"humidity": 150, "temperature": 28.5}'
+          -d '{"t1":28.5,"t2":28.5,"t3":28.5,"t4":28.5,"t5":28.5,"t6":28.5,"h1":150,"h2":68,"h3":68,"h4":68}'
      ```
 * **Hasil Pengamatan Lapangan:**
   - *Sebelum Hardening:* Broker MQTT mengizinkan publikasi pesan dari klien anonim, dan API menerima kelembapan 150% tanpa validasi.
@@ -107,7 +109,7 @@ Mengikuti ketentuan Panduan PBL TEK1314 Bagian IX, skenario penyerangan dibagi k
      ```
   2. Mengirimkan kembali paket yang persis sama dari Attacker Node (`192.168.12.100`) ke broker MQTT `192.168.12.5:1883` pada kanal kontrol:
      ```bash
-     python3 /home/smartcow-lab/mqtt_pub.py 192.168.12.5 1883 cow-sprinkler-01/control '{"manualSsr":"on","source":"replay"}'
+     python3 /home/analyst/mqtt_pub.py --host 192.168.12.5 --port 1883 --topic cow-sprinkler-01/control --message '{"manualSsr":"on","source":"replay"}'
      ```
   3. Menguji pengiriman ulang request kendali ke antarmuka REST API menggunakan token yang sudah dicabut:
      ```bash

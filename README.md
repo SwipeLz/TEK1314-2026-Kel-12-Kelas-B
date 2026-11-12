@@ -16,7 +16,9 @@ Seluruh pengujian pertahanan dan simulasi serangan Red Team dijalankan secara be
 | :--- | :--- |
 | [LOGBOOK.md](LOGBOOK.md) | Catatan logbook mingguan dan kronologi teknis pengerjaan |
 | [docs/design/ip_plan.md](docs/design/ip_plan.md) | Skema pengalamatan IP, peran node, dan alokasi port layanan |
-| [docs/design/topology.png](docs/design/topology.png) | Diagram topologi jaringan lab (Target, Attacker, Monitoring) |
+| [docs/design/topology-minggu9.png](docs/design/topology-minggu9.png) | Diagram topologi jaringan lab minggu 9 (Target, Attacker, Monitoring) |
+| [docs/phase-1-baseline/baseline-report.md](docs/phase-1-baseline/baseline-report.md) | Baseline report fase 1 (minggu 7) beserta aset, hardening, dan bukti logging |
+| [docs/phase-2-va/README.md](docs/phase-2-va/README.md) | Verifikasi ulang kontrol fase 2 dan daftar bukti teks 12 November 2026 |
 | [docs/presentation-minggu9/tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) | Deklarasi arsitektur teknologi asli dan pemetaannya ke lab |
 | [Presentasi Minggu 9](docs/presentation-minggu9/README.md) | PDF dan pratinjau gambar delapan slide evaluasi Minggu 9 |
 | [docs/blueteam/hardening_checklist.md](docs/blueteam/hardening_checklist.md) | Dokumentasi 9 kontrol hardening beserta bukti verifikasi |
@@ -24,15 +26,18 @@ Seluruh pengujian pertahanan dan simulasi serangan Red Team dijalankan secara be
 | [docs/redteam/attack_plan.md](docs/redteam/attack_plan.md) | Rancangan skenario serangan Red Team (RT-01 s.d. RT-04) |
 | [docs/redteam/evidence/](docs/redteam/evidence/) | Bukti keluaran eksekusi pengujian penyerangan |
 | [docs/purple-team-log.md](docs/purple-team-log.md) | Catatan siklus 5 tahap Purple Team Loop dan evaluasi deteksi |
+| [scripts/smartcow-lab/](scripts/smartcow-lab/README.md) | Kode replika backend lab (REST API, broker MQTT, simulator, unit systemd) yang dipasang di Target Node |
 
 ## Alur Penelusuran Dokumen
 
 Penelusuran dokumentasi dapat dilakukan secara berurutan sesuai alur berikut:
 
 1. [ip_plan.md](docs/design/ip_plan.md) - Meninjau rancangan topologi jaringan, subnetting, dan penetapan fungsi setiap mesin virtual.
-2. [tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) - Memahami arsitektur sistem SmartCow dan dasar pemilihan replika backend lab.
-3. [hardening_checklist.md](docs/blueteam/hardening_checklist.md) - Memeriksa implementasi sembilan kontrol pengamanan Blue Team pada Target Node.
-4. [attack_plan.md](docs/redteam/attack_plan.md) dan [purple-team-log.md](docs/purple-team-log.md) - Menelaah skenario pengujian penyerangan dan evaluasi hasil deteksi pada sensor Security Onion.
+2. [baseline-report.md](docs/phase-1-baseline/baseline-report.md) - Membaca kondisi awal setelah hardening dan bukti logging minggu ke-5.
+3. [tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) - Memahami arsitektur sistem SmartCow dan dasar pemilihan replika backend lab.
+4. [hardening_checklist.md](docs/blueteam/hardening_checklist.md) - Memeriksa implementasi sembilan kontrol pengamanan Blue Team pada Target Node.
+5. [attack_plan.md](docs/redteam/attack_plan.md) dan [purple-team-log.md](docs/purple-team-log.md) - Menelaah skenario pengujian penyerangan dan evaluasi hasil deteksi pada sensor Security Onion.
+6. [phase-2-va/README.md](docs/phase-2-va/README.md) - Melihat hasil verifikasi ulang kontrol fase 2 beserta bukti teksnya.
 
 ## Ringkasan Proyek
 
@@ -46,14 +51,16 @@ Penelusuran dokumentasi dapat dilakukan secara berurutan sesuai alur berikut:
 
 Repositori ini disusun mengikuti struktur direktori yang ditetapkan dalam Panduan PBL Minggu 9 secara presisi (`docs/design`, `docs/presentation-minggu9`, `docs/blueteam`, `docs/redteam`, dan `docs/purple-team-log.md`). Dokumentasi pelengkap seperti naskah presentasi, lembar catatan latihan, dan prosedur pengujian insiden internal disimpan pada direktori kerja kelompok di luar repositori publik ini.
 
-Setiap pernyataan teknis dan hasil pengujian yang disajikan dalam repositori maupun slide presentasi dapat diverifikasi secara langsung melalui tangkapan layar terminal asli yang terlampir.
+Setiap pernyataan teknis dan hasil pengujian disertai bukti tangkapan layar atau berkas log asli. Pemeriksaan ulang pada 12 November 2026 menemukan dua tangkapan layar lama yang isinya justru memperlihatkan kegagalan perintah, yaitu pada kontrol C1 dan C3; keduanya sudah diganti dengan bukti log eksekusi baru di `docs/phase-2-va/evidence/2026-11-12/` dan statusnya dicatat pada `hardening_checklist.md`.
 
 ## Akses Lingkungan Lab
 
 | Peran | Alamat IP | Pengguna | Metode Akses |
 | :--- | :--- | :--- | :--- |
-| Blue Team | 192.168.12.5 | sec_admin | Kunci kriptografis SSH (login berbasis kata sandi dinonaktifkan) |
-| Red Team | 192.168.12.100 | analyst | Kata sandi lingkungan lab |
-| Monitoring | 192.168.12.200 | analyst | Kata sandi lingkungan lab |
+| Blue Team | 192.168.12.5 | sec_admin | Kunci SSH Ed25519 (login berbasis kata sandi dinonaktifkan) |
+| Red Team | 192.168.12.100 | analyst | Konsol VirtualBox atau `guestcontrol`; mesin juga punya SSH |
+| Monitoring | 192.168.12.200 | analyst | Kunci SSH yang sama dengan lab |
 
-Akses administratif ke Target Node dikunci menggunakan autentikasi kunci publik Ed25519. Kredensial kata sandi default telah dinonaktifkan dan token otentikasi API telah dirotasi.
+Akses administratif ke Target Node dikunci menggunakan autentikasi kunci publik Ed25519. Kredensial kata sandi default telah dinonaktifkan dan token otentikasi API telah dirotasi. Ketiga alamat tersebut terverifikasi saling terhubung pada 12 November 2026 (`docs/phase-2-va/evidence/2026-11-12/03-topology-reachability.log`).
+
+Kata sandi lingkungan lab tidak disimpan di repositori. Pada Target Node seluruh akun menolak login berkata sandi (`docs/phase-2-va/evidence/2026-11-12/08-password-login-rejected.log`), sedangkan Attacker Node dan Monitoring Node pada 12 November 2026 masih menawarkan autentikasi kata sandi sehingga kata sandi sistem di kedua node itu tetap harus dirotasi setelah penilaian. Nilai yang dipakai saat pengujian diisi manual dari catatan internal kelompok. Karena autentikasi kata sandi SSH pada Target Node sudah dimatikan dan `PermitRootLogin` disetel `no`, kata sandi tersebut tidak dapat dipakai untuk masuk ke Target Node dari jaringan; kata sandi tetap harus dirotasi setelah penilaian selesai.

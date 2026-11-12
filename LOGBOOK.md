@@ -45,7 +45,7 @@
 - Konfigurasi firewall iptables: kebijakan default disetel ke INPUT DROP, memberikan izin paket ICMP serta koneksi TCP pada port 22, 80, dan 1883 khusus dari subnet `192.168.12.0/24`. Uji ping dari Attacker Node ke Target Node tetap menghasilkan 0% loss, membuktikan aturan firewall tidak mengganggu konektivitas sah.
 - Pengelolaan hak akses: akun non-root `sec_admin` (UID 1001) ditetapkan sebagai akun operasional. Alamat IP disetel secara permanen pada `192.168.12.5/24`.
 - Keterbatasan lingkungan: pembaruan paket sistem operasi (`pacman -Syu`) tidak dapat dilakukan karena isolasi total jaringan lab tanpa koneksi internet. Kondisi ini dicatat sebagai batasan lingkungan uji.
-- Bukti pengujian tersimpan pada: `assets/hardening-services.png`, `assets/hardening-firewall.png`, dan `assets/target-ip-statis.png`.
+- Bukti pengujian tersimpan pada `assets/hardening-services.png` dan `assets/hardening-firewall.png`. Tangkapan layar `target-ip-statis.png` ditarik dari repositori karena memuat kata sandi; bukti IP dan hostname terkini ada pada `docs/phase-2-va/evidence/2026-11-12/06-target-state-recon.log`.
 
 ## Minggu 7
 
@@ -86,7 +86,7 @@ Seluruh skenario penyerangan diuji secara nyata menggunakan data dummy untuk mem
 
 - **Kondisi Sebelum Hardening:** Pemindaian Nmap menemukan port 22, 80, 1883, dan 9000 terbuka. Percobaan login SSH akun `sec_admin` berhasil menggunakan kata sandi sederhana. Publikasi pesan MQTT ke topik kontrol diterima broker tanpa kredensial. Injeksi telemetri palsu (kelembapan 150%) dan perintah aktivasi pompa manual diterima oleh REST API.
 - **Kondisi Sesudah Hardening:** Seluruh upaya login SSH berbasis kata sandi ditolak sistem (`Permission denied (publickey)`). Publikasi pesan MQTT tanpa otorisasi ditolak broker dengan kode `CONNACK 5`. Injeksi data di luar batas wajar ditolak REST API dengan kode `HTTP 400 Bad Request`. Request tanpa token ditolak dengan `HTTP 401 Unauthorized`. Port 9000 berstatus filtered dari jaringan luar karena API terikat pada loopback.
-- Bukti pengujian berupa 24 tangkapan layar terminal asli tersimpan pada direktori `docs/blueteam/evidence/` dan `docs/redteam/evidence/`.
+- Bukti pengujian berupa tangkapan layar terminal tersimpan pada direktori `docs/blueteam/evidence/` (26 berkas) dan `docs/redteam/evidence/` (11 berkas).
 
 ### Hasil Analisis dan Kendala Monitoring Node
 
@@ -113,7 +113,17 @@ Seluruh skenario penyerangan diuji secara nyata menggunakan data dummy untuk mem
   - RT-01: pemindaian Nmap dari Attacker Node memastikan port 9000 berstatus filtered dan header web server menyembunyikan nomor versi.
   - RT-02: pengujian brute force kata sandi ditolak seluruhnya oleh autentikasi berbasis kunci Ed25519, serta laju koneksi konkuren diredam firewall.
   - RT-03: pengiriman pesan ke broker tanpa otentikasi ditolak dengan kode CONNACK 5, dan injeksi data sensor ke REST API ditolak dengan respons HTTP 400.
-  - RT-04: pengiriman ulang (replay) paket kendali pompa ditolak oleh aturan hak topik broker (ACL drop), token lama ditolak dengan HTTP 401, serta percobaan serangan terdeteksi oleh Snort pada Security Onion (CID 6127).
-- Verifikasi prosedur pemulihan data (C3): menguji skrip `/usr/local/bin/smartcow-restore` dengan mensimulasikan berkas data yang rusak (ukuran 0 byte). Hasil pemeriksaan nilai hash SHA256 membuktikan berkas pulih sempurna sesuai kondisi sebelum kerusakan (`d66f76c894af5e76579119d283e05bbc6c006266273e8881b59c285cd8be610f`).
+  - RT-04: pengiriman ulang (replay) paket kendali pompa ditolak oleh aturan hak topik broker (ACL drop), token lama ditolak dengan HTTP 401, serta percobaan serangan terdeteksi oleh Snort pada Security Onion (CID 6127, diverifikasi ulang melalui query basis data pada 12 November 2026).
+- Verifikasi prosedur pemulihan data (C3): uji coba pada 20 Oktober 2026 berhenti di langkah pencadangan karena `tar` gagal membaca berkas arsip yang belum ada, sehingga klaim pemulihan berbasis hash SHA256 pada catatan sebelumnya belum punya bukti. Penjadwalan dan pengujian ulang yang valid dilakukan pada 12 November 2026 (lihat Minggu 12).
 - Penyusunan dokumen Vulnerability Assessment Report (VAR) sebagai laporan formal penyelesaian Fase 2 pada `docs/vulnerability-assessment-report.md`.
 - Pemutakhiran repositori GitHub kelompok dengan seluruh artefak hasil pengujian dan dokumentasi lengkap.
+
+## Minggu 12 (12 November 2026): Verifikasi Ulang Fase 2
+
+- Pemulihan struktur fase 1: `docs/phase-1-baseline/` yang terhapus pada commit restrukturisasi dikembalikan dari riwayat repositori, termasuk baseline report, aset, dan log bukti. Rujukan diagram pada `README.md` diarahkan ke `docs/design/topology-minggu9.png` (diagram minggu 9 yang berlaku), bukan `topology.png` milik minggu 4. Folder `scripts/smartcow-lab/` juga dikembalikan agar kode yang dipasang di Target Node dapat ditelusuri.
+- Perbaikan topologi: Attacker Node sebelumnya menerima alamat DHCP dari subnet lain. Server DHCP VirtualBox pada jaringan Host-Only dipindahkan ke rentang `192.168.12.3` sampai `192.168.12.254`, lalu antarmuka Attacker disetel statis `192.168.12.100/24` dengan gateway `192.168.12.1`. Ketiga node kini saling terhubung dan merespons ping dari host tanpa kehilangan paket.
+- Uji ulang C1 (validasi input API dan ACL topik MQTT) dijalankan di Target Node yang hidup, 6 dari 6 pemeriksaan lulus. Tangkapan layar `mqtt-acl-terverifikasi.png` dari 20 Oktober 2026 hanya memuat kegagalan `Permission denied` saat skrip dijalankan dan juga memperlihatkan kredensial broker, sehingga berkas itu ditarik dari repositori dan bukti utama diganti dengan log eksekusi.
+- Perbaikan C3: skrip `/usr/local/bin/smartcow-backup` dilengkapi checksum arsip dan manifest sha256 per berkas, ditambah retensi tujuh arsip. Skrip dipasang `root:root` mode 750 agar tidak bisa ditimpa pengguna layanan. Unit `smartcow-backup.service` dan `smartcow-backup.timer` dipasang dan diaktifkan, lalu pencadangan dijalankan. Uji gerbang keamanan dengan manifest yang dirusak ditolak tanpa menyentuh data (`rc=1`), sedangkan pemulihan sah berhasil dan menyisakan salinan `data.prev-<stempel>`, dengan `/health` kembali `200`.
+- Monitoring: rantai deteksi lengkap berjalan (`snort`, `barnyard2`, `sguild`, `mysqld`). Pengujian ulang dari Attacker Node menghasilkan alert kustom yang benar-benar masuk basis data: CID 6352 (SID 1000003, injeksi HTTP) dan CID 6356 (SID 1000002, publish topik kontrol). Alert lama CID 6125 dan 6127 terbukti masih tersimpan. Catatan penting: kolom `event.sid` pada basis data Sguil berisi ID sensor, bukan SID Snort; SID Snort ada pada kolom `signature_id`.
+- Penanganan kredensial: sebelas tangkapan layar bukti yang memuat kata sandi atau token ditarik dari repositori dan tautannya dialihkan ke bukti log tersanitasi. Kredensial broker MQTT akun `esp32` dirotasi karena nilainya terlihat pada tangkapan layar lama; berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600 dan uji C1 dijalankan ulang setelah rotasi (6/6 lulus).
+- Seluruh hasil pemeriksaan tersimpan sebagai berkas teks di `docs/phase-2-va/evidence/2026-11-12/`.

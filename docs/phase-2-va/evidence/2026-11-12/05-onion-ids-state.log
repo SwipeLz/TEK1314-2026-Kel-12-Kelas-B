@@ -1,0 +1,18 @@
+# Tanggal: 2026-11-12
+# Perintah: ssh analyst@192.168.12.200 (sudo)
+# Catatan: sguild berjalan sebagai proses 'tclsh /usr/bin/sguild', sehingga 'pgrep sguild' tidak menemukannya.
+mysql mysqld /usr/sbin/mysqld
+root su su - sguil -- /usr/bin/sguild -c /etc/nsm/securityonion/sguild.conf -a /etc/nsm/securityonion/autocat.conf -g /etc/nsm/securityonion
+sguil tclsh tclsh /usr/bin/sguild -c /etc/nsm/securityonion/sguild.conf -a /etc/nsm/securityonion/autocat.conf -g /etc/nsm/securityonion/sgu
+root su su - sguil -- /usr/bin/snort_agent.tcl -c /etc/nsm/seconion-import/snort_agent-1.conf
+sguil tclsh tclsh /usr/bin/snort_agent.tcl -c /etc/nsm/seconion-import/snort_agent-1.conf
+sguil snort snort -c /etc/nsm/seconion-import/snort.conf -u sguil -g sguil -i eth0 -l /nsm/sensor_data/seconion-import/snort-1 --perfmon-fil
+sguil barnyard2 barnyard2 -c /etc/nsm/seconion-import/barnyard2-1.conf -u sguil -g sguil -d /nsm/sensor_data/seconion-import/snort-1 -f snor
+sguil tclsh tclsh /usr/bin/sguild -c /etc/nsm/securityonion/sguild.conf -a /etc/nsm/securityonion/autocat.conf -g /etc/nsm/securityonion/sgu
+sguil tclsh tclsh /usr/bin/sguild -c /etc/nsm/securityonion/sguild.conf -a /etc/nsm/securityonion/autocat.conf -g /etc/nsm/securityonion/sgu
+---RULE
+1
+---PORTS
+*:7734
+127.0.0.1:3306
+:::7734

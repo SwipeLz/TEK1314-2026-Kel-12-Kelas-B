@@ -1,0 +1,16 @@
+# Tanggal: 2026-11-12
+# Perintah: ping dari host ke ketiga node, lalu ip -brief pada Target (.5) dan
+# Monitoring (.200); antarmuka Attacker Node (.100) direkam di
+# 11-external-port-check.log
+--- host -> 192.168.12.5
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),
+--- host -> 192.168.12.100
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),
+--- host -> 192.168.12.200
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),
+--- ip -brief .5
+lo               UNKNOWN        127.0.0.1/8 
+eth0             UP             192.168.12.5/24 
+--- ip -brief .200
+eth1             UP             192.168.0.1/24 
+eth2             UP             192.168.12.200/24 

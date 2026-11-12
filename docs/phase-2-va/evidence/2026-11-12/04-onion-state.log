@@ -1,0 +1,10 @@
+# Tanggal: 2026-11-12
+# Perintah: ssh analyst@192.168.12.200
+SOC-KEL12-B
+analyst
+eth1             UP             192.168.0.1/24 
+eth2             UP             192.168.12.200/24 
+br-2abbd5305390  UP             172.18.0.1/16 
+docker0          UP             172.17.0.1/16 
+--- interface promiscuous ---
+eth0             UP             08:00:27:f3:62:3c <BROADCAST,MULTICAST,NOARP,PROMISC,UP,LOWER_UP> 

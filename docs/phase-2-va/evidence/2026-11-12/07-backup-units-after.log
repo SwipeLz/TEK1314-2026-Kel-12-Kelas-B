@@ -1,0 +1,9 @@
+# Tanggal: 2026-11-12, Target Node 192.168.12.5
+# Perintah: ls -l skrip, status timer, jadwal berikutnya
+-rwxr-x--- 1 root root 1825 Nov 12 11:15 /usr/local/bin/smartcow-backup
+-rwxr-x--- 1 root root 2041 Nov 12 11:15 /usr/local/bin/smartcow-restore
+-rwxr-xr-x 1 root root 1132 Nov 12 11:15 /usr/local/sbin/c3_restore_check.sh
+---TIMER
+enabled
+active
+Fri 2026-11-13 00:01:49 WIB 12h left n/a  n/a    smartcow-backup.timer smartcow-backup.service

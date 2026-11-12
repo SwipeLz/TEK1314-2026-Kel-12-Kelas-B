@@ -1,0 +1,24 @@
+# Tanggal: 2026-11-12, dijalankan pada Target Node 192.168.12.5
+--- access.log baris terakhir
+2026-11-12T11:17:02+07:00 http 127.0.0.1 "GET /api/devices/cow-sprinkler-01/telemetry/latest?auth=REDACTED HTTP/1.1" 401 -
+--- kunci .env (nilai disembunyikan)
+SMARTCOW_TOKEN=<hidden>
+SMARTCOW_BIND=<hidden>
+SMARTCOW_PORT=<hidden>
+SMARTCOW_VALIDATE=<hidden>
+SMARTCOW_LOG=<hidden>
+SMARTCOW_DATA=<hidden>
+--- backup dir
+state-20261020-061320.tar.gz
+state-20261026-024650.tar.gz
+state-20261112-105335.tar.gz
+state-20261112-105335.tar.gz.sha256
+state-20261112-105335.tar.gz.sha256sums
+state-20261112-105825.tar.gz
+--- api health
+health=200
+--- listener
+0.0.0.0:1883
+0.0.0.0:22
+0.0.0.0:80
+127.0.0.1:9000

@@ -1,0 +1,102 @@
+# Tanggal: 2026-11-12, kondisi Target Node sesudah perbaikan C3
+=== DATE ===
+2026-11-12T11:20:15+07:00
+=== HOSTNAME ===
+SRV-IOT-KEL12-B
+   Static hostname: SRV-IOT-KEL12-B
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: a56dcdfe74fd43f89ecdab8612799547
+=== KERNEL ===
+5.10.14-arch1-1
+=== ADDRESSES ===
+lo               UNKNOWN        127.0.0.1/8 
+eth0             UP             192.168.12.5/24 
+=== SSHD EFFECTIVE ===
+allowusers sec_admin
+maxauthtries 3
+maxstartups 3:50:10
+passwordauthentication no
+permitemptypasswords no
+permitrootlogin no
+port 22
+pubkeyauthentication yes
+=== LISTENERS ===
+tcp 0.0.0.0:1883
+tcp 0.0.0.0:22
+tcp 0.0.0.0:80
+tcp 127.0.0.1:9000
+tcp [::]:22
+=== IPTABLES FILTER ===
+-P INPUT DROP
+-P FORWARD ACCEPT
+-P OUTPUT ACCEPT
+-A INPUT -s 192.168.12.100/32 -p tcp -m tcp --dport 22 -m conntrack --ctstate NEW -m hashlimit --hashlimit-above 3/sec --hashlimit-burst 6 --hashlimit-mode srcip --hashlimit-name sshlimit -j REJECT --reject-with tcp-reset
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -s 192.168.12.0/24 -p icmp -m icmp --icmp-type 8 -j ACCEPT
+-A INPUT -s 192.168.12.0/24 -p tcp -m tcp --dport 22 -j ACCEPT
+-A INPUT -s 192.168.12.0/24 -p tcp -m tcp --dport 80 -j ACCEPT
+-A INPUT -s 192.168.12.0/24 -p tcp -m tcp --dport 1883 -j ACCEPT
+=== IPTABLES PERSISTENCE ===
+enabled
+active
+-rw-r--r-- 1 root root 750 Oct 20 13:35 /etc/iptables/iptables.rules
+=== UNITS ===
+sshd                   enabled=enabled   active=active
+nginx                  enabled=enabled   active=active
+iptables               enabled=enabled   active=active
+smartcow-api           enabled=enabled   active=active
+smartcow-broker        enabled=enabled   active=active
+smartcow-sim           enabled=enabled   active=active
+smartcow-backup.timer  enabled=enabled   active=active
+=== USERS ===
+nobody uid=65534 shell=/sbin/nologin
+analyst uid=1000 shell=/bin/bash
+sec_admin uid=1001 shell=/bin/bash
+=== PERMS ===
+/home/smartcow-lab/.env 600 smartcow:smartcow
+/home/smartcow-lab/mqtt.env 600 smartcow:smartcow
+/home/smartcow-lab/secrets 750 smartcow:smartcow
+/home/smartcow-lab/secrets/mqtt_users.json 600 smartcow:smartcow
+/home/smartcow-lab/logs/access.log 644 smartcow:smartcow
+=== ENV KEYS (nilai disembunyikan) ===
+SMARTCOW_TOKEN=<hidden>
+SMARTCOW_BIND=<hidden>
+SMARTCOW_PORT=<hidden>
+SMARTCOW_VALIDATE=<hidden>
+SMARTCOW_LOG=<hidden>
+SMARTCOW_DATA=<hidden>
+=== MQTT ENV KEYS (nilai disembunyikan) ===
+SMARTCOW_MQTT_BIND=<hidden>
+SMARTCOW_MQTT_PORT=<hidden>
+SMARTCOW_MQTT_AUTH=<hidden>
+SMARTCOW_MQTT_ACL=<hidden>
+SMARTCOW_MQTT_CRED=<hidden>
+SMARTCOW_MQTT_LOG=<hidden>
+=== MQTT USERS (nama saja) ===
+['esp32']
+=== BACKUP DIR ===
+state-20261020-061320.tar.gz
+state-20261026-024650.tar.gz
+state-20261112-105335.tar.gz
+state-20261112-105335.tar.gz.sha256
+state-20261112-105335.tar.gz.sha256sums
+state-20261112-105825.tar.gz
+state-20261112-105825.tar.gz.sha256
+state-20261112-105825.tar.gz.sha256sums
+state-20261112-111542-3570.tar.gz
+state-20261112-111542-3570.tar.gz.sha256
+=== BACKUP SCRIPTS ===
+-rwxr-x--- 1 root root 1825 Nov 12 11:15 /usr/local/bin/smartcow-backup
+-rwxr-x--- 1 root root 2041 Nov 12 11:15 /usr/local/bin/smartcow-restore
+=== API HEALTH (loopback) ===
+health=200
+=== NGINX HEADER ===
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 12 Nov 2026 04:20:15 GMT
+Content-Type: text/html
+Content-Length: 31947
+Last-Modified: Mon, 26 Oct 2026 07:37:34 GMT
+=== END ===

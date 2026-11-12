@@ -1,0 +1,30 @@
+# Fase 2 - Vulnerability Assessment dan Verifikasi Kontrol
+
+Folder ini memuat verifikasi ulang kontrol pengamanan fase 2 pada lingkungan lab yang benar-benar berjalan, beserta berkas bukti teks yang bisa dibaca ulang tanpa perlu mesin virtualnya hidup.
+
+## Bukti 12 November 2026
+
+Direktori `evidence/2026-11-12/` berisi keluaran perintah asli, bukan rekonstruksi. Semua nilai rahasia (token API, sandi akun broker, isi `.env`) tidak ikut tercetak.
+
+| Berkas | Isi | Hasil |
+| :--- | :--- | :--- |
+| `01-c1-live-verification.log` | `c1_verify.py` dijalankan dua kali: langsung ke `127.0.0.1:9000` dan lewat Nginx `192.168.12.5:80` | 6/6 lulus pada kedua jalur |
+| `02-c3-backup-restore.log` | Backup harian, verifikasi pemulihan, dan uji gerbang keamanan dengan manifest yang dirusak | backup `Succeeded`; pemulihan 4/4 cocok; arsip rusak ditolak tanpa menyentuh data |
+| `03-topology-reachability.log` | Ping dari host ke 192.168.12.5, .100, dan .200 | ketiganya 0% loss |
+| `04-onion-state.log` | Identitas dan antarmuka Monitoring Node | `SOC-KEL12-B`, `eth2=192.168.12.200/24`, `eth0` promiscuous tanpa IP |
+| `05-onion-ids-state.log` | Rantai deteksi di Onion | `snort`, `barnyard2`, `sguild` (`tclsh`), `mysqld` berjalan; rule SID 1000002 ada |
+| `06-target-state-recon.log` | Kondisi Target Node sesudah perbaikan C3 | sshd, iptables, listener, izin berkas, kunci `.env`, isi direktori `backup` (daftar dipotong 10 baris), `/health`. Daftar arsip lengkap beserta checksum ada pada `02-c3-backup-restore.log` |
+| `07-backup-units-after.log` | Izin skrip dan status timer | skrip `root:root` mode 750, timer `enabled`/`active` |
+| `08-password-login-rejected.log` | Login SSH memakai kata sandi lab untuk `root`, `sec_admin`, `analyst` | ketiganya ditolak, hanya `publickey` diterima |
+| `09-sguil-alerts.log` | Query basis data untuk seluruh alert `SMARTCOW%` | CID 6125, 6127, 6352, 6356 |
+| `10-mqtt-credential-rotation.log` | Kredensial broker lama dan baru setelah rotasi | lama ditolak `CONNACK 5`, baru diterima |
+| `11-external-port-check.log` | Pemeriksaan dari Attacker Node | 22/80/1883 terbuka, 9000 tertutup, API lewat 80 membalas 401 tanpa token |
+| `12-target-redaction-and-env.log` | Redaksi `auth` pada log akses dan kunci `.env` | `auth=REDACTED`, kunci `.env` terdaftar tanpa nilai |
+
+## Catatan status dan batasan
+
+- Rantai deteksi Sguil berjalan penuh dan sudah diuji ulang: alert kustom SID 1000002 dan 1000003 yang dihasilkan pada 12 November 2026 masuk ke basis data sebagai CID 6356 dan 6352 (`09-sguil-alerts.log`).
+- Kredensial broker MQTT akun `esp32` dirotasi pada 12 November 2026 karena nilainya terlihat pada tangkapan layar lama. Berkas lama disimpan sebagai `mqtt_users.json.bak-20261112` mode 600, kredensial lama ditolak sedangkan yang baru diterima, dan uji C1 dijalankan ulang setelah rotasi dengan hasil 6/6 lulus (`10-mqtt-credential-rotation.log`).
+- Kata sandi akun sistem (bukan kredensial broker) belum dirotasi. Nilainya masih tercatat pada riwayat Git lama, tetapi tidak dapat dipakai masuk ke Target Node dari jaringan karena autentikasi kata sandi SSH dimatikan di sana. Attacker Node dan Monitoring Node pada 12 November 2026 masih menawarkan autentikasi kata sandi, sehingga rotasi kata sandi di kedua node itu tetap wajib.
+- Belum ada tangkapan layar khusus untuk RT-04; deteksinya terbukti lewat query basis data.
+- Fase 3 tidak disentuh pada pekerjaan ini.

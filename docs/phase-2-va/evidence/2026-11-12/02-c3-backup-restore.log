@@ -1,0 +1,16 @@
+# Perintah: systemctl start smartcow-backup.service; sudo sh /usr/local/sbin/c3_restore_check.sh; uji arsip rusak; restore normal
+# Tanggal: 2026-11-12, Target Node 192.168.12.5
+# 1) Backup harian
+smartcow-backup.service: Succeeded.
+Finished SmartCow lab data backup.
+# 2) Verifikasi pemulihan non-destruktif
+archive=state-20261112-111943-4077.tar.gz
+PASS archive-checksum
+PASS restore-content-matches-manifest files=4
+SUMMARY restored_files=4
+# 3) Uji gerbang keamanan (manifest dirusak)
+rc=1
+Memulihkan dari state-safetytest-111943.tar.gz
+GAGAL: isi arsip tidak cocok dengan manifest
+data_mtime_unchanged=yes
+services=active active 

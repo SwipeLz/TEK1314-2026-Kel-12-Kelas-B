@@ -1,0 +1,13 @@
+# Tanggal: 2026-11-12
+# Perintah: script dijalankan di ATTACKER-KEL12-B (192.168.12.100)
+enp0s3           UP             192.168.12.100/24 
+---PORTS
+22 open
+80 open
+1883 open
+9000 closed/filtered
+---API80
+api80=401
+---API9000
+api9000=000
+api9000 unreachable

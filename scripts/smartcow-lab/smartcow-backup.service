@@ -1,0 +1,12 @@
+[Unit]
+Description=SmartCow lab data backup
+Documentation=file:///home/smartcow-lab/README.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/smartcow-backup
+User=root
+Group=root
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes

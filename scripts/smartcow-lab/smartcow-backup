@@ -1,0 +1,65 @@
+#!/bin/bash
+# smartcow-backup - snapshot data lab secara konsisten.
+#
+# Alasan urutan kerja: data/ ditulis simulator tiap dua detik. Arsip dibuat dari
+# salinan beku (cp -a) supaya tar dan manifest sha256 melihat isi yang sama.
+# Semua keluaran memakai akhiran .part lalu di-rename, sehingga arsip rusak tidak
+# pernah terlihat sebagai arsip terbaru oleh pemulihan.
+#
+# Batas kepercayaan: skrip ini berjalan sebagai root, sedangkan data/ dapat
+# ditulis pengguna layanan. Karena itu direktori arsip dimiliki root:root mode
+# 700, sehingga smartcow tidak bisa menaruh arsip atau checksum palsu.
+set -euo pipefail
+
+LAB=/home/smartcow-lab
+DEST=$LAB/backup
+OWNER=root:root
+KEEP=7
+
+STAMP=$(date +%Y%m%d-%H%M%S)
+NAME=state-$STAMP-$$
+OUT=$DEST/$NAME.tar.gz
+SNAP=$(mktemp -d /tmp/smartcow-backup.XXXXXX)
+
+cleanup() {
+    rm -rf "$SNAP"
+    rm -f "$OUT.part" "$OUT.sha256.part" "$OUT.sha256sums.part"
+}
+trap cleanup EXIT INT TERM
+
+[ -d "$LAB/data" ] || { echo "GAGAL: $LAB/data tidak ada" >&2; exit 1; }
+
+mkdir -p "$DEST"
+chown "$OWNER" "$DEST"
+chmod 700 "$DEST"
+
+# 1. Bekukan isi data, lalu arsipkan salinan beku tersebut.
+cp -a "$LAB/data" "$SNAP/data"
+tar -czf "$OUT.part" -C "$SNAP" data
+
+# 2. Manifest per berkas dihitung dari salinan beku yang sama.
+(cd "$SNAP" && find data -type f -exec sha256sum {} + | sort -k2) > "$OUT.sha256sums.part"
+
+# 3. Checksum arsip ditulis dengan nama akhir, bukan nama .part.
+(cd "$DEST" && sha256sum "$NAME.tar.gz.part" | sed "s|$NAME.tar.gz.part|$NAME.tar.gz|") > "$OUT.sha256.part"
+
+# 4. Publikasikan secara atomik.
+mv "$OUT.part" "$OUT"
+mv "$OUT.sha256sums.part" "$OUT.sha256sums"
+mv "$OUT.sha256.part" "$OUT.sha256"
+
+chown "$OWNER" "$OUT" "$OUT.sha256" "$OUT.sha256sums"
+chmod 600 "$OUT" "$OUT.sha256" "$OUT.sha256sums"
+
+# Retensi: simpan $KEEP arsip terbaru beserta berkas pendampingnya. Hanya path
+# absolut di dalam $DEST dengan pola nama skrip ini yang boleh dihapus oleh root.
+find "$DEST" -maxdepth 1 -type f -name 'state-*.tar.gz' -printf '%T@ %p\n' 2>/dev/null \
+    | sort -nr | tail -n +$((KEEP + 1)) | cut -d' ' -f2- \
+    | while IFS= read -r old; do
+        [ "$(dirname -- "$old")" = "$DEST" ] || continue
+        case ${old##*/} in
+            state-[0-9]*-[0-9]*-[0-9]*.tar.gz) rm -f -- "$old" "$old.sha256" "$old.sha256sums" ;;
+        esac
+    done
+
+echo "$(date -Is) backup ok file=$(basename "$OUT") bytes=$(wc -c < "$OUT")"

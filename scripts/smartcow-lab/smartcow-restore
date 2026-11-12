@@ -1,0 +1,76 @@
+#!/bin/bash
+# smartcow-restore - memulihkan data lab dari arsip hasil smartcow-backup.
+#
+# Urutan pengamanan:
+#   1. Verifikasi checksum arsip dan manifest per berkas SEBELUM menyentuh data live.
+#   2. Tolak arsip yang berisi symlink (data/ dapat ditulis pengguna layanan).
+#   3. Hentikan layanan penulis (api, sim).
+#   4. Simpan data saat ini sebagai data.prev-<stamp>.
+#   5. Pasang hasil ekstraksi, perbaiki kepemilikan dan mode.
+#   6. Nyalakan layanan kembali.
+#   7. Kalau salah satu langkah gagal, data sebelumnya dikembalikan otomatis.
+set -euo pipefail
+
+LAB=/home/smartcow-lab
+BACKUP_DIR=$LAB/backup
+LIVE=$LAB/data
+ARCH=${1:-}
+
+# Argumen boleh relatif, absolut, atau kosong (pakai arsip terbaru). Path
+# dinormalkan lebih dulu supaya pemanggilan sha256sum dari direktori lain tetap sah.
+if [ -n "$ARCH" ]; then
+    ARCH=$(readlink -f -- "$ARCH") || { echo "GAGAL: arsip tidak ditemukan: $1" >&2; exit 1; }
+else
+    ARCH=$(find "$BACKUP_DIR" -maxdepth 1 -type f -name 'state-*.tar.gz' -printf '%T@ %p\n' 2>/dev/null | sort -nr)
+    ARCH=${ARCH%%$'\n'*}
+    ARCH=${ARCH#* }
+    [ -n "$ARCH" ] || { echo "GAGAL: tidak ada arsip di $BACKUP_DIR" >&2; exit 1; }
+fi
+
+[ -n "$ARCH" ] && [ -f "$ARCH" ] || { echo "GAGAL: arsip tidak ditemukan" >&2; exit 1; }
+[ -f "$ARCH.sha256" ] || { echo "GAGAL: $ARCH.sha256 tidak ada" >&2; exit 1; }
+[ -f "$ARCH.sha256sums" ] || { echo "GAGAL: $ARCH.sha256sums tidak ada" >&2; exit 1; }
+
+echo "Memulihkan dari $(basename "$ARCH")"
+
+# 1. Gerbang integritas.
+(cd "$(dirname "$ARCH")" && sha256sum -c "$(basename "$ARCH").sha256") >/dev/null \
+    || { echo "GAGAL: checksum arsip tidak cocok" >&2; exit 1; }
+
+if tar -tvzf "$ARCH" | grep '^l' >/dev/null 2>&1; then
+    echo "GAGAL: arsip berisi symlink, pemulihan dibatalkan" >&2
+    exit 1
+fi
+
+TMP=$(mktemp -d /tmp/smartcow-restore.XXXXXX)
+trap 'rm -rf "$TMP"' EXIT INT TERM
+tar -xzf "$ARCH" -C "$TMP"
+(cd "$TMP" && sha256sum -c "$ARCH.sha256sums") >/dev/null \
+    || { echo "GAGAL: isi arsip tidak cocok dengan manifest" >&2; exit 1; }
+echo "Verifikasi arsip lulus"
+
+STAMP=$(date +%Y%m%d-%H%M%S)
+PREV=$LAB/data.prev-$STAMP
+
+systemctl stop smartcow-api.service smartcow-sim.service
+
+rollback() {
+    echo "ROLLBACK: mengembalikan data sebelumnya" >&2
+    rm -rf "$LIVE"
+    [ -d "$PREV" ] && mv "$PREV" "$LIVE"
+    systemctl start smartcow-api.service smartcow-sim.service || true
+}
+trap 'rollback' ERR
+
+[ -d "$LIVE" ] && mv "$LIVE" "$PREV"
+cp -a "$TMP/data" "$LIVE"
+
+chown -R smartcow:smartcow "$LIVE"
+find "$LIVE" -type d -exec chmod 750 {} +
+# app.py menulis users.json/state.json mode 600 (hash sandi + token sesi).
+find "$LIVE" -type f -exec chmod 600 {} +
+
+systemctl start smartcow-api.service smartcow-sim.service
+trap - ERR
+
+echo "SUKSES: data dipulihkan dari $(basename "$ARCH"); salinan sebelumnya di $PREV"

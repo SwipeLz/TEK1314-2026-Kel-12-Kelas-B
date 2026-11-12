@@ -1,0 +1,18 @@
+# Perintah: sudo python3 /usr/local/sbin/c1_verify.py (lokal) dan --host 192.168.12.5 --port 80 (via Nginx)
+# Tanggal: 2026-11-12, sesudah rotasi kredensial broker
+# Kredensial dan token dibaca dari berkas mode 600 di Target Node, tidak dicetak.
+PASS mqtt-anon-rejected :: rc=3 ['GAGAL: CONNACK return code 5 (0x05 = tidak diizinkan)']
+PASS mqtt-auth-allowed-topic :: rc=0 ['PUBLISH diterima broker (koneksi tetap hidup)']
+PASS mqtt-acl-forbidden-topic :: rc=4 ['GAGAL: broker menutup koneksi setelah publish (ACL tolak topik)']
+PASS api-valid-payload :: HTTP 200
+PASS api-humidity-out-of-range :: HTTP 400
+PASS api-no-token-rejected :: HTTP 401
+SUMMARY total=6 pass=6 fail=0 host=127.0.0.1 port=9000
+
+PASS mqtt-anon-rejected :: rc=3 ['GAGAL: CONNACK return code 5 (0x05 = tidak diizinkan)']
+PASS mqtt-auth-allowed-topic :: rc=0 ['PUBLISH diterima broker (koneksi tetap hidup)']
+PASS mqtt-acl-forbidden-topic :: rc=4 ['GAGAL: broker menutup koneksi setelah publish (ACL tolak topik)']
+PASS api-valid-payload :: HTTP 200
+PASS api-humidity-out-of-range :: HTTP 400
+PASS api-no-token-rejected :: HTTP 401
+SUMMARY total=6 pass=6 fail=0 host=192.168.12.5 port=80
