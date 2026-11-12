@@ -100,7 +100,7 @@ Seluruh skenario diuji nyata memakai data dummy untuk memverifikasi efektivitas 
 
 - **Kondisi Sebelum Hardening Fase 2:** Pemindaian Nmap mencatat port 22, 80, dan 1883 terbuka. Port 9000 sudah berstatus filtered karena API mendengarkan di `0.0.0.0:9000` tetapi tidak pernah diloloskan firewall. Login SSH `sec_admin` berhasil dengan kata sandi sederhana. Publikasi MQTT ke topik kontrol diterima broker tanpa kredensial. Injeksi telemetri palsu (kelembapan 150%) dan perintah aktivasi pompa manual diterima REST API.
 - **Kondisi Sesudah Hardening:** Upaya login SSH berbasis kata sandi ditolak (`Permission denied (publickey)`). Publikasi MQTT tanpa otorisasi ditolak broker dengan `CONNACK 5`. Injeksi di luar batas ditolak REST API dengan `HTTP 400 Bad Request`, dan request tanpa token ditolak `HTTP 401 Unauthorized`. Port 1883 ditutup lewat kontrol B4, sedangkan port 9000 tetap filtered dan hanya melayani loopback; pemindaian akhir hanya menemukan 22 dan 80 terbuka.
-- Bukti: `docs/blueteam/evidence/` (67 berkas) dan `docs/redteam/evidence/` (19 berkas), termasuk tangkapan layar terminal dan log eksekusi.
+- Bukti: `docs/blueteam/evidence/` (71 berkas) dan `docs/redteam/evidence/` (19 berkas), termasuk tangkapan layar terminal dan log eksekusi.
 
 ### Hasil Analisis dan Kendala Monitoring Node
 

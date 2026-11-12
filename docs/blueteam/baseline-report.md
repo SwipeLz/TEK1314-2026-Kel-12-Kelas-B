@@ -23,6 +23,13 @@ Sensor IDS pada Monitoring Node belum terprovisioning saat itu, sehingga penangk
 
 Catatan sistem operasi: `ip_plan.md` awalnya merencanakan Ubuntu Server 22.04 atau Metasploitable 2, sedangkan lab memakai Arch Linux Security Workstation. Layanan dan port yang dibuka menyesuaikan kondisi tersebut; fungsi tiap node tetap sama.
 
+Persiapan lingkungan virtualisasi pada host utama dan host cadangan juga terdokumentasi. Keempat tangkapan VirtualBox berikut tidak memuat kredensial, dan setiap gambar diperiksa ulang sebelum dipindahkan ke folder bukti:
+
+- [LabVM Workstation di host utama](evidence/baseline/virtualbox-host-utama-labvm.png): jendela VirtualBox dengan terminal kosong dan prompt `analyst@secops`.
+- [Desktop Security Onion di host utama](evidence/baseline/virtualbox-host-utama-security-onion.png): desktop Security Onion dengan ikon Sguil, Kibana, CyberChef, dan Squert.
+- [LabVM Workstation di host cadangan, 2 September 2026](evidence/monitoring-node/virtualbox-host-cadangan-labvm.png): jendela VirtualBox dengan prompt `analyst@secops` di atas latar NetAcad CSE Lab VM.
+- [Desktop Security Onion di host cadangan, 2 September 2026](evidence/monitoring-node/virtualbox-host-cadangan-security-onion.png): desktop Security Onion dengan ikon Sguil, Kibana, CyberChef, dan Squert.
+
 ## 2. Hardening
 
 **Jaringan (iptables, karena Target Arch Linux tidak memakai UFW):**
