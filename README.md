@@ -21,7 +21,7 @@ Seluruh pengujian pertahanan dan simulasi serangan Red Team dijalankan secara be
 | [docs/blueteam/evidence/verifikasi-2026-11-12/README.md](docs/blueteam/evidence/verifikasi-2026-11-12/README.md) | Verifikasi ulang kontrol fase 2 dan daftar bukti teks 12 November 2026 |
 | [docs/presentation-minggu9/tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) | Deklarasi arsitektur teknologi asli dan pemetaannya ke lab |
 | [Presentasi Minggu 9](docs/presentation-minggu9/README.md) | PDF dan pratinjau gambar delapan slide evaluasi Minggu 9 |
-| [docs/blueteam/hardening_checklist.md](docs/blueteam/hardening_checklist.md) | Dokumentasi 9 kontrol hardening beserta bukti verifikasi |
+| [docs/blueteam/hardening_checklist.md](docs/blueteam/hardening_checklist.md) | Dokumentasi 10 kontrol hardening (3 Access, 4 Service, 3 Data/Application) beserta bukti verifikasi |
 | [docs/blueteam/evidence/](docs/blueteam/evidence/) | Bukti before/after hardening, tangkapan baseline, dan log verifikasi kontrol |
 | [docs/redteam/attack_plan.md](docs/redteam/attack_plan.md) | Rancangan skenario serangan Red Team (RT-01 s.d. RT-04) |
 | [docs/redteam/evidence/](docs/redteam/evidence/) | Bukti keluaran eksekusi pengujian penyerangan |
@@ -35,14 +35,14 @@ Penelusuran dokumentasi dapat dilakukan secara berurutan sesuai alur berikut:
 1. [ip_plan.md](docs/design/ip_plan.md) - Meninjau rancangan topologi jaringan, subnetting, dan penetapan fungsi setiap mesin virtual.
 2. [baseline-report.md](docs/blueteam/baseline-report.md) - Membaca kondisi awal setelah hardening dan bukti logging minggu ke-5.
 3. [tech_stack_declaration.md](docs/presentation-minggu9/tech_stack_declaration.md) - Memahami arsitektur sistem SmartCow dan dasar pemilihan replika backend lab.
-4. [hardening_checklist.md](docs/blueteam/hardening_checklist.md) - Memeriksa implementasi sembilan kontrol pengamanan Blue Team pada Target Node.
+4. [hardening_checklist.md](docs/blueteam/hardening_checklist.md) - Memeriksa implementasi sepuluh kontrol pengamanan Blue Team pada Target Node.
 5. [attack_plan.md](docs/redteam/attack_plan.md) dan [purple-team-log.md](docs/purple-team-log.md) - Menelaah skenario pengujian penyerangan dan evaluasi hasil deteksi pada sensor Security Onion.
 6. [verifikasi-2026-11-12/README.md](docs/blueteam/evidence/verifikasi-2026-11-12/README.md) - Melihat hasil verifikasi ulang kontrol fase 2 beserta bukti teksnya.
 
 ## Ringkasan Proyek
 
 - **Lingkungan Uji:** Tiga mesin virtual terisolasi pada jaringan Host-Only (192.168.12.0/24).
-- **Pertahanan Blue Team:** Sembilan kontrol pengamanan aktif (tiga Access, tiga Service, tiga Data/Application).
+- **Pertahanan Blue Team:** Sepuluh kontrol pengamanan aktif (tiga Access, empat Service, tiga Data/Application).
 - **Pengujian Red Team:** Empat skenario pengujian terencana (Reconnaissance, Brute Force SSH, Injeksi REST & Unauthorized MQTT Publish, serta Replay Attack).
 - **Validasi Purple Team:** Siklus evaluasi lima tahap berbasis sensor Snort/Sguil dan audit log lokal.
 - **Integritas Pengujian:** Seluruh pengujian menggunakan data dummy tanpa menyentuh perangkat maupun server produksi.

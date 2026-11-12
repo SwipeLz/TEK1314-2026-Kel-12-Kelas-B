@@ -72,12 +72,12 @@ Target Node dikonfigurasi untuk mereplikasi arsitektur backend sistem SmartCow. 
 - Web Server Nginx 1.18.0: menyajikan antarmuka web dashboard pada port 80 dan meneruskan rute `/api` ke backend lokal via proxy terbalik.
 - Manajemen layanan: seluruh komponen dijalankan sebagai layanan systemd di bawah akun sistem non-privilese `smartcow`.
 
-### Penerapan Sembilan Kontrol Pengamanan (Hardening)
+### Penerapan Sepuluh Kontrol Pengamanan (Hardening)
 
-Penerapan sembilan kontrol pengamanan terbagi merata ke dalam tiga kategori (rincian lengkap pada `docs/blueteam/hardening_checklist.md`):
+Penerapan sepuluh kontrol pengamanan terbagi ke dalam tiga kategori: 3 Access & Authentication, 4 Service & Attack Surface, dan 3 Data & Application (rincian lengkap pada `docs/blueteam/hardening_checklist.md`):
 
 - **Kategori A (Access & Authentication):** A1 (penolakan login root via SSH), A2 (autentikasi SSH berbasis kunci Ed25519 dan penonaktifan kata sandi), A3 (pembatasan koneksi sshd `MaxStartups 3:50:10` dan pembatasan laju koneksi iptables hashlimit).
-- **Kategori B (Service & Attack Surface):** B1 (firewall iptables whitelist persisten), B2 (isolasi REST API pada loopback 127.0.0.1:9000), B3 (penyembunyian banner versi Nginx via `server_tokens off`).
+- **Kategori B (Service & Attack Surface):** B1 (firewall iptables whitelist persisten), B2 (isolasi REST API pada loopback 127.0.0.1:9000), B3 (penyembunyian banner versi Nginx via `server_tokens off`), B4 (penutupan akses jaringan ke broker MQTT sehingga hanya loopback yang dilayani).
 - **Kategori C (Data & Application):** C1 (validasi batas nilai telemetri dan ACL topik MQTT), C2 (penghapusan literal token, izin berkas kredensial mode 600, dan rotasi token), C3 (pencatatan log akses tersanitasi dan verifikasi prosedur backup/restore data).
 
 ### Hasil Pengujian Serangan Red Team
@@ -86,7 +86,7 @@ Seluruh skenario penyerangan diuji secara nyata menggunakan data dummy untuk mem
 
 - **Kondisi Sebelum Hardening:** Pemindaian Nmap menemukan port 22, 80, 1883, dan 9000 terbuka. Percobaan login SSH akun `sec_admin` berhasil menggunakan kata sandi sederhana. Publikasi pesan MQTT ke topik kontrol diterima broker tanpa kredensial. Injeksi telemetri palsu (kelembapan 150%) dan perintah aktivasi pompa manual diterima oleh REST API.
 - **Kondisi Sesudah Hardening:** Seluruh upaya login SSH berbasis kata sandi ditolak sistem (`Permission denied (publickey)`). Publikasi pesan MQTT tanpa otorisasi ditolak broker dengan kode `CONNACK 5`. Injeksi data di luar batas wajar ditolak REST API dengan kode `HTTP 400 Bad Request`. Request tanpa token ditolak dengan `HTTP 401 Unauthorized`. Port 9000 berstatus filtered dari jaringan luar karena API terikat pada loopback.
-- Bukti pengujian berupa tangkapan layar terminal tersimpan pada direktori `docs/blueteam/evidence/` (26 berkas) dan `docs/redteam/evidence/` (11 berkas).
+- Bukti pengujian tersimpan pada `docs/blueteam/evidence/` (67 berkas) dan `docs/redteam/evidence/` (19 berkas), termasuk tangkapan layar terminal dan log eksekusi.
 
 ### Hasil Analisis dan Kendala Monitoring Node
 

@@ -1,3 +1,9 @@
+# ARSIP - JANGAN DIPAKAI SEBAGAI BUKTI STATUS AKHIR
+# Tangkapan 2026-10-03 10:47 UTC ini diambil saat Nginx (80) dan broker MQTT (1883)
+# belum berjalan, sehingga 80/1883 tercatat "closed" dan tidak mencerminkan kondisi akhir.
+# Bukti status akhir Fase 2 ada pada: docs/redteam/evidence/01-pemindaian-port-sebelum.png,
+# 02-pemindaian-port-setelah.png, 11-pemindaian-port-lengkap.png (scan -p-),
+# 13-pemindaian-port-mqtt-sebelum.png, dan 14-pemindaian-port-mqtt-setelah.png.
 Starting Nmap 7.80 ( https://nmap.org ) at 2026-10-03 10:47 UTC
 Nmap scan report for 192.168.12.5
 Host is up (0.00075s latency).

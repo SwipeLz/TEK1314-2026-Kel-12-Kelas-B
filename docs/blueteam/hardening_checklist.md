@@ -4,7 +4,7 @@
 
 ## 1. Tujuan dan Ruang Lingkup
 
-Dokumen ini menyajikan implementasi sembilan kontrol pengamanan (*hardening*) pada Target Node yang menjalankan replika backend sistem SmartCow (sistem sprinkler kandang sapi perah). Seluruh kontrol dikelompokkan secara terstruktur ke dalam tiga kategori utama sesuai standar Bagian VIII Panduan PBL: *Access and Authentication*, *Service and Attack Surface*, serta *Data and Application*.
+Dokumen ini menyajikan implementasi sepuluh kontrol pengamanan (*hardening*) pada Target Node (3 Access and Authentication, 4 Service and Attack Surface, 3 Data and Application) yang menjalankan replika backend sistem SmartCow (sistem sprinkler kandang sapi perah). Seluruh kontrol dikelompokkan secara terstruktur ke dalam tiga kategori utama sesuai standar Bagian VIII Panduan PBL: *Access and Authentication*, *Service and Attack Surface*, serta *Data and Application*.
 
 - **Target Node:** `SRV-IOT-KEL12-B`, sistem operasi Arch Linux Security Workstation, alamat IP laboratorium `192.168.12.5`.
 - **Perangkat Penguji:** `ATTACKER-KEL12-B` (`192.168.12.100`) dan host administrasi (`192.168.12.1`).
